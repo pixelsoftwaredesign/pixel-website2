@@ -1,0 +1,108 @@
+<!DOCTYPE html>{% load static %}<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Facture {{ commande.reference }} — Pixel Software Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#fff;color:#111;font-family:'Space Grotesk',sans-serif;font-size:13px;line-height:1.5;padding:0}
+.invoice{max-width:800px;margin:0 auto;padding:40px}
+.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:30px;padding-bottom:20px;border-bottom:2px solid #1EB482}
+.header .h-left .logo{display:flex;align-items:center;gap:10px;margin-bottom:4px}
+.header .h-left .logo svg{width:32px;height:32px}
+.header .h-left .logo-text strong{font-size:16px;color:#0a1a15}
+.header .h-left .logo-text span{display:block;font-size:10px;color:#666;font-family:'Space Mono',monospace}
+.header .h-right{text-align:right}
+.header .h-right .ref{font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:#1EB482}
+.header .h-right .date{font-size:11px;color:#666;margin-top:2px}
+.info{display:flex;justify-content:space-between;margin-bottom:30px;padding-bottom:20px;border-bottom:1px solid #eee}
+.info .col h3{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#999;margin-bottom:6px}
+.info .col p{font-size:12px;color:#333;line-height:1.6}
+.info .col p strong{color:#0a1a15}
+table{width:100%;border-collapse:collapse;margin-bottom:30px}
+table th{background:#1EB482;color:#fff;padding:8px 10px;text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.06em}
+table td{padding:8px 10px;border-bottom:1px solid #eee;font-size:12px}
+table td:last-child,table th:last-child{text-align:right}
+table td:nth-child(2),table th:nth-child(2){text-align:right}
+table td:nth-child(3),table th:nth-child(3){text-align:right}
+table tbody tr:last-child td{border-bottom:none}
+.total-box{margin-left:auto;width:280px;padding:15px;background:#f8faf9;border-radius:8px;margin-bottom:30px}
+.total-box .tl{display:flex;justify-content:space-between;padding:4px 0;font-size:12px;color:#555}
+.total-box .tl.total{font-size:16px;font-weight:700;color:#1EB482;border-top:2px solid #1EB482;padding-top:8px;margin-top:4px}
+.footer{border-top:1px solid #eee;padding-top:20px;text-align:center;font-size:10px;color:#999;line-height:1.8}
+.footer .payment-info{color:#555;margin-bottom:8px;font-size:11px}
+.status-badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:10px;font-weight:600;font-family:'Space Mono',monospace}
+.status-badge.confirmee,.status-badge.livree,.status-badge.expediee{background:#d4ede1;color:#0f6e4a}
+.status-badge.en_attente,.status-badge.preparation{background:#fef3c7;color:#92400e}
+@media print{body{background:#fff}.no-print{display:none!important}.invoice{padding:20px}.total-box{break-inside:avoid}}
+</style>
+</head>
+<body>
+<div class="invoice">
+<div class="header">
+<div class="h-left">
+<div class="logo">
+<svg width="32" height="32" viewBox="0 0 100 100"><polygon points="50,2 93,26 93,74 50,98 7,74 7,26" fill="#1EB482"/><path d="M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z" fill="white" opacity="0.92"/></svg>
+<div class="logo-text"><strong>{{ societe.nom }}</strong><span>{{ societe.slogan }}</span></div>
+</div>
+<p style="font-size:11px;color:#666;margin-top:6px">{{ societe.adresse }}<br>{{ societe.email }} — {{ societe.tel }}</p>
+</div>
+<div class="h-right">
+<div class="ref">{{ commande.reference }}</div>
+<div class="date">{{ commande.date_commande|date:"d F Y" }}</div>
+<div style="margin-top:6px"><span class="status-badge {{ commande.statut }}">{{ commande.get_statut_display }}</span></div>
+</div>
+</div>
+
+<div class="info">
+<div class="col">
+<h3>Facturé à</h3>
+<p><strong>{{ commande.client_nom }}</strong><br>
+{{ commande.client_email }}<br>
+{% if commande.client_tel %}{{ commande.client_tel }}<br>{% endif %}
+{{ commande.client_adresse }}<br>
+{% if commande.client_ville %}{{ commande.client_ville }}{% if commande.client_code_postal %}, {{ commande.client_code_postal }}{% endif %}{% endif %}
+</p>
+</div>
+<div class="col" style="text-align:right">
+<h3>Paiement</h3>
+<p><strong>{{ commande.get_methode_paiement_display }}</strong><br>
+{% if commande.id_transaction %}Transaction: {{ commande.id_transaction }}<br>{% endif %}
+{{ societe.registre }}</p>
+</div>
+</div>
+
+<table>
+<thead><tr><th>Produit</th><th style="text-align:right">Qté</th><th style="text-align:right">Prix unit.</th><th style="text-align:right">Total</th></tr></thead>
+<tbody>
+{% for item in items %}
+<tr><td>{{ item.nom_produit }}</td><td style="text-align:right">{{ item.quantite }}</td><td style="text-align:right">{{ item.prix_unitaire }} TND</td><td style="text-align:right">{{ item.sous_total }} TND</td></tr>
+{% endfor %}
+</tbody>
+</table>
+
+<div class="total-box">
+<div class="tl"><span>Sous-total</span><span>{{ commande.total_ttc }} TND</span></div>
+<div class="tl total"><span>Total TTC</span><span>{{ commande.total_ttc }} TND</span></div>
+</div>
+
+{% if commande.notes %}
+<p style="font-size:11px;color:#666;margin-bottom:20px;padding:10px;background:#f8faf9;border-radius:6px"><strong>Notes :</strong><br>{{ commande.notes }}</p>
+{% endif %}
+
+<div class="footer">
+<div class="payment-info">Merci pour votre confiance !</div>
+<p>{{ societe.nom }} — {{ societe.slogan }}<br>
+{{ societe.email }} — {{ societe.tel }} — {{ societe.registre }}</p>
+</div>
+</div>
+
+<div class="no-print" style="text-align:center;padding:20px;background:#f0f0f0;border-top:1px solid #ddd">
+<button onclick="window.print()" style="padding:10px 30px;background:#1EB482;color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:14px">🖨️ Télécharger / Imprimer</button>
+<a href="javascript:history.back()" style="display:inline-block;margin-left:10px;padding:10px 20px;background:#eee;color:#333;border-radius:6px;text-decoration:none;font-size:14px">← Retour</a>
+</div>
+
+<script>window.onload=function(){setTimeout(function(){window.print()},500)}</script>
+</body>
+</html>

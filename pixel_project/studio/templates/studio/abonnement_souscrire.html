@@ -1,0 +1,53 @@
+<!DOCTYPE html>{% load static %}<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Souscrire — {{ plan.nom }} — Pixel Software Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,2 93,26 93,74 50,98 7,74 7,26' fill='%231EB482'/%3E%3Cpath d='M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z' fill='white' opacity='0.92'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<style>
+.sub-form-page{padding:9rem 1rem 3rem;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.sub-form-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:2.5rem;width:100%;max-width:480px}
+.sub-form-box h1{font-size:1.3rem;margin-bottom:.3rem}
+.sub-form-box .plan-name{display:inline-block;font-family:'Space Mono',monospace;font-size:.6rem;color:var(--accent);background:rgba(30,180,130,.1);padding:.2rem .6rem;border-radius:4px;margin-bottom:1.2rem}
+.sub-form-box .price{font-family:'Space Mono',monospace;font-size:1.2rem;color:var(--accent);font-weight:700;margin-bottom:1.5rem}
+.sub-form-box .cg{margin-bottom:.9rem}
+.sub-form-box .cg label{display:block;font-size:.7rem;color:var(--muted);margin-bottom:.3rem;font-family:'Space Mono',monospace}
+.sub-form-box .cg input,.sub-form-box .cg select{width:100%;padding:.6rem .8rem;border-radius:6px;border:1px solid var(--border);background:#0a1a15;color:#fff;font-size:.8rem;outline:none;transition:border-color .2s}
+.sub-form-box .cg input:focus,.sub-form-box .cg select:focus{border-color:var(--accent)}
+.sub-form-box .btn-p{width:100%;justify-content:center;padding:.7rem}
+.sub-form-box .methodes{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-bottom:1rem}
+.sub-form-box .methodes label{cursor:pointer;padding:.6rem;border:1px solid var(--border);border-radius:8px;text-align:center;font-size:.65rem;transition:.2s;font-family:'Space Mono',monospace}
+.sub-form-box .methodes label:hover{border-color:var(--accent)}
+.sub-form-box .methodes input:checked+span{background:rgba(30,180,130,.15);display:block;padding:.6rem;margin:-.6rem;border-radius:7px;border:1px solid var(--accent)}
+.sub-form-box .methodes input{display:none}
+.sub-form-box .error{font-size:.72rem;color:#ef4444;text-align:center;margin-bottom:.8rem;padding:.3rem;background:rgba(239,68,68,.1);border-radius:4px}
+</style>
+</head>
+<body>
+<svg style="display:none"><defs><symbol id="pxl" viewBox="0 0 100 100"><polygon points="50,2 93,26 93,74 50,98 7,74 7,26" fill="none"/><polygon points="50,2 93,26 70,14" fill="#2DBD6E"/><polygon points="50,2 70,14 50,30 30,14" fill="#3DC87A"/><polygon points="50,2 30,14 7,26" fill="#1EB482"/><polygon points="93,26 93,74 78,50" fill="#1A9BAF"/><polygon points="93,26 78,50 70,14" fill="#1CB89A"/><polygon points="70,14 78,50 50,30" fill="#22C490"/><polygon points="50,30 78,50 60,72 40,72 22,50" fill="#1A9BAF"/><polygon points="7,26 30,14 22,50" fill="#1565C0"/><polygon points="30,14 50,30 22,50" fill="#1878C8"/><polygon points="7,26 22,50 7,74" fill="#1565C0"/><polygon points="7,74 22,50 40,72 50,98 30,86" fill="#1A9BAF"/><polygon points="93,74 78,50 60,72 50,98 70,86" fill="#1565C0"/><polygon points="50,98 70,86 93,74" fill="#1878C8"/><polygon points="50,98 30,86 7,74" fill="#1A9BAF"/><polygon points="40,72 60,72 50,98 30,86" fill="#1CB89A"/><path d="M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z" fill="white" opacity="0.92"/></symbol></defs></svg>
+<nav><a href="/" class="logo"><svg><use href="#pxl"/></svg><div class="logo-text"><strong>Pixel Software Design</strong><span>L'architecture de l'innovation</span></div></a><ul class="nav-menu" id="navMenu"><li><a href="/">Accueil</a></li><li><a href="/a-propos/">À propos</a></li><li><a href="/prix/">Prix</a></li><li><a href="/contact/">Contact</a></li><li><a href="/faq/">FAQ</a></li></ul><button class="burger" onclick="document.getElementById('navMenu').classList.toggle('open')" aria-label="Menu"><span></span><span></span><span></span></button></nav>
+<div class="sub-form-page">
+<div class="sub-form-box">
+<h1>Souscrire à {{ plan.nom }}</h1>
+<span class="plan-name">{{ plan.get_categorie_display }}</span>
+<div class="price">{% if plan.prix == 0 %}Gratuit{% else %}{{ plan.prix }} TND <span style="font-size:.65rem;color:var(--muted);font-weight:400">/ {{ plan.duree_jours }} jours</span>{% endif %}</div>
+{% if error %}<div class="error">{{ error }}</div>{% endif %}
+<form method="POST">{% csrf_token %}
+<div class="cg"><label>Nom complet</label><input type="text" name="nom" placeholder="Votre nom" required></div>
+<div class="cg"><label>Email</label><input type="email" name="email" placeholder="votre@email.com" required></div>
+<div class="cg"><label>Téléphone (optionnel)</label><input type="text" name="tel" placeholder="+216 XX XXX XXX"></div>
+<div class="cg"><label>Mode de paiement</label></div>
+<div class="methodes">
+<label><input type="radio" name="methode" value="especes" required><span>💵 Espèces</span></label>
+<label><input type="radio" name="methode" value="online"><span>💳 En ligne</span></label>
+<label><input type="radio" name="methode" value="virement"><span>🏦 Virement</span></label>
+</div>
+<button type="submit" class="btn-p">Confirmer et payer →</button>
+</form>
+</div>
+</div>
+<footer><div style="display:flex;align-items:center;gap:10px"><svg width="24" height="24"><use href="#pxl"/></svg><span class="fcopy">© 2026 Pixel Software Design</span></div><div class="flinks"><a href="/">Accueil</a><a href="/abonnement/">Abonnements</a></div></footer>
+</body>
+</html>

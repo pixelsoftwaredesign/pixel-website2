@@ -1,0 +1,75 @@
+<!DOCTYPE html>{% load static %}<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Dashboard — Pixel Software Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,2 93,26 93,74 50,98 7,74 7,26' fill='%231EB482'/%3E%3Cpath d='M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z' fill='white' opacity='0.92'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<style>
+.db{padding:9rem 3rem 3rem}
+.db h1{font-size:1.6rem}.db .sub{color:var(--muted);font-size:.8rem;margin-top:.2rem}
+.db-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin:2rem 0}
+.db-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.2rem;transition:border-color .2s}
+.db-card:hover{border-color:rgba(30,180,130,.3)}
+.db-card .db-icon{font-size:1.3rem;margin-bottom:.3rem}
+.db-card .db-num{font-family:'Space Mono',monospace;font-size:1.5rem;font-weight:700;color:var(--accent)}
+.db-card .db-num.tnd{font-size:1rem}
+.db-card .db-lbl{font-size:.7rem;color:var(--muted);margin-top:.15rem}
+.db-card .db-sub{font-size:.6rem;color:var(--muted);margin-top:.2rem;font-family:'Space Mono',monospace}
+.db-section{margin-top:2.5rem}.db-section h2{font-size:1rem;font-weight:600;margin-bottom:1rem}
+.db-table{width:100%;border-collapse:collapse;font-size:.72rem;background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.db-table th{background:rgba(30,180,130,.1);color:var(--accent);padding:.4rem .5rem;text-align:left;font-weight:600;font-size:.6rem;text-transform:uppercase;letter-spacing:.05em}
+.db-table td{padding:.35rem .5rem;border-bottom:1px solid var(--border)}
+.db-table tr:last-child td{border-bottom:none}
+.db-links{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:1rem}
+.db-links a{padding:.3rem .8rem;border:1px solid var(--border);border-radius:6px;text-decoration:none;font-family:'Space Mono',monospace;font-size:.6rem;color:var(--muted);transition:.2s}
+.db-links a:hover{border-color:var(--accent);color:var(--accent)}
+@media(max-width:768px){.db{padding:9rem 1rem 2rem}.db-grid{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<svg style="display:none"><defs><symbol id="pxl" viewBox="0 0 100 100"><polygon points="50,2 93,26 93,74 50,98 7,74 7,26" fill="none"/><polygon points="50,2 93,26 70,14" fill="#2DBD6E"/><polygon points="50,2 70,14 50,30 30,14" fill="#3DC87A"/><polygon points="50,2 30,14 7,26" fill="#1EB482"/><polygon points="93,26 93,74 78,50" fill="#1A9BAF"/><polygon points="93,26 78,50 70,14" fill="#1CB89A"/><polygon points="70,14 78,50 50,30" fill="#22C490"/><polygon points="50,30 78,50 60,72 40,72 22,50" fill="#1A9BAF"/><polygon points="7,26 30,14 22,50" fill="#1565C0"/><polygon points="30,14 50,30 22,50" fill="#1878C8"/><polygon points="7,26 22,50 7,74" fill="#1565C0"/><polygon points="7,74 22,50 40,72 50,98 30,86" fill="#1A9BAF"/><polygon points="93,74 78,50 60,72 50,98 70,86" fill="#1565C0"/><polygon points="50,98 70,86 93,74" fill="#1878C8"/><polygon points="50,98 30,86 7,74" fill="#1A9BAF"/><polygon points="40,72 60,72 50,98 30,86" fill="#1CB89A"/><path d="M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z" fill="white" opacity="0.92"/></symbol></defs></svg>
+<nav><a href="/" class="logo"><svg><use href="#pxl"/></svg><div class="logo-text"><strong>Pixel Software Design</strong><span>Dashboard</span></div></a><ul class="nav-menu" id="navMenu"><li><a href="/">Accueil</a></li><li><a href="/ecommerce/">PixelShop</a></li><li><a href="/gestiactiv/">GestiActiv</a></li><li><a href="/portail/">Mon espace</a></li></ul><button class="burger" onclick="document.getElementById('navMenu').classList.toggle('open')" aria-label="Menu"><span></span><span></span><span></span></button></nav>
+<div class="db">
+<h1>📊 <span class="h1-grad">Tableau de bord</span></h1>
+<p class="sub">Vue d'ensemble de votre activité Pixel Software Design</p>
+
+<div class="db-grid">
+<div class="db-card"><div class="db-icon">🛍️</div><div class="db-num">{{ stats.commandes }}</div><div class="db-lbl">Commandes e‑commerce</div><div class="db-sub">{{ stats.commandes_en_attente }} en attente</div></div>
+<div class="db-card"><div class="db-icon">💰</div><div class="db-num tnd">{{ stats.ca_total }} TND</div><div class="db-lbl">Chiffre d'affaires (e‑commerce)</div></div>
+<div class="db-card"><div class="db-icon">📦</div><div class="db-num">{{ stats.produits }}</div><div class="db-lbl">Produits actifs</div><div class="db-sub">{{ stats.alerte_stock }} en alerte stock</div></div>
+<div class="db-card"><div class="db-icon">📋</div><div class="db-num">{{ stats.souscriptions_actives }}</div><div class="db-lbl">Abonnements actifs</div><div class="db-sub">{{ stats.total_souscriptions }} total</div></div>
+<div class="db-card"><div class="db-icon">💳</div><div class="db-num tnd">{{ stats.revenu_abonnements }} TND</div><div class="db-lbl">Revenu abonnements</div></div>
+<div class="db-card"><div class="db-icon">🤝</div><div class="db-num">{{ stats.total_candidatures }}</div><div class="db-lbl">Candidatures</div><div class="db-sub">{{ stats.candidatures_nouvelles }} nouvelles</div></div>
+<div class="db-card"><div class="db-icon">👥</div><div class="db-num">{{ stats.utilisateurs }}</div><div class="db-lbl">Utilisateurs inscrits</div></div>
+<div class="db-card"><div class="db-icon">⚠️</div><div class="db-num" style="color:{% if stats.alerte_stock > 0 %}#F59E0B{% else %}#1EB482{% endif %}">{{ stats.alerte_stock }}</div><div class="db-lbl">Alertes stock</div></div>
+</div>
+
+<div class="db-section">
+<h2>📋 Dernières commandes</h2>
+<table class="db-table">
+<thead><tr><th>Réf.</th><th>Client</th><th>Total</th><th>Statut</th><th>Date</th></tr></thead>
+<tbody>
+{% for cmd in commandes_recentes %}
+<tr><td style="font-family:'Space Mono',monospace;font-size:.6rem">{{ cmd.reference }}</td><td>{{ cmd.client_nom }}</td><td style="font-family:'Space Mono',monospace;color:var(--accent);font-weight:600">{{ cmd.total_ttc }} TND</td><td>{{ cmd.get_statut_display }}</td><td style="font-family:'Space Mono',monospace;font-size:.55rem;color:var(--muted)">{{ cmd.date_commande|date:"d/m/Y" }}</td></tr>
+{% empty %}<tr><td colspan="5" style="text-align:center;padding:1.5rem;color:var(--muted)">Aucune commande récente.</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+
+<div class="db-links">
+<a href="/ecommerce/">PixelShop</a>
+<a href="/ecommerce/stock/">Gestion stock</a>
+<a href="/ecommerce/commandes/">Commandes</a>
+<a href="/abonnement/">Abonnements</a>
+<a href="/admin-bancaire/">Configuration bancaire</a>
+<a href="/subscriptions/">Souscriptions</a>
+<a href="/recrutement/gestion/">Candidatures</a>
+<a href="/portail/">Mon espace</a>
+</div>
+</div>
+<footer><div style="display:flex;align-items:center;gap:10px"><svg width="24" height="24"><use href="#pxl"/></svg><span class="fcopy">© 2026 Pixel Software Design — Dashboard</span></div><div class="flinks"><a href="/">Accueil</a><a href="/ecommerce/">Boutique</a><a href="/gestiactiv/">ERP</a></div></footer>
+</body>
+</html>

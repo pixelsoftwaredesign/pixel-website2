@@ -1,0 +1,92 @@
+<!DOCTYPE html>{% load static %}<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Configuration bancaire — Pixel Software Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,2 93,26 93,74 50,98 7,74 7,26' fill='%231EB482'/%3E%3Cpath d='M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z' fill='white' opacity='0.92'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<style>
+.erp-wrap{padding:9rem 3rem 2rem}.erp-h{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}.erp-h h1{font-size:1.5rem}
+.erp-section{margin-top:2rem}.erp-section h3{font-size:.95rem;font-weight:600;margin-bottom:.8rem}
+.erp-table{width:100%;border-collapse:collapse;font-size:.75rem;background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.erp-table th{background:rgba(30,180,130,.1);color:var(--accent);padding:.5rem .6rem;text-align:left;font-weight:600;font-size:.65rem;text-transform:uppercase;letter-spacing:.05em}
+.erp-table td{padding:.45rem .6rem;border-bottom:1px solid var(--border)}
+.erp-table tr:last-child td{border-bottom:none}
+.erp-table .del{color:#ef4444;text-decoration:none;font-size:.65rem;margin-left:.4rem;cursor:pointer}.erp-table .del:hover{text-decoration:underline}
+.erp-table .edit{color:var(--accent);text-decoration:none;font-size:.65rem;cursor:pointer}.erp-table .edit:hover{text-decoration:underline}
+.erp-add-form{display:flex;gap:.4rem;flex-wrap:wrap;padding:.6rem;background:rgba(30,180,130,.05);border:1px dashed rgba(30,180,130,.3);border-radius:8px;margin-bottom:.8rem;align-items:center;font-size:.65rem}
+.erp-add-form input,.erp-add-form select,.erp-add-form textarea{padding:.3rem .5rem;border-radius:4px;border:1px solid var(--border);background:#0a1a15;color:#fff;font-family:'Space Mono',monospace;font-size:.65rem}
+.erp-add-form textarea{width:100%;min-height:60px;font-family:inherit}
+.erp-add-form button{padding:.3rem .7rem;border-radius:4px;border:none;background:var(--accent);color:#05100D;font-weight:700;font-size:.65rem;cursor:pointer;font-family:'Space Mono',monospace}
+.erp-add-form .edit-actions{display:none}.erp-add-form .edit-actions button{padding:.25rem .6rem;border-radius:4px;cursor:pointer;font-weight:700;font-size:.65rem;font-family:'Space Mono',monospace}
+.erp-add-form .erp-field{display:flex;flex-direction:column;gap:.2rem}
+.erp-add-form .erp-field label{font-size:.6rem;color:var(--muted);font-family:'Space Mono',monospace}
+.stag{font-family:'Space Mono',monospace;font-size:.65rem;color:var(--muted);margin-bottom:.2rem}.badge-on{color:#1EB482;font-weight:700}.badge-off{color:#ef4444}
+@media(max-width:768px){.erp-wrap{padding:9rem 1rem 2rem}.erp-table{overflow-x:auto}.erp-add-form{flex-direction:column}}
+</style>
+</head>
+<body>
+<svg style="display:none"><defs><symbol id="pxl" viewBox="0 0 100 100"><polygon points="50,2 93,26 93,74 50,98 7,74 7,26" fill="none"/><polygon points="50,2 93,26 70,14" fill="#2DBD6E"/><polygon points="50,2 70,14 50,30 30,14" fill="#3DC87A"/><polygon points="50,2 30,14 7,26" fill="#1EB482"/><polygon points="93,26 93,74 78,50" fill="#1A9BAF"/><polygon points="93,26 78,50 70,14" fill="#1CB89A"/><polygon points="70,14 78,50 50,30" fill="#22C490"/><polygon points="50,30 78,50 60,72 40,72 22,50" fill="#1A9BAF"/><polygon points="7,26 30,14 22,50" fill="#1565C0"/><polygon points="30,14 50,30 22,50" fill="#1878C8"/><polygon points="7,26 22,50 7,74" fill="#1565C0"/><polygon points="7,74 22,50 40,72 50,98 30,86" fill="#1A9BAF"/><polygon points="93,74 78,50 60,72 50,98 70,86" fill="#1565C0"/><polygon points="50,98 70,86 93,74" fill="#1878C8"/><polygon points="50,98 30,86 7,74" fill="#1A9BAF"/><polygon points="40,72 60,72 50,98 30,86" fill="#1CB89A"/><path d="M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z" fill="white" opacity="0.92"/></symbol></defs></svg>
+<nav><a href="/" class="logo"><svg><use href="#pxl"/></svg><div class="logo-text"><strong>Pixel Software Design</strong><span>Configuration bancaire</span></div></a><ul class="nav-menu" id="navMenu"><li><a href="/">Accueil</a></li><li><a href="/abonnement/">Abonnements</a></li></ul><button class="burger" onclick="document.getElementById('navMenu').classList.toggle('open')" aria-label="Menu"><span></span><span></span><span></span></button></nav>
+<div class="erp-wrap">
+<div class="erp-h"><div><p class="stag">// Administration</p><h1>🏦 Configuration bancaire</h1></div><a href="/abonnement/">← Abonnements</a></div>
+
+<div class="erp-section">
+<h3>➕ Ajouter un compte bancaire</h3>
+<form method="POST" class="erp-add-form">{% csrf_token %}<input type="hidden" name="action" value="add_banque">
+<div class="erp-field"><label>Banque</label><select name="banque">
+<option value="BIAT">BIAT</option><option value="Attijari">Attijari Bank</option><option value="Amen">Amen Bank</option>
+<option value="BH">BH</option><option value="BNA">BNA</option><option value="Poste">La Poste (CCP)</option>
+<option value="STB">STB</option><option value="UIB">UIB</option><option value="Zitouna">Zitouna</option>
+<option value="autre">Autre</option>
+</select></div>
+<div class="erp-field"><label>Titulaire</label><input type="text" name="titulaire" placeholder="Nom du titulaire" required></div>
+<div class="erp-field"><label>RIB</label><input type="text" name="rib" placeholder="20 chiffres" required></div>
+<div class="erp-field"><label>SWIFT</label><input type="text" name="swift" placeholder="BIC/SWIFT"></div>
+<div class="erp-field"><label>Agence</label><input type="text" name="agence" placeholder="Agence"></div>
+<label style="font-size:.6rem;color:var(--muted)"><input type="checkbox" name="est_defaut" value="1"> Par défaut</label>
+<button type="submit">+ Ajouter</button>
+</form>
+</div>
+
+<div class="erp-section">
+<h3>🏦 Comptes bancaires</h3>
+<table class="erp-table"><thead><tr><th>Banque</th><th>Titulaire</th><th>RIB</th><th>SWIFT</th><th>Défaut</th><th>Actif</th><th></th></tr></thead>
+<tbody>{% for b in banques %}
+<tr><td>{{ b.get_banque_display }}</td><td>{{ b.titulaire }}</td><td style="font-family:'Space Mono',monospace;font-size:.65rem">{{ b.rib }}</td><td>{{ b.swift|default:"—" }}</td>
+<td>{% if b.est_defaut %}⭐{% else %}—{% endif %}</td><td>{% if b.is_active %}<span class="badge-on">Oui</span>{% else %}<span class="badge-off">Non</span>{% endif %}</td>
+<td><a href="#" class="edit" onclick="editRecord(this)">✎</a>
+<a href="#" class="del" onclick="if(confirm('Supprimer ?'))fetch('',{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token }}'},body:new URLSearchParams({action:'delete_banque',id:'{{ b.id }}'})}).then(()=>location.reload())">✕</a></td>
+</tr>{% empty %}<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:1rem">Aucun compte configuré.</td></tr>{% endfor %}</tbody></table>
+</div>
+
+{% for cfg in configs_enligne %}
+<div class="erp-section">
+<h3>💳 Configuration paiement en ligne</h3>
+<form method="POST" class="erp-add-form" style="flex-direction:column;align-items:stretch">{% csrf_token %}<input type="hidden" name="action" value="save_paiement_config"><input type="hidden" name="config_id" value="{{ cfg.id }}">
+<div style="display:flex;gap:.5rem;flex-wrap:wrap">
+<div class="erp-field"><label>Fournisseur</label><select name="fournisseur">
+<option value="expressee"{% if cfg.fournisseur == 'expressee' %} selected{% endif %}>Express eE</option>
+<option value="d17"{% if cfg.fournisseur == 'd17' %} selected{% endif %}>D17</option>
+<option value="flouci"{% if cfg.fournisseur == 'flouci' %} selected{% endif %}>Flouci</option>
+<option value="paymee"{% if cfg.fournisseur == 'paymee' %} selected{% endif %}>Paymee</option>
+<option value="konnect"{% if cfg.fournisseur == 'konnect' %} selected{% endif %}>Konnect</option>
+<option value="manual"{% if cfg.fournisseur == 'manual' %} selected{% endif %}>Manuel</option>
+</select></div>
+<div class="erp-field"><label>Frais (%)</label><input type="number" name="frais_pourcentage" value="{{ cfg.frais_pourcentage }}" step="0.01"></div>
+<label style="font-size:.6rem;color:var(--muted);align-self:flex-end"><input type="checkbox" name="est_actif" value="1"{% if cfg.est_actif %} checked{% endif %}> Actif</label>
+</div>
+<div class="erp-field"><label>Instructions de paiement</label><textarea name="instructions" rows="4">{{ cfg.instructions }}</textarea></div>
+<button type="submit">💾 Enregistrer</button>
+</form>
+</div>
+{% endfor %}
+
+</div>
+<footer><div style="display:flex;align-items:center;gap:10px"><svg width="24" height="24"><use href="#pxl"/></svg><span class="fcopy">© 2026 Pixel Software Design</span></div></footer>
+<script>
+function editRecord(btn){var tr=btn.closest('tr');var f=tr.closest('.erp-section').querySelector('.erp-add-form');if(!f)return;alert('Édition directe non disponible. Utilisez le bouton ✕ pour supprimer et recréer.');}
+</script>
+</body>
+</html>

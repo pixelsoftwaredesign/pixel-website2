@@ -1,0 +1,51 @@
+<!DOCTYPE html>{% load static %}<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Inscription — Pixel Software Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<style>
+.auth-page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:6rem 1rem 2rem;background:#05100D}
+.auth-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:2.5rem;width:100%;max-width:420px}
+.auth-box h1{font-size:1.3rem;margin-bottom:.3rem}
+.auth-box .sub{font-size:.75rem;color:var(--muted);margin-bottom:1.5rem}
+.auth-box .cg{margin-bottom:.9rem}
+.auth-box .cg label{display:block;font-size:.7rem;color:var(--muted);margin-bottom:.3rem;font-family:'Space Mono',monospace}
+.auth-box .cg input,.auth-box .cg select{width:100%;padding:.6rem .8rem;border-radius:6px;border:1px solid var(--border);background:#0a1a15;color:#fff;font-size:.8rem;outline:none;transition:border-color .2s}
+.auth-box .cg input:focus,.auth-box .cg select:focus{border-color:var(--accent)}
+.auth-box .btn-p{width:100%;justify-content:center;padding:.7rem}
+.auth-box .auth-link{text-align:center;margin-top:1rem;font-size:.75rem;color:var(--muted)}
+.auth-box .auth-link a{color:var(--accent);text-decoration:none}
+.auth-box .auth-msg{margin-top:.8rem;font-size:.75rem;text-align:center;padding:.4rem;border-radius:4px;display:none}
+.auth-box .auth-msg.error{display:block;background:rgba(239,68,68,.15);color:#ef4444}
+.auth-box .auth-msg.success{display:block;background:rgba(30,180,130,.15);color:var(--accent)}
+</style>
+</head>
+<body>
+<svg style="display:none"><defs><symbol id="pxl" viewBox="0 0 100 100"><polygon points="50,2 93,26 93,74 50,98 7,74 7,26" fill="none"/><polygon points="50,2 93,26 70,14" fill="#2DBD6E"/><polygon points="50,2 70,14 50,30 30,14" fill="#3DC87A"/><polygon points="50,2 30,14 7,26" fill="#1EB482"/><polygon points="93,26 93,74 78,50" fill="#1A9BAF"/><polygon points="93,26 78,50 70,14" fill="#1CB89A"/><polygon points="70,14 78,50 50,30" fill="#22C490"/><polygon points="50,30 78,50 60,72 40,72 22,50" fill="#1A9BAF"/><polygon points="7,26 30,14 22,50" fill="#1565C0"/><polygon points="30,14 50,30 22,50" fill="#1878C8"/><polygon points="7,26 22,50 7,74" fill="#1565C0"/><polygon points="7,74 22,50 40,72 50,98 30,86" fill="#1A9BAF"/><polygon points="93,74 78,50 60,72 50,98 70,86" fill="#1565C0"/><polygon points="50,98 70,86 93,74" fill="#1878C8"/><polygon points="50,98 30,86 7,74" fill="#1A9BAF"/><polygon points="40,72 60,72 50,98 30,86" fill="#1CB89A"/><path d="M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z" fill="white" opacity="0.92"/></symbol></defs></svg>
+<nav><a href="/" class="logo"><svg><use href="#pxl"/></svg><div class="logo-text"><strong>Pixel Software Design</strong><span>L'architecture de l'innovation</span></div></a><ul class="nav-menu" id="navMenu"><li><a href="/">Accueil</a></li><li><a href="/a-propos/">À propos</a></li><li><a href="/prix/">Prix</a></li><li><a href="/faq/">FAQ</a></li><li><a href="/contact/">Contact</a></li><li><a href="/register/" class="active">Inscription</a></li></ul><button class="burger" onclick="document.getElementById('navMenu').classList.toggle('open')" aria-label="Menu"><span></span><span></span><span></span></button></nav>
+<div class="auth-page">
+<div class="auth-box">
+<h1>Inscription</h1>
+<p class="sub">Créez votre compte Pixel Software Design</p>
+<form id="regForm" onsubmit="return false">
+<div class="cg"><label>Identifiant</label><input type="text" id="regUsername" placeholder="Choisissez un identifiant" required></div>
+<div class="cg"><label>Email</label><input type="email" id="regEmail" placeholder="votre@email.com" required></div>
+<div class="cg"><label>Mot de passe</label><input type="password" id="regPassword" placeholder="Créez un mot de passe" required></div>
+<div class="cg"><label>Entreprise (optionnel)</label><input type="text" id="regEntreprise" placeholder="Nom de votre entreprise"></div>
+<div class="cg"><label>Type de profil</label><select id="regRole"><option value="designer">Designer</option><option value="developer">Développeur</option><option value="both">Designer &amp; Développeur</option></select></div>
+<button type="button" class="btn-p" onclick="executerInscription()">Créer mon compte →</button>
+<div id="regMsg" class="auth-msg"></div>
+</form>
+<p class="auth-link">Déjà inscrit ? <a href="/login/">Se connecter</a></p>
+</div>
+</div>
+<footer><div style="display:flex;align-items:center;gap:10px"><svg width="24" height="24"><use href="#pxl"/></svg><span class="fcopy">© 2026 Pixel Software Design</span></div><div class="flinks"><a href="/">Accueil</a><a href="/prix/">Prix</a></div></footer>
+<script>
+function msg(t,c){var m=document.getElementById('regMsg');m.textContent=t;m.className='auth-msg '+c;m.style.display='block'}
+function executerInscription(){var u=document.getElementById('regUsername').value,e=document.getElementById('regEmail').value,p=document.getElementById('regPassword').value,ent=document.getElementById('regEntreprise').value,r=document.getElementById('regRole').value;if(!u||!e||!p){msg('Veuillez remplir tous les champs obligatoires.','error');return}
+fetch('/api/inscription/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},body:JSON.stringify({username:u,email:e,password:p,entreprise:ent,role:r})}).then(function(r){return r.json()}).then(function(d){if(d.status==='success'){msg(d.message,'success');setTimeout(function(){window.location.href='/portail/'},800)}else{msg(d.message,'error')}}).catch(function(){msg('Erreur de connexion au serveur.','error')})}
+</script>
+</body>
+</html>

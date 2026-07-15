@@ -1,0 +1,102 @@
+<!DOCTYPE html>{% load static %}<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Commandes — PixelShop</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,2 93,26 93,74 50,98 7,74 7,26' fill='%231EB482'/%3E%3Cpath d='M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z' fill='white' opacity='0.92'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<style>
+.erp-wrap{padding:9rem 3rem 2rem}
+.erp-h{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}.erp-h h1{font-size:1.5rem}
+.erp-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.8rem;margin:1.5rem 0}
+.erp-stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem;text-align:center}
+.erp-stat .num{font-family:'Space Mono',monospace;font-size:1.3rem;font-weight:700;color:var(--accent)}
+.erp-stat .lbl{font-size:.65rem;color:var(--muted);margin-top:.2rem}
+.erp-section{margin-top:2rem}.erp-section h3{font-size:.9rem;font-weight:600;margin-bottom:.8rem}
+.erp-table{width:100%;border-collapse:collapse;font-size:.72rem;background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.erp-table th{background:rgba(30,180,130,.1);color:var(--accent);padding:.45rem .5rem;text-align:left;font-weight:600;font-size:.6rem;text-transform:uppercase;letter-spacing:.05em}
+.erp-table td{padding:.4rem .5rem;border-bottom:1px solid var(--border);vertical-align:middle}
+.erp-table tr:last-child td{border-bottom:none}
+.erp-table .del{color:#ef4444;text-decoration:none;font-size:.6rem;cursor:pointer}.erp-table .del:hover{text-decoration:underline}
+.stag{font-family:'Space Mono',monospace;font-size:.65rem;color:var(--muted);margin-bottom:.2rem}
+.badge{display:inline-block;padding:.12rem .4rem;border-radius:999px;font-family:'Space Mono',monospace;font-size:.55rem;font-weight:600}
+.badge-panier{background:rgba(107,114,128,.15);color:#9ca3af}
+.badge-en_attente{background:rgba(245,158,11,.15);color:#f59e0b}
+.badge-confirmee{background:rgba(59,130,246,.15);color:#3b82f6}
+.badge-preparation{background:rgba(139,92,246,.15);color:#8b5cf6}
+.badge-expediee{background:rgba(30,180,130,.15);color:#1eb482}
+.badge-livree{background:rgba(30,180,130,.25);color:#1eb482;font-weight:700}
+.badge-annulee{background:rgba(239,68,68,.15);color:#ef4444}
+.statut-form{display:inline-flex;gap:.25rem;align-items:center}
+.statut-form select{padding:.15rem .3rem;border-radius:3px;border:1px solid var(--border);background:#0a1a15;color:#fff;font-family:'Space Mono',monospace;font-size:.55rem}
+.statut-form button{padding:.15rem .4rem;border:none;border-radius:3px;background:var(--accent);color:#05100D;font-weight:700;font-size:.55rem;cursor:pointer;font-family:'Space Mono',monospace}
+.filtres{display:flex;gap:.35rem;flex-wrap:wrap;margin-bottom:1rem}
+.filtres a{padding:.25rem .7rem;border-radius:5px;border:1px solid var(--border);color:var(--muted);text-decoration:none;font-family:'Space Mono',monospace;font-size:.6rem;transition:.2s}
+.filtres a:hover,.filtres a.active{border-color:var(--accent);color:var(--accent);background:rgba(30,180,130,.08)}
+.detail-btn{color:var(--accent);text-decoration:none;font-size:.6rem}
+@media(max-width:768px){.erp-wrap{padding:9rem 1rem 2rem}.erp-table{overflow-x:auto}}
+</style>
+</head>
+<body>
+<svg style="display:none"><defs><symbol id="pxl" viewBox="0 0 100 100"><polygon points="50,2 93,26 93,74 50,98 7,74 7,26" fill="none"/><polygon points="50,2 93,26 70,14" fill="#2DBD6E"/><polygon points="50,2 70,14 50,30 30,14" fill="#3DC87A"/><polygon points="50,2 30,14 7,26" fill="#1EB482"/><polygon points="93,26 93,74 78,50" fill="#1A9BAF"/><polygon points="93,26 78,50 70,14" fill="#1CB89A"/><polygon points="70,14 78,50 50,30" fill="#22C490"/><polygon points="50,30 78,50 60,72 40,72 22,50" fill="#1A9BAF"/><polygon points="7,26 30,14 22,50" fill="#1565C0"/><polygon points="30,14 50,30 22,50" fill="#1878C8"/><polygon points="7,26 22,50 7,74" fill="#1565C0"/><polygon points="7,74 22,50 40,72 50,98 30,86" fill="#1A9BAF"/><polygon points="93,74 78,50 60,72 50,98 70,86" fill="#1565C0"/><polygon points="50,98 70,86 93,74" fill="#1878C8"/><polygon points="50,98 30,86 7,74" fill="#1A9BAF"/><polygon points="40,72 60,72 50,98 30,86" fill="#1CB89A"/><path d="M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z" fill="white" opacity="0.92"/></symbol></defs></svg>
+<nav><a href="/" class="logo"><svg><use href="#pxl"/></svg><div class="logo-text"><strong>Pixel Software Design</strong><span>Gestion des commandes</span></div></a><ul class="nav-menu" id="navMenu"><li><a href="/">Accueil</a></li><li><a href="/ecommerce/">Boutique</a></li><li><a href="/ecommerce/stock/">Stock</a></li></ul><button class="burger" onclick="document.getElementById('navMenu').classList.toggle('open')" aria-label="Menu"><span></span><span></span><span></span></button></nav>
+<div class="erp-wrap">
+<div class="erp-h">
+<div><p class="stag">// PixelShop — Commandes</p><h1>📋 Gestion des commandes</h1></div>
+<a href="/ecommerce/" style="font-size:.65rem;color:var(--accent);text-decoration:none">← PixelShop</a>
+</div>
+
+<div class="erp-stats">
+<div class="erp-stat"><div class="num">{{ stats.total }}</div><div class="lbl">Total</div></div>
+<div class="erp-stat"><div class="num">{{ stats.en_attente }}</div><div class="lbl">En attente</div></div>
+<div class="erp-stat"><div class="num">{{ stats.confirmees }}</div><div class="lbl">Confirmées</div></div>
+<div class="erp-stat"><div class="num">{{ stats.livrees }}</div><div class="lbl">Livrées</div></div>
+</div>
+
+<div class="filtres">
+<a href="/ecommerce/commandes/" class="{% if not statut_filtre %}active{% endif %}">Toutes</a>
+<a href="/ecommerce/commandes/?statut=en_attente" class="{% if statut_filtre == 'en_attente' %}active{% endif %}">En attente</a>
+<a href="/ecommerce/commandes/?statut=confirmee" class="{% if statut_filtre == 'confirmee' %}active{% endif %}">Confirmées</a>
+<a href="/ecommerce/commandes/?statut=livree" class="{% if statut_filtre == 'livree' %}active{% endif %}">Livrées</a>
+</div>
+
+<div class="erp-section">
+<table class="erp-table">
+<thead><tr><th>Réf.</th><th>Client</th><th>Total</th><th>Paiement</th><th>Date</th><th>Statut</th><th>Actions</th></tr></thead>
+<tbody>
+{% for cmd in commandes %}
+<tr>
+<td style="font-family:'Space Mono',monospace;font-size:.6rem">{{ cmd.reference }}</td>
+<td><strong>{{ cmd.client_nom }}</strong><br><span style="font-size:.6rem;color:var(--muted)">{{ cmd.client_email }}</span></td>
+<td style="font-family:'Space Mono',monospace;font-weight:700;color:var(--accent)">{{ cmd.total_ttc }} TND</td>
+<td style="font-size:.6rem">{{ cmd.get_methode_paiement_display }}</td>
+<td style="font-family:'Space Mono',monospace;font-size:.55rem;color:var(--muted);white-space:nowrap">{{ cmd.date_commande|date:"d/m/Y H:i" }}</td>
+<td><span class="badge badge-{{ cmd.statut }}">{{ cmd.get_statut_display }}</span></td>
+<td style="white-space:nowrap">
+<a href="/ecommerce/facture/{{ cmd.id }}/" class="detail-btn" style="margin-right:.4rem" target="_blank">📄 Facture</a>
+<form method="POST" class="statut-form" style="display:inline-flex">{% csrf_token %}
+<input type="hidden" name="commande_id" value="{{ cmd.id }}">
+<select name="statut">
+<option value="en_attente"{% if cmd.statut == 'en_attente' %} selected{% endif %}>En attente</option>
+<option value="confirmee"{% if cmd.statut == 'confirmee' %} selected{% endif %}>Confirmée</option>
+<option value="preparation"{% if cmd.statut == 'preparation' %} selected{% endif %}>Préparation</option>
+<option value="expediee"{% if cmd.statut == 'expediee' %} selected{% endif %}>Expédiée</option>
+<option value="livree"{% if cmd.statut == 'livree' %} selected{% endif %}>Livrée</option>
+<option value="annulee"{% if cmd.statut == 'annulee' %} selected{% endif %}>Annulée</option>
+</select>
+<button type="submit" name="action" value="statut">OK</button>
+<button type="submit" name="action" value="delete" style="background:#ef4444" onclick="return confirm('Supprimer cette commande ?')">✕</button>
+</form>
+</td>
+</tr>
+{% empty %}
+<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--muted)">Aucune commande trouvée.</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+<footer><div style="display:flex;align-items:center;gap:10px"><svg width="24" height="24"><use href="#pxl"/></svg><span class="fcopy">© 2026 Pixel Software Design — PixelShop</span></div><div class="flinks"><a href="/">Accueil</a><a href="/ecommerce/">Boutique</a><a href="/ecommerce/stock/">Stock</a></div></footer>
+</body>
+</html>

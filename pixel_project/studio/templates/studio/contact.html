@@ -1,0 +1,59 @@
+<!DOCTYPE html>{% load static %}<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Contact — Pixel Software Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,2 93,26 93,74 50,98 7,74 7,26' fill='%231EB482'/%3E%3Cpath d='M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z' fill='white' opacity='0.92'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<style>
+.page{padding:9rem 3rem 4rem;max-width:800px;margin:0 auto}
+.page h1{font-size:1.8rem;text-align:center}
+.page .sub{text-align:center;color:var(--muted);font-size:.85rem;max-width:600px;margin:.5rem auto 2.5rem}
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:2rem}
+@media(max-width:768px){.contact-grid{grid-template-columns:1fr}}
+.info-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.5rem;margin-bottom:1rem}
+.info-card .icon{font-size:1.2rem;margin-bottom:.3rem}
+.info-card h3{font-size:.8rem;margin-bottom:.2rem}
+.info-card p{font-size:.75rem;color:var(--muted);margin:0}
+.form-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.5rem}
+.form-card .form-row{margin-bottom:1rem}
+.form-card label{display:block;font-size:.7rem;font-weight:600;margin-bottom:.3rem;color:var(--muted)}
+.form-card input,.form-card textarea{width:100%;padding:.6rem .8rem;background:#0a1a15;border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'Space Grotesk',sans-serif;font-size:.8rem;transition:border-color .2s;box-sizing:border-box}
+.form-card input:focus,.form-card textarea:focus{border-color:var(--accent);outline:none}
+.form-card textarea{min-height:120px;resize:vertical}
+.form-card .btn-p{width:100%;justify-content:center;font-size:.7rem;padding:.6rem;margin-top:.5rem}
+.form-card .error{color:#ef4444;font-size:.75rem;margin-bottom:1rem;text-align:center;padding:.5rem;background:rgba(239,68,68,.1);border-radius:6px}
+.form-card .success{color:var(--accent);font-size:.75rem;margin-bottom:1rem;text-align:center;padding:.5rem;background:rgba(30,180,130,.1);border-radius:6px}
+@media(max-width:768px){.page{padding:9rem 1rem 2rem}}
+</style>
+</head>
+<body>
+<svg style="display:none"><defs><symbol id="pxl" viewBox="0 0 100 100"><polygon points="50,2 93,26 93,74 50,98 7,74 7,26" fill="none"/><polygon points="50,2 93,26 70,14" fill="#2DBD6E"/><polygon points="50,2 70,14 50,30 30,14" fill="#3DC87A"/><polygon points="50,2 30,14 7,26" fill="#1EB482"/><polygon points="93,26 93,74 78,50" fill="#1A9BAF"/><polygon points="93,26 78,50 70,14" fill="#1CB89A"/><polygon points="70,14 78,50 50,30" fill="#22C490"/><polygon points="50,30 78,50 60,72 40,72 22,50" fill="#1A9BAF"/><polygon points="7,26 30,14 22,50" fill="#1565C0"/><polygon points="30,14 50,30 22,50" fill="#1878C8"/><polygon points="7,26 22,50 7,74" fill="#1565C0"/><polygon points="7,74 22,50 40,72 50,98 30,86" fill="#1A9BAF"/><polygon points="93,74 78,50 60,72 50,98 70,86" fill="#1565C0"/><polygon points="50,98 70,86 93,74" fill="#1878C8"/><polygon points="50,98 30,86 7,74" fill="#1A9BAF"/><polygon points="40,72 60,72 50,98 30,86" fill="#1CB89A"/><path d="M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z" fill="white" opacity="0.92"/></symbol></defs></svg>
+<nav><a href="/" class="logo"><svg><use href="#pxl"/></svg><div class="logo-text"><strong>Pixel Software Design</strong><span>L'architecture de l'innovation</span></div></a><ul class="nav-menu" id="navMenu"><li><a href="/">Accueil</a></li><li><a href="/a-propos/">À propos</a></li><li><a href="/temoignages/">Témoignages</a></li><li><a href="/prix/">Prix</a></li><li><a href="/contact/" class="active">Contact</a></li><li><a href="/faq/">FAQ</a></li><li><a href="/login/">Connexion</a></li></ul><button class="burger" onclick="document.getElementById('navMenu').classList.toggle('open')" aria-label="Menu"><span></span><span></span><span></span></button></nav>
+<div class="page">
+<h1><span class="h1-grad">Contactez-nous</span></h1>
+<p class="sub">Une question, un projet, une collaboration ? Nous sommes à votre écoute.</p>
+
+<div class="contact-grid">
+<div>
+<div class="info-card"><div class="icon">📍</div><h3>Adresse</h3><p>Tunis, Tunisie</p></div>
+<div class="info-card"><div class="icon">📞</div><h3>Téléphone</h3><p>+216 XX XXX XXX</p></div>
+<div class="info-card"><div class="icon">✉️</div><h3>Email</h3><p>contact@pixelsoftwaredesign.com</p></div>
+<div class="info-card"><div class="icon">🕐</div><h3>Horaires</h3><p>Lun-Ven : 9h00 – 18h00</p></div>
+</div>
+
+<form class="form-card" method="post">
+{% csrf_token %}
+{% if error %}<div class="error">{{ error }}</div>{% endif %}
+{% if success %}<div class="success">{{ success }}</div>{% endif %}
+<div class="form-row"><label for="nom">Nom complet *</label><input name="nom" id="nom" required placeholder="Votre nom"></div>
+<div class="form-row"><label for="email">Email *</label><input type="email" name="email" id="email" required placeholder="vous@exemple.com"></div>
+
+<div class="form-row"><label for="message">Message *</label><textarea name="message" id="message" required placeholder="Votre message..."></textarea></div>
+<button class="btn-p" type="submit">Envoyer le message</button>
+</form>
+</div>
+</div>
+</body>
+</html>

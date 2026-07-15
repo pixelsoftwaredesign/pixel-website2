@@ -1,0 +1,48 @@
+<!DOCTYPE html>{% load static %}<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Virement bancaire — {{ plan.nom }} — Pixel Software Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,2 93,26 93,74 50,98 7,74 7,26' fill='%231EB482'/%3E%3Cpath d='M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z' fill='white' opacity='0.92'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<style>.pay-page{padding:9rem 1rem 3rem;min-height:100vh;display:flex;align-items:center;justify-content:center}.pay-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:2.5rem;width:100%;max-width:500px}.pay-box .pay-icon{font-size:3rem;text-align:center;margin-bottom:.5rem}.pay-box h1{font-size:1.2rem;text-align:center;margin-bottom:.3rem}.pay-box .sub{font-size:.75rem;color:var(--muted);text-align:center;margin-bottom:1.5rem}.pay-box .coord{background:#0a1a15;border:1px solid var(--border);border-radius:10px;padding:1.2rem;margin-bottom:1.5rem}.pay-box .coord .row{display:flex;justify-content:space-between;padding:.35rem 0;font-size:.72rem;border-bottom:1px solid rgba(255,255,255,.03)}.pay-box .coord .row:last-child{border:none}.pay-box .coord .lbl{color:var(--muted);font-family:'Space Mono',monospace;font-size:.65rem}.pay-box .coord .val{font-weight:600;text-align:right;max-width:55%}.pay-box .coord .highlight{color:var(--accent);font-family:'Space Mono',monospace;font-size:.8rem;letter-spacing:.05em}.pay-box .info{background:rgba(30,180,130,.05);border:1px dashed rgba(30,180,130,.3);border-radius:8px;padding:1rem;margin-bottom:1.2rem;font-size:.75rem}.pay-box .info div{padding:.15rem 0}.pay-box .info .lbl{color:var(--muted);font-size:.65rem;font-family:'Space Mono',monospace}.pay-box .cg{margin-bottom:.9rem}.pay-box .cg label{display:block;font-size:.7rem;color:var(--muted);margin-bottom:.3rem;font-family:'Space Mono',monospace}.pay-box .cg input{width:100%;padding:.6rem .8rem;border-radius:6px;border:1px solid var(--border);background:#0a1a15;color:#fff;font-size:.8rem;outline:none}.pay-box .cg input:focus{border-color:var(--accent)}.pay-box .btn-p{width:100%;justify-content:center;padding:.7rem}.pay-box .error{font-size:.72rem;color:#ef4444;text-align:center;margin-bottom:.8rem;padding:.3rem;background:rgba(239,68,68,.1);border-radius:4px}.pay-box .ref{font-family:'Space Mono',monospace;font-size:.65rem;color:var(--muted);text-align:center;margin-top:1rem}</style>
+</head>
+<body>
+<svg style="display:none"><defs><symbol id="pxl" viewBox="0 0 100 100"><polygon points="50,2 93,26 93,74 50,98 7,74 7,26" fill="none"/><polygon points="50,2 93,26 70,14" fill="#2DBD6E"/><polygon points="50,2 70,14 50,30 30,14" fill="#3DC87A"/><polygon points="50,2 30,14 7,26" fill="#1EB482"/><polygon points="93,26 93,74 78,50" fill="#1A9BAF"/><polygon points="93,26 78,50 70,14" fill="#1CB89A"/><polygon points="70,14 78,50 50,30" fill="#22C490"/><polygon points="50,30 78,50 60,72 40,72 22,50" fill="#1A9BAF"/><polygon points="7,26 30,14 22,50" fill="#1565C0"/><polygon points="30,14 50,30 22,50" fill="#1878C8"/><polygon points="7,26 22,50 7,74" fill="#1565C0"/><polygon points="7,74 22,50 40,72 50,98 30,86" fill="#1A9BAF"/><polygon points="93,74 78,50 60,72 50,98 70,86" fill="#1565C0"/><polygon points="50,98 70,86 93,74" fill="#1878C8"/><polygon points="50,98 30,86 7,74" fill="#1A9BAF"/><polygon points="40,72 60,72 50,98 30,86" fill="#1CB89A"/><path d="M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z" fill="white" opacity="0.92"/></symbol></defs></svg>
+<nav><a href="/" class="logo"><svg><use href="#pxl"/></svg><div class="logo-text"><strong>Pixel Software Design</strong><span>Virement bancaire</span></div></a><ul class="nav-menu" id="navMenu"><li><a href="/">Accueil</a></li><li><a href="/abonnement/">Abonnements</a></li></ul><button class="burger" onclick="document.getElementById('navMenu').classList.toggle('open')" aria-label="Menu"><span></span><span></span><span></span></button></nav>
+<div class="pay-page">
+<div class="pay-box">
+<div class="pay-icon">🏦</div>
+<h1>Virement bancaire</h1>
+<p class="sub">Effectuez un virement vers notre compte bancaire ci-dessous.</p>
+{% if banque %}
+<div class="coord">
+<div class="row"><span class="lbl">Banque</span><span class="val">{{ banque.get_banque_display }}</span></div>
+{% if banque.agence %}<div class="row"><span class="lbl">Agence</span><span class="val">{{ banque.agence }}</span></div>{% endif %}
+<div class="row"><span class="lbl">Titulaire</span><span class="val">{{ banque.titulaire }}</span></div>
+<div class="row"><span class="lbl">RIB</span><span class="val highlight">{{ banque.rib }}</span></div>
+{% if banque.rip %}<div class="row"><span class="lbl">RIP</span><span class="val highlight">{{ banque.rip }}</span></div>{% endif %}
+{% if banque.swift %}<div class="row"><span class="lbl">SWIFT/BIC</span><span class="val">{{ banque.swift }}</span></div>{% endif %}
+</div>
+{% else %}
+<div class="info"><div class="lbl">Coordonnées bancaires non configurées. Contactez-nous.</div></div>
+{% endif %}
+<div class="info">
+<div><span class="lbl">Client</span> {{ sub.client_nom }}</div>
+<div><span class="lbl">Plan</span> {{ plan.nom }}</div>
+<div><span class="lbl">Montant</span> <span style="color:var(--accent);font-weight:700">{{ plan.prix }} TND</span></div>
+<div><span class="lbl">Réf.</span> <span style="font-family:'Space Mono',monospace">{{ paiement.reference }}</span></div>
+</div>
+<p style="font-size:.7rem;color:var(--muted);margin-bottom:.5rem">Après virement, saisissez le numéro de virement :</p>
+{% if error %}<div class="error">{{ error }}</div>{% endif %}
+<form method="POST">{% csrf_token %}
+<div class="cg"><label>Numéro de virement / Référence</label><input type="text" name="transaction_id" placeholder="Ex: VIR-2026-XXX" required></div>
+<button type="submit" class="btn-p">Confirmer le virement →</button>
+</form>
+<div class="ref">Réf: {{ paiement.reference }}</div>
+</div>
+</div>
+<footer><div style="display:flex;align-items:center;gap:10px"><svg width="24" height="24"><use href="#pxl"/></svg><span class="fcopy">© 2026 Pixel Software Design</span></div></footer>
+</body>
+</html>

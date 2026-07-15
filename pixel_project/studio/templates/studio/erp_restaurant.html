@@ -1,0 +1,116 @@
+<!DOCTYPE html>{% load static %}<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Gestion Restaurant — Pixel Software Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,2 93,26 93,74 50,98 7,74 7,26' fill='%231EB482'/%3E%3Cpath d='M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z' fill='white' opacity='0.92'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<style>
+.erp-wrap{padding:9rem 3rem 2rem}.erp-h{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}.erp-h h1{font-size:1.5rem}.erp-h a{padding:.4rem 1rem;border-radius:8px;font-family:'Space Mono',monospace;font-size:.6rem;text-decoration:none;transition:.2s;border:1px solid var(--border);color:var(--muted)}.erp-h a:hover{border-color:var(--accent);color:var(--accent)}
+.erp-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.8rem;margin:1.5rem 0}
+.erp-stat{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem;text-align:center}
+.erp-stat .num{font-family:'Space Mono',monospace;font-size:1.4rem;font-weight:700;color:var(--accent)}
+.erp-stat .lbl{font-size:.7rem;color:var(--muted);margin-top:.2rem}
+.erp-section{margin-top:2rem}.erp-section h3{font-size:.95rem;font-weight:600;margin-bottom:.8rem}
+.erp-table{width:100%;border-collapse:collapse;font-size:.75rem;background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+.erp-table th{background:rgba(30,180,130,.1);color:var(--accent);padding:.5rem .6rem;text-align:left;font-weight:600;font-size:.65rem;text-transform:uppercase;letter-spacing:.05em}
+.erp-table td{padding:.45rem .6rem;border-bottom:1px solid var(--border)}
+.erp-table tr:last-child td{border-bottom:none}
+.erp-table .del{color:#ef4444;text-decoration:none;font-size:.65rem;margin-left:.4rem;cursor:pointer}.erp-table .del:hover{text-decoration:underline}.erp-table .edit{color:var(--accent);text-decoration:none;font-size:.65rem;cursor:pointer}.erp-table .edit:hover{text-decoration:underline}
+.erp-add-form{display:flex;gap:.4rem;flex-wrap:wrap;padding:.6rem;background:rgba(30,180,130,.05);border:1px dashed rgba(30,180,130,.3);border-radius:8px;margin-bottom:.8rem;align-items:center}
+.erp-add-form input,.erp-add-form select{padding:.3rem .5rem;border-radius:4px;border:1px solid var(--border);background:#0a1a15;color:#fff;font-family:'Space Mono',monospace;font-size:.65rem}
+.erp-add-form button{padding:.3rem .7rem;border-radius:4px;border:none;background:var(--accent);color:#05100D;font-weight:700;font-size:.65rem;cursor:pointer;font-family:'Space Mono',monospace}
+.erp-add-form .edit-actions{display:none}.erp-add-form .edit-actions button{padding:.25rem .6rem;border-radius:4px;cursor:pointer;font-weight:700;font-size:.65rem;font-family:'Space Mono',monospace}
+.erp-search{background:transparent;border:1px solid var(--border);border-radius:4px;padding:.25rem .5rem;color:#fff;font-family:'Space Mono',monospace;font-size:.65rem;margin-bottom:.5rem;width:200px;float:right}
+.erp-search::placeholder{color:var(--muted)}.stag{font-family:'Space Mono',monospace;font-size:.65rem;color:var(--muted);margin-bottom:.2rem}.badge-on{color:#1EB482;font-weight:700}.badge-off{color:#ef4444}
+@media(max-width:768px){.erp-wrap{padding:9rem 1rem 2rem}.erp-search{width:100%;float:none}.erp-stats{grid-template-columns:repeat(2,1fr)}.erp-table{display:block;overflow-x:auto;white-space:nowrap}.erp-add-form{flex-direction:column;align-items:stretch}.erp-add-form input,.erp-add-form select{width:100%}}
+</style>
+</head>
+<body>
+<svg style="display:none"><defs><symbol id="pxl" viewBox="0 0 100 100"><polygon points="50,2 93,26 93,74 50,98 7,74 7,26" fill="none"/><polygon points="50,2 93,26 70,14" fill="#2DBD6E"/><polygon points="50,2 70,14 50,30 30,14" fill="#3DC87A"/><polygon points="50,2 30,14 7,26" fill="#1EB482"/><polygon points="93,26 93,74 78,50" fill="#1A9BAF"/><polygon points="93,26 78,50 70,14" fill="#1CB89A"/><polygon points="70,14 78,50 50,30" fill="#22C490"/><polygon points="50,30 78,50 60,72 40,72 22,50" fill="#1A9BAF"/><polygon points="7,26 30,14 22,50" fill="#1565C0"/><polygon points="30,14 50,30 22,50" fill="#1878C8"/><polygon points="7,26 22,50 7,74" fill="#1565C0"/><polygon points="7,74 22,50 40,72 50,98 30,86" fill="#1A9BAF"/><polygon points="93,74 78,50 60,72 50,98 70,86" fill="#1565C0"/><polygon points="50,98 70,86 93,74" fill="#1878C8"/><polygon points="50,98 30,86 7,74" fill="#1A9BAF"/><polygon points="40,72 60,72 50,98 30,86" fill="#1CB89A"/><path d="M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z" fill="white" opacity="0.92"/></symbol></defs></svg>
+<nav><a href="/" class="logo"><svg><use href="#pxl"/></svg><div class="logo-text"><strong>Pixel Software Design</strong><span>Gestion Restaurant</span></div></a><ul class="nav-menu" id="navMenu"><li><a href="/">Accueil</a></li><li><a href="/restaurant/">&#8592; Retour</a></li></ul><button class="burger" onclick="document.getElementById('navMenu').classList.toggle('open')" aria-label="Menu"><span></span><span></span><span></span></button></nav>
+<div class="erp-wrap">
+<div class="erp-h"><div><p class="stag">// Restaurant & Café — Gestion</p><h1>🍽️ Gestion Restaurant</h1></div><a href="/restaurant/">&#8592; Page publique</a></div>
+<div class="erp-stats">
+<div class="erp-stat"><div class="num">{{ total_menus }}</div><div class="lbl">Articles au menu</div></div>
+<div class="erp-stat"><div class="num">{{ menus_disponibles }}</div><div class="lbl">Disponibles</div></div>
+<div class="erp-stat"><div class="num">{{ total_tables }}</div><div class="lbl">Tables</div></div>
+<div class="erp-stat"><div class="num">{{ tables_libres }}</div><div class="lbl">Tables libres</div></div>
+</div>
+<div class="erp-section">
+<h3>📋 Menu</h3>
+<form method="POST" class="erp-add-form">{% csrf_token %}<input type="hidden" name="edit_id" value=""><input type="hidden" name="action" value="add_menu">
+<input type="text" name="nom" placeholder="Nom de l'article" required>
+<select name="categorie"><option value="entree">Entrée</option><option value="plat" selected>Plat</option><option value="dessert">Dessert</option><option value="boisson">Boisson</option><option value="snack">Snack</option><option value="petit-dej">Petit-déjeuner</option></select>
+<input type="number" name="prix" step="0.01" placeholder="Prix TND" required>
+<label style="font-size:.65rem;color:var(--muted)"><input type="checkbox" name="disponible" value="1" checked> Disponible</label>
+<button type="submit" class="btn-add">+ Ajouter</button><span class="edit-actions"><button type="submit" style="background:#1EB482;color:#05100D">✓</button><button type="button" onclick="cancelEdit(this)" style="background:transparent;color:#ef4444;border:1px solid #ef4444">✕</button></span>
+</form>
+<input type="text" class="erp-search" placeholder="🔍 Filtrer..." oninput="filterTable(this)">
+<table class="erp-table"><thead><tr><th>Nom</th><th>Catégorie</th><th>Prix</th><th>Statut</th><th></th></tr></thead>
+<tbody>{% for m in menus %}<tr data-model="menu" data-id="{{ m.id }}">
+<td>{{ m.nom }}</td><td>{{ m.get_categorie_display }}</td><td>{{ m.prix }} TND</td>
+<td>{% if m.disponible %}<span class="badge-on">Dispo</span>{% else %}<span class="badge-off">Indispo</span>{% endif %}</td>
+<td><a href="#" class="edit" onclick="editRecord(this)">✎</a><a href="#" class="del" onclick="if(confirm('Supprimer ?'))fetch('',{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token }}'},body:new URLSearchParams({action:'delete',model:'menu',id:'{{ m.id }}'})}).then(()=>location.reload())">✕</a></td>
+</tr>{% empty %}<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:1rem">Aucun article. Ajoutez-en un !</td></tr>{% endfor %}</tbody></table>
+</div>
+<div class="erp-section">
+<h3>🪑 Tables</h3>
+<form method="POST" class="erp-add-form">{% csrf_token %}<input type="hidden" name="edit_id" value=""><input type="hidden" name="action" value="add_table">
+<input type="text" name="numero" placeholder="N° Table" required>
+<input type="number" name="capacite" placeholder="Capacité" value="4" min="1">
+<select name="statut"><option value="libre">Libre</option><option value="occupee">Occupée</option><option value="reservee">Réservée</option></select>
+<button type="submit" class="btn-add">+ Ajouter</button><span class="edit-actions"><button type="submit" style="background:#1EB482;color:#05100D">✓</button><button type="button" onclick="cancelEdit(this)" style="background:transparent;color:#ef4444;border:1px solid #ef4444">✕</button></span>
+</form>
+<input type="text" class="erp-search" placeholder="🔍 Filtrer..." oninput="filterTable(this)">
+<table class="erp-table"><thead><tr><th>N°</th><th>Capacité</th><th>Statut</th><th></th></tr></thead>
+<tbody>{% for t in tables %}<tr data-model="table" data-id="{{ t.id }}">
+<td>{{ t.numero }}</td><td>{{ t.capacite }} pers.</td>
+<td>{% if t.statut == 'libre' %}<span class="badge-on">Libre</span>{% elif t.statut == 'occupee' %}<span class="badge-off">Occupée</span>{% else %}<span style="color:#F59E0B;font-weight:700">Réservée</span>{% endif %}</td>
+<td><a href="#" class="edit" onclick="editRecord(this)">✎</a><a href="#" class="del" onclick="if(confirm('Supprimer ?'))fetch('',{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token }}'},body:new URLSearchParams({action:'delete',model:'table',id:'{{ t.id }}'})}).then(()=>location.reload())">✕</a></td>
+</tr>{% empty %}<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:1rem">Aucune table.</td></tr>{% endfor %}</tbody></table>
+</div>
+</div>
+<footer><div style="display:flex;align-items:center;gap:10px"><svg width="24" height="24"><use href="#pxl"/></svg><span class="fcopy">© 2026 Pixel Software Design — Restaurant & Café</span></div><div class="flinks"><a href="/">Accueil</a><a href="/restaurant/">Restaurant</a></div></footer>
+<script>
+function editRecord(btn){
+  var sec=btn.closest('.erp-section');
+  var f=sec.querySelector('.erp-add-form');
+  if(!f)return;
+  var tr=btn.closest('tr');
+  f.querySelector('[name=edit_id]').value=tr.dataset.id;
+  var cells=tr.querySelectorAll('td:not(:last-child)');
+  var inputs=f.querySelectorAll('[name]:not([type=hidden]):not([name=csrfmiddlewaretoken]):not([name=action]):not([name=edit_id])');
+  inputs.forEach(function(inp,i){
+    if(!cells[i])return;
+    var v=cells[i].textContent.trim().replace(' TND','').replace(' pers.','');
+    if(inp.tagName=='SELECT'){
+      var o=Array.from(inp.options).find(function(o){return o.textContent.trim()==v;});
+      if(o) inp.value=o.value;
+    } else if(inp.type=='checkbox'){
+      inp.checked=v=='Dispo'||v=='Libre';
+    } else { inp.value=v; }
+  });
+  f.querySelector('.btn-add').style.display='none';
+  f.querySelector('.edit-actions').style.display='inline';
+  f.scrollIntoView({behavior:'smooth',block:'center'});
+}
+function filterTable(inp){
+  var q=inp.value.toLowerCase();
+  var t=inp.closest('.erp-section').querySelector('.erp-table tbody');
+  if(!t)return;
+  Array.from(t.rows).forEach(function(r){
+    r.style.display=r.textContent.toLowerCase().indexOf(q)>-1?'':'none';
+  });
+}
+function cancelEdit(btn){
+  var f=btn.closest('.erp-add-form');
+  f.querySelector('[name=edit_id]').value='';
+  f.querySelectorAll('input:not([type=hidden]),select').forEach(function(e){if(e.type!='checkbox')e.value='';else e.checked=true});
+  f.querySelector('.btn-add').style.display='inline';
+  f.querySelector('.edit-actions').style.display='none';
+}
+</script>
+</body>
+</html>

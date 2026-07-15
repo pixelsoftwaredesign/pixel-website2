@@ -1,0 +1,35 @@
+<!DOCTYPE html>{% load static %}<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Abonnement activé — Pixel Software Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,2 93,26 93,74 50,98 7,74 7,26' fill='%231EB482'/%3E%3Cpath d='M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z' fill='white' opacity='0.92'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<style>.succ-page{padding:9rem 1rem 3rem;min-height:100vh;display:flex;align-items:center;justify-content:center}.succ-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:2.5rem;width:100%;max-width:480px;text-align:center}.succ-box .icon{font-size:3.5rem;margin-bottom:.5rem}.succ-box h1{font-size:1.3rem;color:var(--accent);margin-bottom:.3rem}.succ-box .sub{font-size:.75rem;color:var(--muted);margin-bottom:1.5rem}.succ-box .cle{background:#0a1a15;border:1px dashed var(--accent);border-radius:10px;padding:1rem;margin-bottom:1.5rem}.succ-box .cle .lbl{font-size:.65rem;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:.3rem}.succ-box .cle .code{font-family:'Space Mono',monospace;font-size:1.2rem;font-weight:700;color:var(--accent);letter-spacing:.15em}.succ-box .cle .info{font-size:.62rem;color:var(--muted);margin-top:.5rem}.succ-box .details{text-align:left;background:rgba(30,180,130,.05);border-radius:8px;padding:1rem;margin-bottom:1.5rem;font-size:.72rem}.succ-box .details div{padding:.2rem 0}.succ-box .details .lbl{color:var(--muted);font-family:'Space Mono',monospace;font-size:.62rem}.succ-box .btn-p{display:inline-flex;padding:.6rem 1.5rem;border-radius:8px;background:var(--accent);color:#05100D;font-weight:700;font-size:.7rem;text-decoration:none;font-family:'Space Mono',monospace}</style>
+</head>
+<body>
+<svg style="display:none"><defs><symbol id="pxl" viewBox="0 0 100 100"><polygon points="50,2 93,26 93,74 50,98 7,74 7,26" fill="none"/><polygon points="50,2 93,26 70,14" fill="#2DBD6E"/><polygon points="50,2 70,14 50,30 30,14" fill="#3DC87A"/><polygon points="50,2 30,14 7,26" fill="#1EB482"/><polygon points="93,26 93,74 78,50" fill="#1A9BAF"/><polygon points="93,26 78,50 70,14" fill="#1CB89A"/><polygon points="70,14 78,50 50,30" fill="#22C490"/><polygon points="50,30 78,50 60,72 40,72 22,50" fill="#1A9BAF"/><polygon points="7,26 30,14 22,50" fill="#1565C0"/><polygon points="30,14 50,30 22,50" fill="#1878C8"/><polygon points="7,26 22,50 7,74" fill="#1565C0"/><polygon points="7,74 22,50 40,72 50,98 30,86" fill="#1A9BAF"/><polygon points="93,74 78,50 60,72 50,98 70,86" fill="#1565C0"/><polygon points="50,98 70,86 93,74" fill="#1878C8"/><polygon points="50,98 30,86 7,74" fill="#1A9BAF"/><polygon points="40,72 60,72 50,98 30,86" fill="#1CB89A"/><path d="M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z" fill="white" opacity="0.92"/></symbol></defs></svg>
+<nav><a href="/" class="logo"><svg><use href="#pxl"/></svg><div class="logo-text"><strong>Pixel Software Design</strong><span>Activation</span></div></a><ul class="nav-menu" id="navMenu"><li><a href="/">Accueil</a></li><li><a href="/abonnement/">Abonnements</a></li></ul><button class="burger" onclick="document.getElementById('navMenu').classList.toggle('open')" aria-label="Menu"><span></span><span></span><span></span></button></nav>
+<div class="succ-page">
+<div class="succ-box">
+<div class="icon">🎉</div>
+<h1>Abonnement activé !</h1>
+<p class="sub">Votre abonnement a été activé avec succès. Voici votre clé d'activation :</p>
+<div class="cle">
+<div class="lbl">🔑 Clé d'activation</div>
+<div class="code">{{ code }}</div>
+<div class="info">Conservez cette clé pour activer votre logiciel hors-ligne</div>
+</div>
+<div class="details">
+<div><span class="lbl">Client</span> {{ sub.client_nom }}</div>
+<div><span class="lbl">Plan</span> {{ plan.nom }}</div>
+<div><span class="lbl">Email</span> {{ sub.client_email }}</div>
+<div><span class="lbl">Validité</span> jusqu'au {{ sub.date_fin|date:"d/m/Y" }}</div>
+</div>
+<a href="/" class="btn-p">Retour à l'accueil →</a>
+</div>
+</div>
+<footer><div style="display:flex;align-items:center;gap:10px"><svg width="24" height="24"><use href="#pxl"/></svg><span class="fcopy">© 2026 Pixel Software Design</span></div></footer>
+</body>
+</html>

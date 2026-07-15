@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pixel Software Design — L'architecture de l'innovation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+<svg style="display:none">
+  <defs>
+    <symbol id="pxl" viewBox="0 0 100 100">
+      <polygon points="50,2 93,26 93,74 50,98 7,74 7,26" fill="none"/>
+      <polygon points="50,2 93,26 70,14" fill="#2DBD6E"/>
+      <polygon points="50,2 70,14 50,30 30,14" fill="#3DC87A"/>
+      <polygon points="50,2 30,14 7,26" fill="#1EB482"/>
+      <polygon points="93,26 93,74 78,50" fill="#1A9BAF"/>
+      <polygon points="93,26 78,50 70,14" fill="#1CB89A"/>
+      <polygon points="70,14 78,50 50,30" fill="#22C490"/>
+      <polygon points="50,30 78,50 60,72 40,72 22,50" fill="#1A9BAF"/>
+      <polygon points="7,26 30,14 22,50" fill="#1565C0"/>
+      <polygon points="30,14 50,30 22,50" fill="#1878C8"/>
+      <polygon points="7,26 22,50 7,74" fill="#1565C0"/>
+      <polygon points="7,74 22,50 40,72 50,98 30,86" fill="#1A9BAF"/>
+      <polygon points="93,74 78,50 60,72 50,98 70,86" fill="#1565C0"/>
+      <polygon points="50,98 70,86 93,74" fill="#1878C8"/>
+      <polygon points="50,98 30,86 7,74" fill="#1A9BAF"/>
+      <polygon points="40,72 60,72 50,98 30,86" fill="#1CB89A"/>
+      <path d="M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z" fill="white" opacity="0.92"/>
+    </symbol>
+  </defs>
+</svg>
+
+<nav>
+  <a href="#" class="logo">
+    <svg><use href="#pxl"/></svg>
+    <div class="logo-text">
+      <strong>Pixel Software Design</strong>
+      <span>L'architecture de l'innovation</span>
+    </div>
+  </a>
+  <ul>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#why">Pourquoi nous</a></li>
+    <li><a href="#projects">Projets</a></li>
+    <li><a href="#process">Processus</a></li>
+    <li><a href="#contact" class="nav-cta">Démarrer →</a></li>
+  </ul>
+</nav>
+
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-inner">
+    <div class="hero-tag">Studio Multidisciplinaire · Tunis</div>
+    <h1>L'architecture<br>de <span class="h1-grad">l'innovation</span></h1>
+    <p class="h1-sub">Là où l'espace rencontre l'intelligence.</p>
+    <p class="hero-desc">Pixel Software Design fusionne le design d'intérieur, le développement logiciel, l'intelligence artificielle et le multimédia — créant des écosystèmes intelligents où le physique et le numérique coexistent en harmonie.</p>
+    <div class="hero-btns">
+      <a href="#services" class="btn-p">Découvrir nos services →</a>
+      <a href="#contact" class="btn-s">Démarrer un projet</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hstat"><div class="n">4</div><div class="l">Disciplines</div></div>
+      <div class="hstat"><div class="n">48+</div><div class="l">Projets livrés</div></div>
+      <div class="hstat"><div class="n">100%</div><div class="l">Clients satisfaits</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="manifesto">
+  <div>
+    <p class="stag">// Notre vision</p>
+    <h2 class="stitle">Un organisme intelligent qui évolue avec vous</h2>
+    <p class="manifesto-quote">
+      Nous ne nous contentons pas de concevoir des environnements :<br>
+      nous créons des <strong>écosystèmes intelligents</strong> où le monde physique et le monde numérique coexistent en parfaite harmonie.
+    </p>
+    <p style="font-size:.88rem;color:var(--muted);line-height:1.75;margin-top:1.5rem;max-width:500px;">Notre mission est de transformer chaque espace — maison, bureau ou commerce — en une expérience interactive, efficiente et technologiquement avancée.</p>
+  </div>
+  <div>
+    <div class="pillars">
+      <div class="pillar"><h4>🤖 Intelligence Artificielle</h4><p>Algorithmes sur mesure intégrés dans vos espaces et processus métier.</p></div>
+      <div class="pillar"><h4>💻 Logiciel &amp; IoT</h4><p>Applications, web, objets connectés qui communiquent en temps réel.</p></div>
+      <div class="pillar"><h4>🏛️ Design d'Intérieur</h4><p>Architecture intérieure contemporaine résidentielle et professionnelle.</p></div>
+      <div class="pillar"><h4>🎬 Multimédia &amp; VR/AR</h4><p>Rendus 3D, visites virtuelles et expériences immersives.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec sec-bg" id="services">
+  <p class="stag">// Nos Services</p>
+  <h2 class="stitle">Quatre disciplines, une vision unifiée</h2>
+  <p class="ssub">De la disposition d'un meuble à l'écriture du code qui en contrôle l'éclairage via l'IA — nous gérons l'intégralité de la chaîne.</p>
+  <div class="services-wrap">
+    <div class="svc-card">
+      <span class="svc-num">01</span>
+      <h3>Intelligence Artificielle &amp; Solutions Digitales</h3>
+      <div class="svc-item"><h4>Intégration d'IA Personnalisée</h4><p>Algorithmes d'IA pour optimiser la gestion des espaces et automatiser des processus métier complexes.</p></div>
+      <div class="svc-item"><h4>Stratégies de Transformation Digitale</h4><p>Digitalisation complète de votre activité : gestion des données cloud, écosystèmes numériques intégrés.</p></div>
+    </div>
+    <div class="svc-card">
+      <span class="svc-num">02</span>
+      <h3>Développement Logiciel &amp; Conseil IT</h3>
+      <div class="svc-item"><h4>Logiciels sur Mesure</h4><p>Applications mobiles, plateformes web et logiciels de gestion avec interfaces UI/UX de dernière génération.</p></div>
+      <div class="svc-item"><h4>Conseil Stratégique IT</h4><p>Analyse technique pour le choix des infrastructures hardware et software, sécurité et évolutivité.</p></div>
+      <div class="svc-item"><h4>Systèmes IoT</h4><p>Objets du quotidien rendus "intelligents", connectés via des protocoles sécurisés.</p></div>
+    </div>
+    <div class="svc-card">
+      <span class="svc-num">03</span>
+      <h3>Design d'Intérieur &amp; Espaces Intelligents</h3>
+      <div class="svc-item"><h4>Design d'Intérieur Évolué</h4><p>Architecture intérieure alliant esthétique contemporaine et fonctionnalité technique.</p></div>
+      <div class="svc-item"><h4>Domotique Avancée</h4><p>Technologies Smart Home pour le contrôle total de l'éclairage, du climat, de la sécurité.</p></div>
+    </div>
+    <div class="svc-card">
+      <span class="svc-num">04</span>
+      <h3>Multimédia &amp; Expériences Immersives</h3>
+      <div class="svc-item"><h4>Visualisation 3D &amp; Visites Virtuelles</h4><p>Rendus photoréalistes et visites immersives en VR/AR pour explorer le projet avant sa réalisation.</p></div>
+      <div class="svc-item"><h4>Production Multimédia</h4><p>Vidéo, motion graphics et installations interactives pour une communication à fort impact.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="why">
+  <div>
+    <p class="stag">// Pourquoi nous choisir</p>
+    <h2 class="stitle">L'unique partenaire de la chaîne complète</h2>
+    <p class="ssub">De la disposition d'un meuble à l'écriture du code qui en contrôle l'éclairage via l'IA.</p>
+    <div class="usp-list">
+      <div class="usp-item"><div class="usp-dot"></div><div><h4>Vision 360° du projet</h4><p>Une seule équipe maîtrise design, développement, IA et multimédia.</p></div></div>
+      <div class="usp-item"><div class="usp-dot"></div><div><h4>Technologie native, pas ajoutée</h4><p>L'intelligence est intégrée dès la conception, pas branchée après coup.</p></div></div>
+      <div class="usp-item"><div class="usp-dot"></div><div><h4>Écosystèmes qui évoluent</h4><p>Nos solutions s'adaptent et grandissent avec vous. Votre espace devient un organisme vivant.</p></div></div>
+      <div class="usp-item"><div class="usp-dot"></div><div><h4>Expertise multisectorielle</h4><p>Résidentiel, retail, corporate, santé — expérience transversale.</p></div></div>
+    </div>
+  </div>
+  <div class="why-visual">
+    <canvas id="why-canvas" width="380" height="380"></canvas>
+  </div>
+</section>
+
+<section class="sec sec-bg" id="projects">
+  <div class="phead">
+    <div>
+      <p class="stag">// Réalisations</p>
+      <h2 class="stitle">Projets récents</h2>
+    </div>
+    <a href="#contact" class="btn-s" style="white-space:nowrap">Tous les projets →</a>
+  </div>
+  <div class="proj-grid">
+    <div class="proj-card feat">
+      <div class="proj-vis" style="height:280px"><canvas id="pc1" width="480" height="280"></canvas></div>
+      <div class="proj-meta">
+        <div class="proj-tag">Smart Home · IA · Design</div>
+        <h3>Villa Jasmine — Résidence Intelligente</h3>
+        <p>Domotique complète + IA + design intérieur contemporain. Contrôle vocal, gestion énergétique prédictive.</p>
+      </div>
+    </div>
+    <div class="proj-card">
+      <div class="proj-vis" style="height:130px"><canvas id="pc2" width="230" height="130"></canvas></div>
+      <div class="proj-meta">
+        <div class="proj-tag">Logiciel · IoT · SaaS</div>
+        <h3>Noor Analytics — Plateforme intelligente</h3>
+      </div>
+    </div>
+    <div class="proj-card">
+      <div class="proj-vis" style="height:130px"><canvas id="pc3" width="230" height="130"></canvas></div>
+      <div class="proj-meta">
+        <div class="proj-tag">VR · 3D · Retail</div>
+        <h3>Zaytouna — Visite virtuelle immersive</h3>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="process">
+  <div>
+    <p class="stag">// Processus</p>
+    <h2 class="stitle">Du concept à l'écosystème</h2>
+    <p class="ssub">Un processus transparent, itératif et collaboratif.</p>
+    <div class="steps">
+      <div class="step"><div class="step-n">01</div><div><h4>Découverte &amp; Stratégie</h4><p>Audit, analyse des besoins, feuille de route complète.</p></div></div>
+      <div class="step"><div class="step-n">02</div><div><h4>Design &amp; Architecture</h4><p>Plans d'intérieur, maquettes UI/UX, schémas IoT.</p></div></div>
+      <div class="step"><div class="step-n">03</div><div><h4>Développement &amp; Intégration</h4><p>Code, hardware, domotique, IA — développement parallèle.</p></div></div>
+      <div class="step"><div class="step-n">04</div><div><h4>Tests &amp; Déploiement</h4><p>Tests complets, formation, déploiement progressif.</p></div></div>
+      <div class="step"><div class="step-n">05</div><div><h4>Suivi &amp; Évolution</h4><p>Monitoring continu, mises à jour, nouvelles fonctionnalités.</p></div></div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:center">
+    <canvas id="proc-canvas" width="340" height="380"></canvas>
+  </div>
+</section>
+
+<section class="sec sec-bg">
+  <p class="stag">// Témoignages</p>
+  <h2 class="stitle">Ce que disent nos clients</h2>
+  <div class="tgrid">
+    <div class="tcard">
+      <p class="tq">"Pixel Software a transformé notre villa en un écosystème vivant. L'éclairage, la sécurité et le confort s'adaptent à notre quotidien."</p>
+      <div class="tauthor">
+        <div class="tavatar" style="background:rgba(30,180,130,.18);color:#1EB482">MA</div>
+        <div><div class="tname">Mehdi Abdelkader</div><div class="trole">Propriétaire, Villa Jasmine</div></div>
+      </div>
+    </div>
+    <div class="tcard">
+      <p class="tq">"Une équipe rare qui parle à la fois le langage du designer et celui de l'ingénieur. Cohérent du sol au plafond — et jusqu'au serveur."</p>
+      <div class="tauthor">
+        <div class="tavatar" style="background:rgba(26,155,175,.18);color:#1A9BAF">SB</div>
+        <div><div class="tname">Sirine Bouzid</div><div class="trole">Directrice, Zaytouna Retail</div></div>
+      </div>
+    </div>
+    <div class="tcard">
+      <p class="tq">"La plateforme Noor nous a permis de réduire nos coûts opérationnels de 30% dès le premier trimestre."</p>
+      <div class="tauthor">
+        <div class="tavatar" style="background:rgba(21,101,192,.18);color:#4A8FD4">KM</div>
+        <div><div class="tname">Karim Maatallah</div><div class="trole">CEO, Noor Analytics</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="pricing">
+  <div style="text-align:center;margin-bottom:2.5rem">
+    <p class="stag">// Tarifs</p>
+    <h2 class="stitle">Transparent dès le départ</h2>
+    <p class="ssub" style="margin:0 auto;text-align:center">Des forfaits pour chaque niveau de projet.</p>
+  </div>
+  <div class="pgrid">
+    <div class="pcard">
+      <div class="pname">Essentiel</div>
+      <div class="pamount">3 000 DT <span>/ projet</span></div>
+      <div class="pdesc">Une discipline principale, un livrable clair.</div>
+      <ul class="pfeats">
+        <li>Site web ou application mobile</li>
+        <li>Design UI/UX complet</li>
+        <li>Design d'intérieur 1 pièce</li>
+        <li>Rendu 3D inclus</li>
+        <li>1 révision majeure</li>
+        <li>Livraison en 4 semaines</li>
+      </ul>
+      <a href="#contact" class="btn-s">Démarrer</a>
+    </div>
+    <div class="pcard feat">
+      <div class="pbadge">POPULAIRE</div>
+      <div class="pname">Studio</div>
+      <div class="pamount">9 500 DT <span>/ projet</span></div>
+      <div class="pdesc">Combinaison multidisciplinaire complète.</div>
+      <ul class="pfeats">
+        <li>2–3 disciplines combinées</li>
+        <li>Intégration IoT basique</li>
+        <li>Design d'intérieur complet</li>
+        <li>Web app ou logiciel sur mesure</li>
+        <li>Visite virtuelle 3D</li>
+        <li>3 révisions incluses</li>
+        <li>Support 6 mois post-livraison</li>
+      </ul>
+      <a href="#contact" class="btn-p">Démarrer →</a>
+    </div>
+    <div class="pcard">
+      <div class="pname">Écosystème</div>
+      <div class="pamount">Sur devis</div>
+      <div class="pdesc">Projet complet, IA avancée, espace intelligent total.</div>
+      <ul class="pfeats">
+        <li>4 disciplines intégrées</li>
+        <li>IA sur mesure &amp; IoT avancé</li>
+        <li>Smart Home / Smart Office</li>
+        <li>Plateforme logicielle dédiée</li>
+        <li>Contrat de maintenance</li>
+        <li>Équipe dédiée &amp; SLA garanti</li>
+      </ul>
+      <a href="#contact" class="btn-s">Nous contacter</a>
+    </div>
+  </div>
+</section>
+
+<section class="sec sec-bg" id="contact">
+  <div>
+    <p class="stag">// Contact</p>
+    <h2 class="stitle">Démarrons votre écosystème intelligent</h2>
+    <p class="ssub">Décrivez-nous votre vision — nous vous répondons sous 24h.</p>
+    <div class="cinfo">
+      <div class="cinfo-item"><div class="ci">📍</div><span>Tunis, Tunisie</span></div>
+      <div class="cinfo-item"><div class="ci">✉️</div><span>hello@pixelsoft.design</span></div>
+      <div class="cinfo-item"><div class="ci">📞</div><span>+216 74 000 000</span></div>
+      <div class="cinfo-item"><div class="ci">🕐</div><span>Lun–Ven, 9h–18h</span></div>
+    </div>
+    <div style="margin-top:2rem;display:flex;align-items:center;gap:12px">
+      <svg width="48" height="48"><use href="#pxl"/></svg>
+      <div>
+        <div style="font-weight:700;font-size:.95rem">Pixel Software Design</div>
+        <div style="font-size:.7rem;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:.08em;margin-top:.1rem">L'architecture de l'innovation</div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <form class="cform" id="projectForm" onsubmit="handleFormSubmit(event)">
+      <div class="crow">
+        <div class="cg"><label>Prénom</label><input type="text" id="username" placeholder="Ahmed" required></div>
+        <div class="cg"><label>Email professionnel</label><input type="email" id="useremail" placeholder="ahmed@exemple.com" required></div>
+      </div>
+      <div class="cg"><label>Votre vision</label><textarea id="usermessage" placeholder="Décrivez votre projet, vos objectifs..." required></textarea></div>
+      <button class="btn-p" type="submit">Envoyer ma demande →</button>
+      <div id="formStatus"></div>
+    </form>
+  </div>
+</section>
+
+<footer>
+  <div style="display:flex;align-items:center;gap:10px">
+    <svg width="24" height="24"><use href="#pxl"/></svg>
+    <span class="fcopy">© 2026 Pixel Software Design · Tunis, Tunisie</span>
+  </div>
+  <div class="flinks">
+    <a href="#">LinkedIn</a><a href="#">Behance</a><a href="#">GitHub</a>
+  </div>
+</footer>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+</html>

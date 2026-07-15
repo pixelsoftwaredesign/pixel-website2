@@ -1,0 +1,652 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pixel Software Design — L'architecture de l'innovation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#05100D;
+  --surface:#081A14;
+  --card:#0C2018;
+  --border:rgba(30,180,130,0.14);
+  --accent:#1EB482;
+  --a2:#1A9BAF;
+  --a3:#2DBD6E;
+  --a4:#1565C0;
+  --text:#E8F5F0;
+  --muted:rgba(232,245,240,0.55);
+}
+html{scroll-behavior:smooth}
+body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden;line-height:1.65}
+a{text-decoration:none}
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:1rem 5rem;
+  background:rgba(5,16,13,.88);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+}
+.logo{display:flex;align-items:center;gap:11px;color:var(--text)}
+.logo svg{width:36px;height:36px;flex-shrink:0}
+.logo-text{line-height:1.15}
+.logo-text strong{font-size:.95rem;font-weight:700;letter-spacing:-.01em}
+.logo-text span{font-size:.62rem;color:var(--accent);font-family:'Space Mono',monospace;letter-spacing:.1em;text-transform:uppercase}
+nav ul{list-style:none;display:flex;gap:2.2rem}
+nav ul a{color:var(--muted);font-size:.85rem;transition:color .2s}
+nav ul a:hover{color:var(--text)}
+.nav-cta{background:var(--accent)!important;color:#05100D!important;padding:.45rem 1.2rem;border-radius:6px;font-weight:700!important;font-size:.85rem!important}
+.nav-cta:hover{opacity:.88}
+
+#hero{
+  min-height:100vh;display:flex;flex-direction:column;justify-content:center;
+  padding:9rem 5rem 5rem;position:relative;overflow:hidden;
+}
+#hero canvas{position:absolute;inset:0;pointer-events:none;z-index:0}
+.hero-inner{position:relative;z-index:1;max-width:800px}
+.hero-tag{
+  display:inline-flex;align-items:center;gap:.6rem;
+  font-family:'Space Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.18em;color:var(--accent);
+  border:1px solid rgba(30,180,130,.3);padding:.35rem .9rem;border-radius:999px;margin-bottom:2rem;
+}
+.hero-tag::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--accent);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+h1{font-size:clamp(2.5rem,5.5vw,4.5rem);font-weight:700;line-height:1.06;letter-spacing:-.03em;margin-bottom:.75rem}
+.h1-sub{font-size:clamp(1.1rem,1.8vw,1.4rem);font-weight:300;color:var(--muted);margin-bottom:1rem}
+.h1-grad{
+  background:linear-gradient(120deg,var(--a3) 0%,var(--a2) 45%,var(--a4) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.hero-desc{font-size:.98rem;color:var(--muted);max-width:560px;line-height:1.8;margin-bottom:2.5rem}
+.hero-btns{display:flex;gap:1rem;flex-wrap:wrap}
+.btn-p{
+  background:var(--accent);color:#05100D;padding:.85rem 2rem;border-radius:8px;
+  font-size:.88rem;font-weight:700;transition:transform .2s,opacity .2s;display:inline-flex;align-items:center;gap:.5rem;border:none;cursor:pointer;font-family:inherit;
+}
+.btn-p:hover{transform:translateY(-2px);opacity:.9}
+.btn-s{
+  border:1px solid var(--border);color:var(--text);padding:.85rem 2rem;border-radius:8px;
+  font-size:.88rem;font-weight:500;transition:border-color .2s,background .2s;display:inline-flex;align-items:center;gap:.5rem;font-family:inherit;cursor:pointer;background:transparent;
+}
+.btn-s:hover{border-color:var(--accent);background:rgba(30,180,130,.05)}
+.hero-stats{display:flex;gap:3rem;margin-top:4rem;padding-top:2rem;border-top:1px solid var(--border);flex-wrap:wrap}
+.hstat .n{font-family:'Space Mono',monospace;font-size:1.5rem;font-weight:700;color:var(--accent)}
+.hstat .l{font-size:.72rem;color:var(--muted);margin-top:.2rem}
+
+.sec{padding:7rem 5rem}
+.sec-bg{background:var(--surface)}
+.sec+.sec{border-top:1px solid var(--border)}
+.stag{font-family:'Space Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.18em;color:var(--accent);margin-bottom:.8rem}
+.stitle{font-size:clamp(1.6rem,3vw,2.3rem);font-weight:700;letter-spacing:-.025em;margin-bottom:.8rem}
+.ssub{font-size:.95rem;color:var(--muted);max-width:540px;line-height:1.75;margin-bottom:3rem}
+
+#manifesto{display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:center}
+.manifesto-quote{
+  font-size:clamp(1.15rem,2vw,1.6rem);font-weight:300;line-height:1.7;
+  color:var(--muted);font-style:italic;border-left:2px solid var(--accent);padding-left:2rem;
+}
+.manifesto-quote strong{color:var(--text);font-weight:600;font-style:normal}
+.pillars{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}
+.pillar{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.25rem;transition:border-color .2s}
+.pillar:hover{border-color:rgba(30,180,130,.4)}
+.pillar h4{font-size:.88rem;font-weight:600;margin-bottom:.3rem}
+.pillar p{font-size:.76rem;color:var(--muted);line-height:1.6}
+
+.services-wrap{display:grid;grid-template-columns:repeat(auto-fit,minmax(400px,1fr));gap:1.25rem;margin-top:3rem}
+.svc-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:2.2rem;transition:border-color .3s,transform .3s}
+.svc-card:hover{border-color:rgba(30,180,130,.4);transform:translateY(-3px)}
+.svc-num{font-family:'Space Mono',monospace;font-size:.7rem;color:var(--accent);display:block;margin-bottom:.5rem}
+.svc-card h3{font-size:1.15rem;font-weight:700;margin-bottom:1.2rem;line-height:1.3}
+.svc-item:not(:last-child){margin-bottom:1.1rem}
+.svc-item h4{font-size:.9rem;font-weight:600;margin-bottom:.25rem;display:flex;align-items:center;gap:.5rem}
+.svc-item h4::before{content:'▹';color:var(--accent);font-family:'Space Mono',monospace}
+.svc-item p{font-size:.82rem;color:var(--muted);line-height:1.6;padding-left:1.2rem}
+
+#why{display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:center}
+.why-visual{display:flex;align-items:center;justify-content:center}
+.usp-list{display:flex;flex-direction:column;gap:.7rem;margin-top:1.5rem}
+.usp-item{display:flex;gap:1rem;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem 1.25rem;transition:border-color .2s}
+.usp-item:hover{border-color:rgba(30,180,130,.4)}
+.usp-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:.35rem}
+.usp-item h4{font-size:.85rem;font-weight:600;margin-bottom:.2rem}
+.usp-item p{font-size:.76rem;color:var(--muted);line-height:1.55}
+
+#projects .phead{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:2.5rem;flex-wrap:wrap;gap:1rem}
+.proj-grid{display:grid;grid-template-columns:1.6fr 1fr;grid-template-rows:auto auto;gap:1rem}
+.proj-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;transition:border-color .25s}
+.proj-card:hover{border-color:rgba(30,180,130,.45)}
+.proj-card.feat{grid-row:span 2}
+.proj-vis{width:100%;display:flex;align-items:center;justify-content:center;background:#060E0A;overflow:hidden}
+.proj-meta{padding:1.2rem 1.5rem}
+.proj-tag{font-family:'Space Mono',monospace;font-size:.58rem;text-transform:uppercase;letter-spacing:.1em;color:var(--a2);margin-bottom:.3rem}
+.proj-meta h3{font-size:.88rem;font-weight:600;margin-bottom:.2rem}
+.proj-meta p{font-size:.76rem;color:var(--muted);line-height:1.6}
+
+#process{display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:center}
+.steps{margin-top:1.5rem}
+.step{display:flex;gap:1.25rem;padding:1.2rem 0;border-bottom:1px solid var(--border)}
+.step:last-child{border-bottom:none}
+.step-n{font-family:'Space Mono',monospace;font-size:.65rem;color:var(--accent);font-weight:700;width:30px;height:30px;border:1px solid rgba(30,180,130,.3);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.step h4{font-size:.85rem;font-weight:600;margin-bottom:.25rem}
+.step p{font-size:.78rem;color:var(--muted);line-height:1.6}
+
+.tgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.2rem;margin-top:2.5rem}
+.tcard{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.6rem}
+.tq{font-size:.82rem;color:var(--muted);line-height:1.75;margin-bottom:1.2rem;font-style:italic}
+.tauthor{display:flex;align-items:center;gap:.75rem}
+.tavatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;font-family:'Space Mono',monospace;flex-shrink:0}
+.tname{font-size:.8rem;font-weight:600}
+.trole{font-size:.7rem;color:var(--muted)}
+
+.pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1.2rem;max-width:920px;margin:0 auto}
+.pcard{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:2rem;position:relative}
+.pcard.feat{border-color:var(--accent);background:linear-gradient(180deg,rgba(30,180,130,.07) 0%,var(--card) 100%)}
+.pbadge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--accent);color:#05100D;font-size:.62rem;font-weight:700;padding:.2rem .8rem;border-radius:999px;font-family:'Space Mono',monospace;white-space:nowrap}
+.pname{font-size:.75rem;color:var(--muted);margin-bottom:.4rem}
+.pamount{font-family:'Space Mono',monospace;font-size:1.8rem;font-weight:700;margin-bottom:.2rem}
+.pamount span{font-size:.8rem;color:var(--muted);font-weight:400}
+.pdesc{font-size:.76rem;color:var(--muted);margin-bottom:1.2rem;line-height:1.5}
+.pfeats{list-style:none;margin-bottom:1.8rem}
+.pfeats li{font-size:.8rem;padding:.3rem 0;color:var(--muted);display:flex;align-items:flex-start;gap:.5rem}
+.pfeats li::before{content:'▸';color:var(--accent);font-size:.65rem;flex-shrink:0;margin-top:.15rem}
+.pcard .btn-p,.pcard .btn-s{width:100%;justify-content:center;text-align:center}
+
+#contact{display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:start}
+.cform{display:flex;flex-direction:column;gap:.9rem}
+.crow{display:grid;grid-template-columns:1fr 1fr;gap:.9rem}
+.cg{display:flex;flex-direction:column;gap:.3rem}
+.cg label{font-size:.7rem;color:var(--muted);font-family:'Space Mono',monospace}
+.cg input,.cg textarea,.cg select{background:var(--card);border:1px solid var(--border);color:var(--text);padding:.65rem .9rem;border-radius:8px;font-family:'Space Grotesk',sans-serif;font-size:.85rem;transition:border-color .2s;outline:none}
+.cg input:focus,.cg textarea:focus,.cg select:focus{border-color:var(--accent)}
+.cg textarea{resize:vertical;min-height:100px}
+.cg select option{background:#081A14}
+.cinfo{margin-top:2rem;display:flex;flex-direction:column;gap:.6rem}
+.cinfo-item{font-size:.8rem;color:var(--muted);display:flex;align-items:center;gap:.6rem}
+.cinfo-item .ci{width:26px;height:26px;border-radius:6px;background:rgba(30,180,130,.1);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.8rem;flex-shrink:0}
+
+footer{padding:2.5rem 5rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}
+.fcopy{font-size:.75rem;color:var(--muted)}
+.flinks{display:flex;gap:1.5rem}
+.flinks a{font-size:.75rem;color:var(--muted);transition:color .2s}
+.flinks a:hover{color:var(--accent)}
+
+@media(max-width:960px){
+  nav{padding:.8rem 1.5rem}nav ul{display:none}
+  .sec{padding:5rem 1.5rem}
+  #hero{padding:7rem 1.5rem 3rem;min-height:auto}
+  #manifesto,#why,#process,#contact{grid-template-columns:1fr;gap:2.5rem}
+  .proj-grid{grid-template-columns:1fr}.proj-card.feat{grid-row:span 1}
+  .services-wrap{grid-template-columns:1fr}
+  .hero-stats{gap:1.5rem}
+  .pgrid{grid-template-columns:1fr}
+  footer{flex-direction:column;text-align:center;padding:2rem 1.5rem}
+  .crow{grid-template-columns:1fr}
+  .pillars{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<svg style="display:none">
+  <defs>
+    <symbol id="pxl" viewBox="0 0 100 100">
+      <polygon points="50,2 93,26 93,74 50,98 7,74 7,26" fill="none"/>
+      <polygon points="50,2 93,26 70,14" fill="#2DBD6E"/>
+      <polygon points="50,2 70,14 50,30 30,14" fill="#3DC87A"/>
+      <polygon points="50,2 30,14 7,26" fill="#1EB482"/>
+      <polygon points="93,26 93,74 78,50" fill="#1A9BAF"/>
+      <polygon points="93,26 78,50 70,14" fill="#1CB89A"/>
+      <polygon points="70,14 78,50 50,30" fill="#22C490"/>
+      <polygon points="50,30 78,50 60,72 40,72 22,50" fill="#1A9BAF"/>
+      <polygon points="7,26 30,14 22,50" fill="#1565C0"/>
+      <polygon points="30,14 50,30 22,50" fill="#1878C8"/>
+      <polygon points="7,26 22,50 7,74" fill="#1565C0"/>
+      <polygon points="7,74 22,50 40,72 50,98 30,86" fill="#1A9BAF"/>
+      <polygon points="93,74 78,50 60,72 50,98 70,86" fill="#1565C0"/>
+      <polygon points="50,98 70,86 93,74" fill="#1878C8"/>
+      <polygon points="50,98 30,86 7,74" fill="#1A9BAF"/>
+      <polygon points="40,72 60,72 50,98 30,86" fill="#1CB89A"/>
+      <path d="M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z" fill="white" opacity="0.92"/>
+    </symbol>
+  </defs>
+</svg>
+
+<nav>
+  <a href="#" class="logo">
+    <svg><use href="#pxl"/></svg>
+    <div class="logo-text">
+      <strong>Pixel Software Design</strong>
+      <span>L'architecture de l'innovation</span>
+    </div>
+  </a>
+  <ul>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#why">Pourquoi nous</a></li>
+    <li><a href="#projects">Projets</a></li>
+    <li><a href="#process">Processus</a></li>
+    <li><a href="#contact" class="nav-cta">Démarrer →</a></li>
+  </ul>
+</nav>
+
+<section id="hero">
+  <canvas id="hero-canvas"></canvas>
+  <div class="hero-inner">
+    <div class="hero-tag">Studio Multidisciplinaire · Tunis</div>
+    <h1>L'architecture<br>de <span class="h1-grad">l'innovation</span></h1>
+    <p class="h1-sub">Là où l'espace rencontre l'intelligence.</p>
+    <p class="hero-desc">Pixel Software Design fusionne le design d'intérieur, le développement logiciel, l'intelligence artificielle et le multimédia — créant des écosystèmes intelligents où le physique et le numérique coexistent en harmonie.</p>
+    <div class="hero-btns">
+      <a href="#services" class="btn-p">Découvrir nos services →</a>
+      <a href="#contact" class="btn-s">Démarrer un projet</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hstat"><div class="n">4</div><div class="l">Disciplines</div></div>
+      <div class="hstat"><div class="n">48+</div><div class="l">Projets livrés</div></div>
+      <div class="hstat"><div class="n">100%</div><div class="l">Clients satisfaits</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="manifesto">
+  <div>
+    <p class="stag">// Notre vision</p>
+    <h2 class="stitle">Un organisme intelligent qui évolue avec vous</h2>
+    <p class="manifesto-quote">
+      Nous ne nous contentons pas de concevoir des environnements :<br>
+      nous créons des <strong>écosystèmes intelligents</strong> où le monde physique et le monde numérique coexistent en parfaite harmonie.
+    </p>
+    <p style="font-size:.88rem;color:var(--muted);line-height:1.75;margin-top:1.5rem;max-width:500px;">Notre mission est de transformer chaque espace — maison, bureau ou commerce — en une expérience interactive, efficiente et technologiquement avancée.</p>
+  </div>
+  <div>
+    <div class="pillars">
+      <div class="pillar">
+        <h4>🤖 Intelligence Artificielle</h4>
+        <p>Algorithmes sur mesure intégrés dans vos espaces et processus métier.</p>
+      </div>
+      <div class="pillar">
+        <h4>💻 Logiciel &amp; IoT</h4>
+        <p>Applications, web, objets connectés qui communiquent en temps réel.</p>
+      </div>
+      <div class="pillar">
+        <h4>🏛️ Design d'Intérieur</h4>
+        <p>Architecture intérieure contemporaine résidentielle et professionnelle.</p>
+      </div>
+      <div class="pillar">
+        <h4>🎬 Multimédia &amp; VR/AR</h4>
+        <p>Rendus 3D, visites virtuelles et expériences immersives.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec sec-bg" id="services">
+  <p class="stag">// Nos Services</p>
+  <h2 class="stitle">Quatre disciplines, une vision unifiée</h2>
+  <p class="ssub">De la disposition d'un meuble à l'écriture du code qui en contrôle l'éclairage via l'IA — nous gérons l'intégralité de la chaîne.</p>
+  <div class="services-wrap">
+    <div class="svc-card">
+      <span class="svc-num">01</span>
+      <h3>Intelligence Artificielle &amp; Solutions Digitales</h3>
+      <div class="svc-item"><h4>Intégration d'IA Personnalisée</h4><p>Algorithmes d'IA pour optimiser la gestion des espaces et automatiser des processus métier complexes. Solutions prédictives adaptées à votre secteur.</p></div>
+      <div class="svc-item"><h4>Stratégies de Transformation Digitale</h4><p>Digitalisation complète de votre activité : gestion des données cloud, écosystèmes numériques intégrés et évolutifs.</p></div>
+    </div>
+    <div class="svc-card">
+      <span class="svc-num">02</span>
+      <h3>Développement Logiciel &amp; Conseil IT</h3>
+      <div class="svc-item"><h4>Logiciels sur Mesure</h4><p>Applications mobiles, plateformes web et logiciels de gestion avec interfaces UI/UX de dernière génération.</p></div>
+      <div class="svc-item"><h4>Conseil Stratégique IT</h4><p>Analyse technique pour le choix des infrastructures hardware et software garantissant sécurité et évolutivité.</p></div>
+      <div class="svc-item"><h4>Systèmes IoT</h4><p>Objets du quotidien rendus "intelligents", connectés et communicants via des protocoles sécurisés.</p></div>
+    </div>
+    <div class="svc-card">
+      <span class="svc-num">03</span>
+      <h3>Design d'Intérieur &amp; Espaces Intelligents</h3>
+      <div class="svc-item"><h4>Design d'Intérieur Évolué</h4><p>Architecture intérieure alliant esthétique contemporaine et fonctionnalité technique pour le résidentiel, retail et professionnel.</p></div>
+      <div class="svc-item"><h4>Domotique Avancée</h4><p>Technologies Smart Home pour le contrôle total de l'éclairage, du climat, de la sécurité et du divertissement.</p></div>
+    </div>
+    <div class="svc-card">
+      <span class="svc-num">04</span>
+      <h3>Multimédia &amp; Expériences Immersives</h3>
+      <div class="svc-item"><h4>Visualisation 3D &amp; Visites Virtuelles</h4><p>Rendus photoréalistes et visites immersives en VR/AR pour explorer le projet avant sa réalisation.</p></div>
+      <div class="svc-item"><h4>Production Multimédia</h4><p>Vidéo, motion graphics et installations interactives pour une communication à fort impact.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="why">
+  <div>
+    <p class="stag">// Pourquoi nous choisir</p>
+    <h2 class="stitle">L'unique partenaire de la chaîne complète</h2>
+    <p class="ssub">De la disposition d'un meuble à l'écriture du code qui en contrôle l'éclairage via l'IA.</p>
+    <div class="usp-list">
+      <div class="usp-item"><div class="usp-dot"></div><div><h4>Vision 360° du projet</h4><p>Une seule équipe maîtrise design, développement, IA et multimédia. Pas de silos entre prestataires.</p></div></div>
+      <div class="usp-item"><div class="usp-dot"></div><div><h4>Technologie native, pas ajoutée</h4><p>L'intelligence est intégrée dès la conception, pas branchée après coup.</p></div></div>
+      <div class="usp-item"><div class="usp-dot"></div><div><h4>Écosystèmes qui évoluent</h4><p>Nos solutions s'adaptent et grandissent avec vous. Votre espace devient un organisme vivant.</p></div></div>
+      <div class="usp-item"><div class="usp-dot"></div><div><h4>Expertise multisectorielle</h4><p>Résidentiel, retail, corporate, santé — une expérience transversale qui enrichit chaque projet.</p></div></div>
+    </div>
+  </div>
+  <div class="why-visual">
+    <canvas id="why-canvas" width="380" height="380"></canvas>
+  </div>
+</section>
+
+<section class="sec sec-bg" id="projects">
+  <div class="phead">
+    <div>
+      <p class="stag">// Réalisations</p>
+      <h2 class="stitle">Projets récents</h2>
+    </div>
+    <a href="#contact" class="btn-s" style="white-space:nowrap">Tous les projets →</a>
+  </div>
+  <div class="proj-grid">
+    <div class="proj-card feat">
+      <div class="proj-vis" style="height:280px"><canvas id="pc1" width="480" height="280"></canvas></div>
+      <div class="proj-meta">
+        <div class="proj-tag">Smart Home · IA · Design</div>
+        <h3>Villa Jasmine — Résidence Intelligente</h3>
+        <p>Domotique complète + IA + design intérieur contemporain. Contrôle vocal, gestion énergétique prédictive, sécurité biométrique.</p>
+      </div>
+    </div>
+    <div class="proj-card">
+      <div class="proj-vis" style="height:130px"><canvas id="pc2" width="230" height="130"></canvas></div>
+      <div class="proj-meta">
+        <div class="proj-tag">Logiciel · IoT · SaaS</div>
+        <h3>Noor Analytics — Plateforme intelligente</h3>
+      </div>
+    </div>
+    <div class="proj-card">
+      <div class="proj-vis" style="height:130px"><canvas id="pc3" width="230" height="130"></canvas></div>
+      <div class="proj-meta">
+        <div class="proj-tag">VR · 3D · Retail</div>
+        <h3>Zaytouna — Visite virtuelle immersive</h3>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="process">
+  <div>
+    <p class="stag">// Processus</p>
+    <h2 class="stitle">Du concept à l'écosystème</h2>
+    <p class="ssub">Un processus transparent, itératif et collaboratif pour assurer la cohérence entre le physique et le numérique.</p>
+    <div class="steps">
+      <div class="step"><div class="step-n">01</div><div><h4>Découverte &amp; Stratégie</h4><p>Audit, analyse des besoins, définition des objectifs numériques et spatiaux. Feuille de route complète.</p></div></div>
+      <div class="step"><div class="step-n">02</div><div><h4>Design &amp; Architecture</h4><p>Plans d'intérieur, maquettes UI/UX, architecture logicielle, schémas IoT. Validation avant développement.</p></div></div>
+      <div class="step"><div class="step-n">03</div><div><h4>Développement &amp; Intégration</h4><p>Code, hardware, domotique, IA — développement parallèle avec démonstrations régulières.</p></div></div>
+      <div class="step"><div class="step-n">04</div><div><h4>Tests &amp; Déploiement</h4><p>Tests complets, formation utilisateurs, déploiement progressif. Zéro surprise à la livraison.</p></div></div>
+      <div class="step"><div class="step-n">05</div><div><h4>Suivi &amp; Évolution</h4><p>Monitoring continu, mises à jour, nouvelles fonctionnalités. Votre écosystème grandit avec vous.</p></div></div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:center">
+    <canvas id="proc-canvas" width="340" height="380"></canvas>
+  </div>
+</section>
+
+<section class="sec sec-bg">
+  <p class="stag">// Témoignages</p>
+  <h2 class="stitle">Ce que disent nos clients</h2>
+  <div class="tgrid">
+    <div class="tcard">
+      <p class="tq">"Pixel Software a transformé notre villa en un écosystème vivant. L'éclairage, la sécurité et le confort s'adaptent à notre quotidien comme si la maison nous connaissait."</p>
+      <div class="tauthor">
+        <div class="tavatar" style="background:rgba(30,180,130,.18);color:#1EB482">MA</div>
+        <div><div class="tname">Mehdi Abdelkader</div><div class="trole">Propriétaire, Villa Jasmine</div></div>
+      </div>
+    </div>
+    <div class="tcard">
+      <p class="tq">"Une équipe rare qui parle à la fois le langage du designer et celui de l'ingénieur. Un résultat cohérent du sol au plafond — et jusqu'au serveur."</p>
+      <div class="tauthor">
+        <div class="tavatar" style="background:rgba(26,155,175,.18);color:#1A9BAF">SB</div>
+        <div><div class="tname">Sirine Bouzid</div><div class="trole">Directrice, Zaytouna Retail</div></div>
+      </div>
+    </div>
+    <div class="tcard">
+      <p class="tq">"La plateforme Noor nous a permis de réduire nos coûts opérationnels de 30% dès le premier trimestre. L'IA fait le travail invisible."</p>
+      <div class="tauthor">
+        <div class="tavatar" style="background:rgba(21,101,192,.18);color:#4A8FD4">KM</div>
+        <div><div class="tname">Karim Maatallah</div><div class="trole">CEO, Noor Analytics</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="pricing">
+  <div style="text-align:center;margin-bottom:2.5rem">
+    <p class="stag">// Tarifs</p>
+    <h2 class="stitle">Transparent dès le départ</h2>
+    <p class="ssub" style="margin:0 auto;text-align:center">Des forfaits pour chaque niveau de projet. Contactez-nous pour un devis sur mesure.</p>
+  </div>
+  <div class="pgrid">
+    <div class="pcard">
+      <div class="pname">Essentiel</div>
+      <div class="pamount">3 000 DT <span>/ projet</span></div>
+      <div class="pdesc">Une discipline principale, un livrable clair.</div>
+      <ul class="pfeats">
+        <li>Site web ou application mobile</li>
+        <li>Design UI/UX complet</li>
+        <li>Design d'intérieur 1 pièce</li>
+        <li>Rendu 3D inclus</li>
+        <li>1 révision majeure</li>
+        <li>Livraison en 4 semaines</li>
+      </ul>
+      <a href="#contact" class="btn-s">Démarrer</a>
+    </div>
+    <div class="pcard feat">
+      <div class="pbadge">POPULAIRE</div>
+      <div class="pname">Studio</div>
+      <div class="pamount">9 500 DT <span>/ projet</span></div>
+      <div class="pdesc">Combinaison multidisciplinaire complète.</div>
+      <ul class="pfeats">
+        <li>2–3 disciplines combinées</li>
+        <li>Intégration IoT basique</li>
+        <li>Design d'intérieur complet</li>
+        <li>Web app ou logiciel sur mesure</li>
+        <li>Visite virtuelle 3D</li>
+        <li>3 révisions incluses</li>
+        <li>Support 6 mois post-livraison</li>
+      </ul>
+      <a href="#contact" class="btn-p">Démarrer →</a>
+    </div>
+    <div class="pcard">
+      <div class="pname">Écosystème</div>
+      <div class="pamount">Sur devis</div>
+      <div class="pdesc">Projet complet, IA avancée, espace intelligent total.</div>
+      <ul class="pfeats">
+        <li>4 disciplines intégrées</li>
+        <li>IA sur mesure &amp; IoT avancé</li>
+        <li>Smart Home / Smart Office</li>
+        <li>Plateforme logicielle dédiée</li>
+        <li>Contrat de maintenance</li>
+        <li>Équipe dédiée &amp; SLA garanti</li>
+      </ul>
+      <a href="#contact" class="btn-s">Nous contacter</a>
+    </div>
+  </div>
+</section>
+
+<section class="sec sec-bg" id="contact">
+  <div>
+    <p class="stag">// Contact</p>
+    <h2 class="stitle">Démarrons votre écosystème intelligent</h2>
+    <p class="ssub">Décrivez-nous votre vision — nous vous répondons sous 24h avec une première proposition.</p>
+    <div class="cinfo">
+      <div class="cinfo-item"><div class="ci">📍</div><span>Tunis, Tunisie</span></div>
+      <div class="cinfo-item"><div class="ci">✉️</div><span>hello@pixelsoft.design</span></div>
+      <div class="cinfo-item"><div class="ci">📞</div><span>+216 74 000 000</span></div>
+      <div class="cinfo-item"><div class="ci">🕐</div><span>Lun–Ven, 9h–18h</span></div>
+    </div>
+    <div style="margin-top:2rem;display:flex;align-items:center;gap:12px">
+      <svg width="48" height="48"><use href="#pxl"/></svg>
+      <div>
+        <div style="font-weight:700;font-size:.95rem">Pixel Software Design</div>
+        <div style="font-size:.7rem;color:var(--muted);font-family:'Space Mono',monospace;letter-spacing:.08em;margin-top:.1rem">L'architecture de l'innovation</div>
+      </div>
+    </div>
+  </div>
+  <div>
+    <div class="cform">
+      <div class="crow">
+        <div class="cg"><label>Prénom</label><input type="text" placeholder="Ahmed"></div>
+        <div class="cg"><label>Nom</label><input type="text" placeholder="Ben Ali"></div>
+      </div>
+      <div class="cg"><label>Email professionnel</label><input type="email" placeholder="ahmed@exemple.com"></div>
+      <div class="cg"><label>Type de projet</label>
+        <select>
+          <option>IA &amp; Transformation Digitale</option>
+          <option>Développement Logiciel / App</option>
+          <option>Design d'Intérieur &amp; Smart Home</option>
+          <option>Multimédia &amp; Expérience Immersive</option>
+          <option>Projet Multidisciplinaire Complet</option>
+        </select>
+      </div>
+      <div class="cg"><label>Votre vision</label><textarea placeholder="Décrivez votre projet, vos objectifs..."></textarea></div>
+      <button class="btn-p" type="button" onclick="alert('Message envoyé ! Notre équipe vous contacte sous 24h.')">Envoyer ma demande →</button>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div style="display:flex;align-items:center;gap:10px">
+    <svg width="24" height="24"><use href="#pxl"/></svg>
+    <span class="fcopy">© 2026 Pixel Software Design · Tunis, Tunisie</span>
+  </div>
+  <div class="flinks">
+    <a href="#">LinkedIn</a><a href="#">Behance</a><a href="#">GitHub</a>
+  </div>
+</footer>
+
+<script>
+const HC=document.getElementById('hero-canvas');
+function resize(){HC.width=window.innerWidth;HC.height=window.innerHeight}
+resize();window.addEventListener('resize',resize);
+const HX=HC.getContext('2d');
+const COLS=['#1EB482','#1A9BAF','#2DBD6E','#1565C0','#22C490'];
+const SZ=26;
+const GC=Math.ceil(HC.width/SZ)+1,GR=Math.ceil(HC.height/SZ)+1;
+const cells=Array.from({length:GC*GR},(_,i)=>({
+  x:(i%GC)*SZ,y:Math.floor(i/GC)*SZ,
+  a:Math.random()*.05,t:Math.random()*.05,
+  s:.003+Math.random()*.007,
+  c:COLS[Math.floor(Math.random()*COLS.length)]
+}));
+(function loop(){
+  HX.clearRect(0,0,HC.width,HC.height);
+  cells.forEach(c=>{
+    c.a+=(c.t-c.a)*c.s;
+    if(Math.abs(c.a-c.t)<.001)c.t=Math.random()<.035?.2+Math.random()*.35:Math.random()*.05;
+    if(c.a>.004){HX.globalAlpha=c.a;HX.fillStyle=c.c;HX.fillRect(c.x+1,c.y+1,SZ-2,SZ-2)}
+  });
+  HX.globalAlpha=1;requestAnimationFrame(loop);
+})();
+
+const WC=document.getElementById('why-canvas'),WX=WC.getContext('2d');
+const nodes=[
+  {x:190,y:70,label:'IA',r:26,c:'#1EB482'},
+  {x:320,y:160,label:'IoT',r:20,c:'#1A9BAF'},
+  {x:260,y:290,label:'Design',r:24,c:'#2DBD6E'},
+  {x:110,y:290,label:'Media',r:20,c:'#1565C0'},
+  {x:60,y:160,label:'Code',r:20,c:'#1A9BAF'},
+  {x:190,y:190,label:'PXL',r:34,c:'#1EB482',center:true},
+];
+const edges=[[0,5],[1,5],[2,5],[3,5],[4,5],[0,1],[1,2],[2,3],[3,4],[4,0]];
+let wt=0;
+(function wloop(){
+  WX.clearRect(0,0,380,380);
+  wt+=.008;
+  edges.forEach(([a,b])=>{
+    const na=nodes[a],nb=nodes[b];
+    WX.strokeStyle='rgba(30,180,130,.16)';WX.lineWidth=1;
+    WX.beginPath();WX.moveTo(na.x,na.y);WX.lineTo(nb.x,nb.y);WX.stroke();
+    const p=(Math.sin(wt+(a+b)*.5)+1)/2;
+    const dx=na.x+(nb.x-na.x)*p,dy=na.y+(nb.y-na.y)*p;
+    WX.fillStyle='rgba(30,180,130,.55)';WX.beginPath();WX.arc(dx,dy,2,0,Math.PI*2);WX.fill();
+  });
+  nodes.forEach(n=>{
+    const pulse=n.center?n.r+Math.sin(wt*2)*4:n.r;
+    WX.fillStyle=n.c+'22';WX.beginPath();WX.arc(n.x,n.y,pulse+8,0,Math.PI*2);WX.fill();
+    WX.fillStyle=n.c+'55';WX.beginPath();WX.arc(n.x,n.y,pulse,0,Math.PI*2);WX.fill();
+    WX.fillStyle=n.c;WX.beginPath();WX.arc(n.x,n.y,pulse*.6,0,Math.PI*2);WX.fill();
+    WX.fillStyle=n.center?'rgba(232,245,240,.95)':'rgba(232,245,240,.8)';
+    WX.font=`${n.center?'700':'500'} ${n.center?13:11}px "Space Grotesk",sans-serif`;
+    WX.textAlign='center';WX.textBaseline='middle';WX.fillText(n.label,n.x,n.y);
+  });
+  requestAnimationFrame(wloop);
+})();
+
+function rr(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);ctx.lineTo(x+r,y+h);ctx.arcTo(x,y+h,x,y+h-r,r);ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);ctx.closePath()}
+
+const c1=document.getElementById('pc1'),x1=c1.getContext('2d');
+x1.fillStyle='#060E0A';x1.fillRect(0,0,480,280);
+x1.strokeStyle='rgba(30,180,130,.18)';x1.lineWidth=1;x1.strokeRect(20,20,190,190);
+for(let i=0;i<5;i++){x1.strokeStyle='rgba(30,180,130,.07)';x1.beginPath();x1.moveTo(20,210-i*38);x1.lineTo(210,210-i*38);x1.stroke()}
+x1.fillStyle='rgba(30,180,130,.13)';rr(x1,35,130,85,55,4);x1.fill();
+x1.fillStyle='rgba(26,155,175,.18)';rr(x1,135,160,55,35,4);x1.fill();
+x1.fillStyle='rgba(21,101,192,.18)';rr(x1,35,30,55,75,4);x1.fill();
+[[85,50,'#1EB482'],[165,80,'#1A9BAF'],[60,175,'#2DBD6E'],[180,115,'#1565C0']].forEach(([dx,dy,c])=>{
+  x1.fillStyle=c+'44';x1.beginPath();x1.arc(dx,dy,9,0,Math.PI*2);x1.fill();
+  x1.fillStyle=c;x1.beginPath();x1.arc(dx,dy,3.5,0,Math.PI*2);x1.fill()});
+x1.fillStyle='#0A1810';rr(x1,230,20,210,240,8);x1.fill();
+x1.fillStyle='rgba(30,180,130,.9)';x1.font='bold 10px "Space Mono",monospace';x1.fillText('SMART HOME',242,42);
+[['Température','22°C','#1EB482'],['Lumière','78%','#1A9BAF'],['Sécurité','ON','#2DBD6E'],['Énergie','1.2kW','#1565C0']].forEach(([l,v,c],i)=>{
+  x1.fillStyle='#0E1F17';rr(x1,242,56+i*48,86,36,5);x1.fill();
+  x1.fillStyle='rgba(232,245,240,.45)';x1.font='8px "Space Mono",monospace';x1.fillText(l,250,72+i*48);
+  x1.fillStyle=c;x1.font='bold 14px "Space Grotesk",sans-serif';x1.fillText(v,250,86+i*48);
+  x1.fillStyle=c+'22';x1.fillRect(340,60+i*48,88,28);
+  x1.fillStyle=c+'66';x1.fillRect(340,60+i*48,(88*[.7,.78,.9,.52][i])|0,28)});
+
+const c2=document.getElementById('pc2'),x2=c2.getContext('2d');
+x2.fillStyle='#050B09';x2.fillRect(0,0,230,130);
+x2.fillStyle='#0A1610';rr(x2,8,8,60,114,6);x2.fill();
+[20,40,60,80,100].forEach((y,i)=>{x2.fillStyle=i===1?'#1EB482':'#122018';rr(x2,12,y,52,14,3);x2.fill();x2.fillStyle=i===1?'rgba(255,255,255,.8)':'rgba(255,255,255,.2)';x2.fillRect(18,y+3,22,8)});
+x2.fillStyle='#090E0C';rr(x2,74,8,148,114,6);x2.fill();
+[.4,.7,.5,.9,.6,.82,.95].forEach((h,i)=>{const bx=80+i*18,bh=h*60,by=8+108-bh;x2.fillStyle=i===6?'#1EB482':'#152C22';x2.fillRect(bx,by,12,bh)});
+x2.strokeStyle='#1A9BAF';x2.lineWidth=1.2;x2.beginPath();
+[.4,.7,.5,.9,.6,.82,.95].forEach((h,i)=>{const bx=86+i*18,by=8+112-h*60;i===0?x2.moveTo(bx,by):x2.lineTo(bx,by)});x2.stroke();
+
+const c3=document.getElementById('pc3'),x3=c3.getContext('2d');
+x3.fillStyle='#050A0C';x3.fillRect(0,0,230,130);
+x3.strokeStyle='rgba(26,155,175,.3)';x3.lineWidth=.8;
+let pts=[[115,60],[10,10],[220,10],[220,120],[10,120]];
+pts.reduce((p,c,i)=>{
+  x3.beginPath();x3.moveTo(p[0],p[1]);x3.lineTo(c[0],c[1]);x3.stroke();
+  x3.beginPath();x3.moveTo(115,60);x3.lineTo(c[0],c[1]);x3.stroke();return c},pts[0]);
+x3.fillStyle='rgba(26,155,175,.15)';x3.fillRect(30,80,55,28);
+x3.fillStyle='rgba(30,180,130,.12)';x3.fillRect(140,70,45,36);
+x3.fillStyle='rgba(21,101,192,.15)';x3.fillRect(90,83,36,22);
+x3.fillStyle='rgba(26,155,175,.7)';x3.font='bold 8px "Space Mono",monospace';x3.fillText('● VR LIVE',10,15);
+x3.fillStyle='rgba(30,180,130,.35)';x3.strokeStyle='rgba(30,180,130,.35)';x3.lineWidth=.5;
+for(let i=0;i<4;i++){rr(x3,100+i*3,55+i*3,26-i*5,18-i*4,2);x3.stroke()}
+
+const PC=document.getElementById('proc-canvas'),PX=PC.getContext('2d');
+const PSTEPS=['Découverte','Design','Développement','Tests','Évolution'];
+const PCOLORS=['#1EB482','#1A9BAF','#2DBD6E','#1565C0','#22C490'];
+let pt=0;
+(function ploop(){
+  PX.clearRect(0,0,340,380);pt+=.005;
+  PX.strokeStyle='rgba(30,180,130,.12)';PX.lineWidth=1;
+  PX.beginPath();PX.moveTo(55,35);PX.lineTo(55,345);PX.stroke();
+  PSTEPS.forEach((s,i)=>{
+    const y=55+i*65,active=Math.floor(((pt*.5)%5)),isActive=i===active;
+    PX.fillStyle=isActive?PCOLORS[i]:PCOLORS[i]+'44';
+    PX.beginPath();PX.arc(55,y,isActive?9:6,0,Math.PI*2);PX.fill();
+    if(isActive){PX.fillStyle=PCOLORS[i]+'22';PX.beginPath();PX.arc(55,y,16+Math.sin(pt*3)*3,0,Math.PI*2);PX.fill()}
+    PX.strokeStyle=PCOLORS[i]+(isActive?'88':'33');PX.lineWidth=1;
+    PX.beginPath();PX.moveTo(65,y);PX.lineTo(90,y);PX.stroke();
+    PX.fillStyle=isActive?PCOLORS[i]+'22':'rgba(12,32,24,.8)';
+    PX.strokeStyle=isActive?PCOLORS[i]+'88':PCOLORS[i]+'22';PX.lineWidth=1;
+    rr(PX,90,y-20,220,40,6);PX.fill();PX.stroke();
+    PX.fillStyle=isActive?PCOLORS[i]:'rgba(232,245,240,.5)';
+    PX.font=`${isActive?'600':'400'} 11px "Space Grotesk",sans-serif`;
+    PX.textAlign='left';PX.textBaseline='middle';PX.fillText(s,104,y);
+    if(isActive){
+      PX.fillStyle='rgba(232,245,240,.35)';PX.font='9px "Space Mono",monospace';
+      PX.fillText(['Audit · Roadmap','Plans · Maquettes','Sprint · Intégration','QA · UAT','Monitoring · Updates'][i],104,y+13)}
+  });
+  requestAnimationFrame(ploop);
+})();
+</script>
+</body>
+</html>

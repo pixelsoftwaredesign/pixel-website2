@@ -1,0 +1,63 @@
+<!DOCTYPE html>{% load static %}<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Gestion des candidatures — Pixel Software Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,2 93,26 93,74 50,98 7,74 7,26' fill='%231EB482'/%3E%3Cpath d='M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z' fill='white' opacity='0.92'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<style>
+.erp-wrap{padding:9rem 3rem 2rem}.erp-h{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem}.erp-h h1{font-size:1.5rem}.erp-section{margin-top:2rem}.erp-section h3{font-size:.95rem;font-weight:600;margin-bottom:.8rem}.erp-table{width:100%;border-collapse:collapse;font-size:.75rem;background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden}.erp-table th{background:rgba(30,180,130,.1);color:var(--accent);padding:.5rem .6rem;text-align:left;font-weight:600;font-size:.65rem;text-transform:uppercase;letter-spacing:.05em}.erp-table td{padding:.45rem .6rem;border-bottom:1px solid var(--border)}.erp-table tr:last-child td{border-bottom:none}.erp-table .del{color:#ef4444;text-decoration:none;font-size:.65rem;cursor:pointer}.erp-table .del:hover{text-decoration:underline}.erp-table .edit{color:var(--accent);text-decoration:none;font-size:.65rem;cursor:pointer}.erp-table .edit:hover{text-decoration:underline}.stag{font-family:'Space Mono',monospace;font-size:.65rem;color:var(--muted);margin-bottom:.2rem}.badge{display:inline-block;padding:.15rem .5rem;border-radius:999px;font-family:'Space Mono',monospace;font-size:.6rem;font-weight:600}.badge-nouveau{background:rgba(59,130,246,.15);color:#3b82f6}.badge-lu{background:rgba(107,114,128,.15);color:#9ca3af}.badge-entretien{background:rgba(245,158,11,.15);color:#f59e0b}.badge-accepte{background:rgba(30,180,130,.15);color:#1eb482}.badge-refuse{background:rgba(239,68,68,.15);color:#ef4444}.statut-form{display:inline-flex;gap:.3rem;align-items:center}.statut-form select{padding:.2rem .4rem;border-radius:4px;border:1px solid var(--border);background:#0a1a15;color:#fff;font-family:'Space Mono',monospace;font-size:.6rem}.statut-form button{padding:.2rem .5rem;border-radius:4px;border:none;background:var(--accent);color:#05100D;font-weight:700;font-size:.6rem;cursor:pointer;font-family:'Space Mono',monospace}.stats-bar{display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap}.stat-item{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:.6rem 1rem;text-align:center;min-width:100px}.stat-item .num{font-family:'Space Mono',monospace;font-size:1.2rem;color:var(--accent);font-weight:700}.stat-item .lbl{font-size:.6rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}.msg-preview{max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.7rem;color:var(--muted);cursor:pointer}.cv-link{color:var(--accent);text-decoration:none;font-size:.65rem}.cv-link:hover{text-decoration:underline}@media(max-width:768px){.erp-wrap{padding:9rem 1rem 2rem}.erp-table{overflow-x:auto;display:block}}
+</style>
+</head>
+<body>
+<svg style="display:none"><defs><symbol id="pxl" viewBox="0 0 100 100"><polygon points="50,2 93,26 93,74 50,98 7,74 7,26" fill="none"/><polygon points="50,2 93,26 70,14" fill="#2DBD6E"/><polygon points="50,2 70,14 50,30 30,14" fill="#3DC87A"/><polygon points="50,2 30,14 7,26" fill="#1EB482"/><polygon points="93,26 93,74 78,50" fill="#1A9BAF"/><polygon points="93,26 78,50 70,14" fill="#1CB89A"/><polygon points="70,14 78,50 50,30" fill="#22C490"/><polygon points="50,30 78,50 60,72 40,72 22,50" fill="#1A9BAF"/><polygon points="7,26 30,14 22,50" fill="#1565C0"/><polygon points="30,14 50,30 22,50" fill="#1878C8"/><polygon points="7,26 22,50 7,74" fill="#1565C0"/><polygon points="7,74 22,50 40,72 50,98 30,86" fill="#1A9BAF"/><polygon points="93,74 78,50 60,72 50,98 70,86" fill="#1565C0"/><polygon points="50,98 70,86 93,74" fill="#1878C8"/><polygon points="50,98 30,86 7,74" fill="#1A9BAF"/><polygon points="40,72 60,72 50,98 30,86" fill="#1CB89A"/><path d="M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z" fill="white" opacity="0.92"/></symbol></defs></svg>
+<nav><a href="/" class="logo"><svg><use href="#pxl"/></svg><div class="logo-text"><strong>Pixel Software Design</strong><span>Administration recrutement</span></div></a><ul class="nav-menu" id="navMenu"><li><a href="/">Accueil</a></li><li><a href="/recrutement/">Recrutement</a></li></ul><button class="burger" onclick="document.getElementById('navMenu').classList.toggle('open')" aria-label="Menu"><span></span><span></span><span></span></button></nav>
+<div class="erp-wrap">
+<div class="erp-h"><div><p class="stag">// Administration</p><h1>🤝 Gestion des candidatures</h1></div><a href="/recrutement/">← Page recrutement</a></div>
+
+<div class="stats-bar">
+<div class="stat-item"><div class="num">{{ candidatures.count }}</div><div class="lbl">Total</div></div>
+{% with nv=candidatures|dictsortreversed:"created_at" %}{% endwith %}
+<div class="stat-item"><div class="num">{{ candidatures|dictsortreversed:"created_at"|length }}</div><div class="lbl">Récentes</div></div>
+</div>
+
+<div class="erp-section">
+<table class="erp-table">
+<thead><tr><th>Date</th><th>Type</th><th>Nom</th><th>Email</th><th>Poste</th><th>Message</th><th>CV</th><th>Statut</th><th>Action</th></tr></thead>
+<tbody>
+{% for c in candidatures %}
+<tr>
+<td style="white-space:nowrap;font-family:'Space Mono',monospace;font-size:.6rem;color:var(--muted)">{{ c.created_at|date:"d/m/Y" }}</td>
+<td><span class="badge badge-{{ c.type_candidature }}">{{ c.get_type_candidature_display }}</span></td>
+<td>{{ c.nom }}</td>
+<td style="font-family:'Space Mono',monospace;font-size:.65rem"><a href="mailto:{{ c.email }}" style="color:var(--accent);text-decoration:none">{{ c.email }}</a></td>
+<td>{{ c.poste|default:"—" }}</td>
+<td>{% if c.message %}<span class="msg-preview" title="{{ c.message }}">{{ c.message|truncatechars:40 }}</span>{% else %}—{% endif %}</td>
+<td>{% if c.cv %}<a href="{{ c.cv.url }}" class="cv-link" download>📎 CV</a>{% else %}—{% endif %}</td>
+<td><span class="badge badge-{{ c.statut }}">{{ c.get_statut_display }}</span></td>
+<td>
+<form method="POST" class="statut-form" style="gap:.3rem">{% csrf_token %}
+<input type="hidden" name="id" value="{{ c.id }}">
+<select name="statut">
+<option value="nouveau"{% if c.statut == 'nouveau' %} selected{% endif %}>Nouveau</option>
+<option value="lu"{% if c.statut == 'lu' %} selected{% endif %}>Lu</option>
+<option value="entretien"{% if c.statut == 'entretien' %} selected{% endif %}>Entretien</option>
+<option value="accepte"{% if c.statut == 'accepte' %} selected{% endif %}>Accepté</option>
+<option value="refuse"{% if c.statut == 'refuse' %} selected{% endif %}>Refusé</option>
+</select>
+<button type="submit" name="action" value="statut">OK</button>
+<button type="submit" name="action" value="delete" style="background:#ef4444" onclick="return confirm('Supprimer cette candidature ?')">✕</button>
+</form>
+</td>
+</tr>
+{% empty %}
+<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--muted)">Aucune candidature pour le moment.</td></tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+</div>
+<footer><div style="display:flex;align-items:center;gap:10px"><svg width="24" height="24"><use href="#pxl"/></svg><span class="fcopy">© 2026 Pixel Software Design — Recrutement</span></div><div class="flinks"><a href="/">Accueil</a><a href="/recrutement/">Carrières</a></div></footer>
+</body>
+</html>
