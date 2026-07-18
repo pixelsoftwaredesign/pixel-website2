@@ -1,0 +1,39 @@
+{% extends "studio/pixsoftpay_base.html" %}
+{% block content %}
+<div class="pp-card" style="max-width:520px">
+  <h2>Créer un paiement QR Code</h2>
+  {% if error %}<p class="pp-error">{{ error }}</p>{% endif %}
+  <form method="POST" action="/pixsoftpay/create/">
+    {% csrf_token %}
+    <div class="pp-form-group">
+      <label>Montant (TND)</label>
+      <input type="number" name="amount" step="0.01" min="0.01" placeholder="0.00" required>
+    </div>
+    <div class="pp-form-group">
+      <label>Description</label>
+      <input type="text" name="description" placeholder="Ex: Paiement commande #123">
+    </div>
+    <div class="pp-form-group">
+      <label>Nom du client</label>
+      <input type="text" name="customer_name" placeholder="Nom complet">
+    </div>
+    <div class="pp-form-group">
+      <label>Email du client</label>
+      <input type="email" name="customer_email" placeholder="email@exemple.com">
+    </div>
+    <div class="pp-form-group">
+      <label>Méthode de paiement</label>
+      <select name="methode">
+        <option value="wallet">Wallet mobile</option>
+        <option value="d17">D17</option>
+        <option value="flouci">Flouci</option>
+        <option value="konnect">Konnect</option>
+        <option value="carte">Carte bancaire</option>
+        <option value="especes">Espèces</option>
+        <option value="virement">Virement bancaire</option>
+      </select>
+    </div>
+    <button type="submit" class="pp-btn pp-btn-primary" style="width:100%">Générer le QR Code</button>
+  </form>
+</div>
+{% endblock %}

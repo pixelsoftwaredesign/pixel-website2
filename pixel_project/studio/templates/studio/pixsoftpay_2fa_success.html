@@ -1,0 +1,24 @@
+{% extends "studio/pixsoftpay_base.html" %}
+{% block content %}
+<div class="pp-card" style="max-width:480px;text-align:center">
+  <div style="font-size:3rem;margin-bottom:16px">🔐</div>
+  <h2 style="margin-bottom:12px;color:#00c853">2FA activée</h2>
+  <p style="color:#888;margin-bottom:20px;font-size:.9rem">
+    L'authentification à deux facteurs est maintenant active sur votre compte.
+  </p>
+
+  {% if tfa %}
+  <div style="background:#0a0a1a;border:1px solid #1e1e3a;border-radius:10px;padding:16px;margin:16px 0;text-align:left">
+    <p style="color:#888;font-size:.8rem;margin-bottom:8px">📋 Codes de secours (à conserver) :</p>
+    {% for code in tfa.get_backup_codes_list %}
+    <code style="display:inline-block;background:#1a1a30;padding:4px 10px;border-radius:6px;margin:3px;font-size:.85rem;color:#ffab00">{{ code }}</code>
+    {% endfor %}
+    <p style="color:#ff1744;font-size:.75rem;margin-top:10px">⚠️ Ces codes ne seront affichés qu'une seule fois. Conservez-les en lieu sûr.</p>
+  </div>
+  {% endif %}
+
+  <a href="/pixsoftpay/">
+    <button class="pp-btn pp-btn-primary" style="margin-top:12px">Aller au Dashboard</button>
+  </a>
+</div>
+{% endblock %}

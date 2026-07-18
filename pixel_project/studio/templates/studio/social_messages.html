@@ -1,0 +1,101 @@
+<!DOCTYPE html>{% load static %}<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Messagerie E2E — PixSocial | Pixel Software Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<style>
+.ps-msg-layout{display:grid;grid-template-columns:320px 1fr;gap:0;max-width:1100px;margin:0 auto;height:calc(100vh - 60px);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-top:1rem}
+.ps-msg-list{background:var(--card);border-right:1px solid var(--border);display:flex;flex-direction:column}
+.ps-msg-list-header{padding:1.2rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.ps-msg-list-header h2{font-size:1rem;margin:0}
+.ps-msg-list-items{flex:1;overflow-y:auto}
+.ps-msg-item{display:flex;align-items:center;gap:.8rem;padding:1rem 1.2rem;cursor:pointer;border-bottom:1px solid var(--border);transition:background .2s}
+.ps-msg-item:hover,.ps-msg-item.active{background:rgba(30,180,130,.08)}
+.ps-msg-item .avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#1A9BAF);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;color:#000;flex-shrink:0}
+.ps-msg-item .info{flex:1;min-width:0}
+.ps-msg-item .info .name{font-weight:600;font-size:.85rem}
+.ps-msg-item .info .preview{font-size:.75rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ps-msg-item .info .time{font-size:.65rem;color:var(--muted)}
+.ps-msg-item .type-badge{font-size:.6rem;background:rgba(30,180,130,.15);color:var(--accent);padding:2px 6px;border-radius:10px}
+.ps-msg-main{display:flex;flex-direction:column;background:var(--bg)}
+.ps-msg-main-empty{display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);text-align:center}
+.ps-msg-main-empty .icon{font-size:3rem;margin-bottom:1rem}
+.ps-msg-main-empty h3{font-size:1rem;margin-bottom:.5rem}
+.ps-e2e-badge{display:inline-flex;align-items:center;gap:.4rem;background:rgba(30,180,130,.1);color:var(--accent);font-size:.7rem;padding:4px 10px;border-radius:20px;margin-left:.5rem}
+.ps-new-conv-btn{background:var(--accent);color:#000;border:none;border-radius:8px;padding:.4rem .8rem;font-size:.75rem;cursor:pointer;font-weight:600}
+@media(max-width:700px){.ps-msg-layout{grid-template-columns:1fr}.ps-msg-main{display:none}}
+</style>
+</head>
+<body>
+<svg style="display:none"><defs><symbol id="pxl" viewBox="0 0 100 100"><polygon points="50,2 93,26 93,74 50,98 7,74 7,26" fill="none"/><polygon points="50,2 93,26 70,14" fill="#2DBD6E"/><polygon points="50,2 70,14 50,30 30,14" fill="#3DC87A"/><polygon points="50,2 30,14 7,26" fill="#1EB482"/><polygon points="93,26 93,74 78,50" fill="#1A9BAF"/><polygon points="93,26 78,50 70,14" fill="#1CB89A"/><polygon points="70,14 78,50 50,30" fill="#22C490"/><polygon points="50,30 78,50 60,72 40,72 22,50" fill="#1A9BAF"/><polygon points="7,26 30,14 22,50" fill="#1565C0"/><polygon points="30,14 50,30 22,50" fill="#1878C8"/><polygon points="7,26 22,50 7,74" fill="#1565C0"/><polygon points="7,74 22,50 40,72 50,98 30,86" fill="#1A9BAF"/><polygon points="93,74 78,50 60,72 50,98 70,86" fill="#1565C0"/><polygon points="50,98 70,86 93,74" fill="#1878C8"/><polygon points="50,98 30,86 7,74" fill="#1A9BAF"/><polygon points="40,72 60,72 50,98 30,86" fill="#1CB89A"/><path d="M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z" fill="white" opacity="0.92"/></symbol></defs></svg>
+<nav><a href="/" class="logo"><svg><use href="#pxl"/></svg><div class="logo-text"><strong>Pixel Software Design</strong><span>L'architecture de l'innovation</span></div></a><ul class="nav-menu" id="navMenu"><li><a href="/">Accueil</a></li><li><a href="/social/">Social</a></li><li><a href="/social/messagerie/" class="active">Messagerie</a></li><li><a href="/pixmail/">PixMail</a></li><li><a href="/pixsoftpay/wallet/">💰 Wallet</a></li><li><a href="/login/">Connexion</a></li></ul><button class="burger" onclick="document.getElementById('navMenu').classList.toggle('open')" aria-label="Menu"><span></span><span></span><span></span></button></nav>
+
+<div class="ps-msg-layout">
+<div class="ps-msg-list">
+<div class="ps-msg-list-header">
+<h2>Messages <span class="ps-e2e-badge">🔐 E2E</span></h2>
+<button class="ps-new-conv-btn" onclick="openNewConv()">+ Nouveau</button>
+</div>
+<div class="ps-msg-list-items">
+{% for conv in conversations %}
+<a href="/social/messagerie/{{ conv.id }}/" class="ps-msg-item" style="text-decoration:none;color:inherit">
+<div class="avatar">{{ conv.title|first|upper|default:"?" }}</div>
+<div class="info">
+<div class="name">{{ conv.title|default:"Sans titre" }} {% if conv.type == 'group' %}<span class="type-badge">Groupe</span>{% endif %}</div>
+<div class="preview">{% if conv.messages.all %}{{ conv.messages.all.0.encrypted_content|truncatechars:40 }}{% else %}Aucun message{% endif %}</div>
+<div class="time">{{ conv.updated_at|timesince }}</div>
+</div>
+</a>
+{% empty %}
+<div style="padding:2rem;text-align:center;color:var(--muted)">
+<div class="icon" style="font-size:2rem">💬</div>
+<p style="font-size:.82rem;margin-top:.5rem">Aucune conversation</p>
+<p style="font-size:.72rem">Créez une nouvelle conversation chiffrée</p>
+</div>
+{% endfor %}
+</div>
+</div>
+
+<div class="ps-msg-main">
+<div class="ps-msg-main-empty">
+<div>
+<div class="icon">🔐</div>
+<h3>Messagerie de bout en bout</h3>
+<p style="font-size:.82rem;max-width:300px">Sélectionnez une conversation ou créez-en une nouvelle.<br>Tous les messages sont chiffrés avec AES-256-GCM et RSA-OAEP.</p>
+</div>
+</div>
+</div>
+</div>
+
+<div id="newConvModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:100;display:none;align-items:center;justify-content:center">
+<div style="background:var(--card);border:1px solid var(--border);border-radius:14px;padding:2rem;max-width:400px;width:90%">
+<h3 style="margin-bottom:1rem">Nouvelle conversation</h3>
+<input type="text" id="convTitle" placeholder="Nom du groupe (optionnel)" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.5rem .8rem;color:var(--text);font-size:.82rem;margin-bottom:.8rem">
+<input type="text" id="convMembers" placeholder="Membres (usernames séparés par virgule)" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.5rem .8rem;color:var(--text);font-size:.82rem;margin-bottom:.8rem">
+<select id="convType" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.5rem .8rem;color:var(--text);font-size:.82rem;margin-bottom:1rem">
+<option value="private">Privé (1 à 1)</option>
+<option value="group">Groupe</option>
+</select>
+<div style="display:flex;gap:.8rem;justify-content:flex-end">
+<button onclick="closeNewConv()" style="background:none;border:1px solid var(--border);color:var(--text);padding:.5rem 1rem;border-radius:8px;cursor:pointer;font-size:.82rem">Annuler</button>
+<button onclick="createConv()" class="btn-p" style="font-size:.82rem">Créer</button>
+</div>
+</div>
+</div>
+
+<script>
+function openNewConv(){document.getElementById('newConvModal').style.display='flex';}
+function closeNewConv(){document.getElementById('newConvModal').style.display='none';}
+async function createConv(){
+  const title=document.getElementById('convTitle').value.trim();
+  const members=document.getElementById('convMembers').value.split(',').map(s=>s.trim()).filter(Boolean);
+  const type=document.getElementById('convType').value;
+  const res=await fetch('/api/social/conversations/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title,type,members})});
+  const data=await res.json();
+  if(res.ok){window.location='/social/messagerie/'+data.conv_id+'/';}
+  else{alert(data.error||'Erreur');}
+}
+</script>
+</body></html>

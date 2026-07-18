@@ -1,0 +1,96 @@
+<!DOCTYPE html><html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Mon Espace — Pixel Software Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/style.css">
+<style>
+.pt-page{min-height:100vh;padding:6rem 1.5rem 3rem;background:#05100D}
+.pt-inner{max-width:900px;margin:0 auto}
+.pt-hero{display:flex;gap:1.5rem;align-items:center;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:2rem;margin-bottom:2rem}
+.pt-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#1A9BAF);display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:700;color:#000;flex-shrink:0}
+.pt-info h1{font-size:1.2rem;margin:0}
+.pt-info .email{font-size:.8rem;color:var(--accent);font-family:'Space Mono',monospace}
+.pt-info .bio{font-size:.8rem;color:var(--muted);margin-top:.4rem}
+.pt-info .meta{font-size:.7rem;color:var(--muted);margin-top:.6rem;display:flex;gap:1.2rem}
+.pt-section{margin-bottom:2rem}
+.pt-section h2{font-size:1rem;margin-bottom:1rem;display:flex;align-items:center;gap:.5rem}
+.pt-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1rem}
+.pt-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.2rem;text-decoration:none;color:inherit;transition:transform .2s,border-color .2s}
+.pt-card:hover{transform:translateY(-3px);border-color:var(--accent)}
+.pt-card .icon{font-size:1.6rem;margin-bottom:.6rem}
+.pt-card h3{font-size:.9rem;margin:0 0 .3rem 0}
+.pt-card p{font-size:.75rem;color:var(--muted);line-height:1.5}
+.pt-card .tag{display:inline-block;font-size:.6rem;background:rgba(30,180,130,.12);color:var(--accent);padding:2px 8px;border-radius:10px;margin-top:.5rem}
+.pt-edit{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.5rem}
+.pt-edit .cg{margin-bottom:1rem}
+.pt-edit label{display:block;font-size:.7rem;color:var(--muted);margin-bottom:.3rem;font-family:'Space Mono',monospace}
+.pt-edit input,.pt-edit textarea{width:100%;padding:.6rem .8rem;border-radius:6px;border:1px solid var(--border);background:#0a1a15;color:#fff;font-size:.8rem;outline:none;font-family:inherit}
+.pt-edit input:focus,.pt-edit textarea:focus{border-color:var(--accent)}
+.pt-edit textarea{resize:vertical;min-height:60px}
+.pt-actions{display:flex;gap:.8rem;margin-top:1rem}
+.pt-msg{margin-top:.8rem;font-size:.75rem;text-align:center;padding:.4rem;border-radius:6px;display:none}
+.pt-msg.success{display:block;background:rgba(30,180,130,.15);color:var(--accent)}
+.pt-logout{color:#ef4444;cursor:pointer;background:none;border:none;font-size:.8rem;text-decoration:underline;margin-top:2rem}
+.pt-not-logged{text-align:center;padding:8rem 1rem}
+.pt-not-logged h2{font-size:1.3rem;margin-bottom:.5rem}
+.pt-not-logged p{color:var(--muted);font-size:.85rem}
+</style>
+</head>
+<body>
+<svg style="display:none"><defs><symbol id="pxl" viewBox="0 0 100 100"><polygon points="50,2 93,26 93,74 50,98 7,74 7,26" fill="none"/><polygon points="50,2 93,26 70,14" fill="#2DBD6E"/><polygon points="50,2 70,14 50,30 30,14" fill="#3DC87A"/><polygon points="50,2 30,14 7,26" fill="#1EB482"/><polygon points="93,26 93,74 78,50" fill="#1A9BAF"/><polygon points="93,26 78,50 70,14" fill="#1CB89A"/><polygon points="70,14 78,50 50,30" fill="#22C490"/><polygon points="50,30 78,50 60,72 40,72 22,50" fill="#1A9BAF"/><polygon points="7,26 30,14 22,50" fill="#1565C0"/><polygon points="30,14 50,30 22,50" fill="#1878C8"/><polygon points="7,26 22,50 7,74" fill="#1565C0"/><polygon points="7,74 22,50 40,72 50,98 30,86" fill="#1A9BAF"/><polygon points="93,74 78,50 60,72 50,98 70,86" fill="#1565C0"/><polygon points="50,98 70,86 93,74" fill="#1878C8"/><polygon points="50,98 30,86 7,74" fill="#1A9BAF"/><polygon points="40,72 60,72 50,98 30,86" fill="#1CB89A"/><path d="M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z" fill="white" opacity="0.92"/></symbol></defs></svg>
+<nav><a href="/" class="logo"><svg><use href="#pxl"/></svg><div class="logo-text"><strong>Pixel Software Design</strong><span>L'architecture de l'innovation</span></div></a><ul class="nav-menu" id="navMenu"><li><a href="/">Accueil</a></li><li><a href="/social/">Social</a></li><li><a href="/social/messagerie/">Messagerie</a></li><li><a href="/pixmail/">PixMail</a></li><li><a href="https://pixmaps.web.app/search.html" target="_blank">PixMaps</a></li><li><a href="/portail/" class="active" id="navAuth">Mon espace</a></li></ul><button class="burger" onclick="document.getElementById('navMenu').classList.toggle('open')" aria-label="Menu"><span></span><span></span><span></span></button></nav>
+
+<div class="pt-page" id="ptPage">
+<div class="pt-inner" id="ptContent"></div>
+</div>
+<footer><div style="display:flex;align-items:center;gap:10px"><svg width="24" height="24"><use href="#pxl"/></svg><span class="fcopy">© 2026 Pixel Software Design</span></div><div class="flinks"><a href="tel:+21652675027">📞 +216 52 675 027</a><a href="/">Accueil</a><a href="/prix/">Prix</a></div></footer>
+<script>
+function getSession(){try{return JSON.parse(localStorage.getItem('pxl_session'))}catch(e){return null}}
+function getUsers(){try{return JSON.parse(localStorage.getItem('pxl_users')||'{}')}catch(e){return{}}}
+function saveUsers(u){localStorage.setItem('pxl_users',JSON.stringify(u))}
+function timeAgo(iso){try{var d=Date.now()-new Date(iso).getTime();var m=Math.floor(d/60000);if(m<60)return m+'min';var h=Math.floor(m/60);if(h<24)return h+'h';return Math.floor(h/24)+'j'}catch(e){return ''}}
+var session=getSession();
+if(!session){document.getElementById('ptContent').innerHTML='<div class="pt-not-logged"><h2>Non connecté</h2><p>Vous devez vous connecter pour accéder à votre espace.</p><br><a href="/login/" class="btn-p" style="display:inline-block;padding:.7rem 1.5rem;text-decoration:none">Se connecter →</a></div>';}
+else{
+  var users=getUsers();
+  var full=users[session.username]||session;
+  var initial=(full.displayName||full.username)[0].toUpperCase();
+  var time=timeAgo(full.createdAt);
+  document.getElementById('ptContent').innerHTML=
+    '<div class="pt-hero"><div class="pt-avatar">'+initial+'</div><div class="pt-info"><h1>'+(full.displayName||full.username)+'</h1><div class="email">@'+full.username+' · '+full.email+'</div><div class="bio">'+(full.bio||'Aucune bio pour le moment.')+'</div><div class="meta"><span>📅 Inscrit '+time+'</span><span>🔑 Connecté à l\'instant</span></div></div></div>'+
+    '<div class="pt-section"><h2>🚀 Accès rapide</h2><div class="pt-grid">'+
+    '<a href="/social/" class="pt-card"><div class="icon">📱</div><h3>PixSocial</h3><p>Feed, posts, abonnements et interactions</p><span class="tag">Social</span></a>'+
+    '<a href="/social/messagerie/" class="pt-card"><div class="icon">🔐</div><h3>Messagerie E2E</h3><p>Messages privés et groupes chiffrés</p><span class="tag">Chiffré</span></a>'+
+    '<a href="/pixmail/" class="pt-card"><div class="icon">✉️</div><h3>PixMail</h3><p>Email @pxelsoftware-64fcd.web.app</p><span class="tag">Email</span></a>'+
+    '<a href="/portfolio/" class="pt-card"><div class="icon">🎨</div><h3>Portfolio</h3><p>Nos réalisations et projets</p><span class="tag">Showcase</span></a>'+
+    '<a href="https://pixmaps.web.app/search.html" target="_blank" class="pt-card"><div class="icon">🗺️</div><h3>PixMaps</h3><p>Recherche et exploration de cartes</p><span class="tag">Cartes</span></a>'+
+    '<a href="/gestiactiv/" class="pt-card"><div class="icon">📊</div><h3>GestiActiv</h3><p>ERP complet pour votre entreprise</p><span class="tag">ERP</span></a>'+
+    '<a href="/ecommerce/" class="pt-card"><div class="icon">🛒</div><h3>PixelShop</h3><p>E-Commerce intégré</p><span class="tag">Commerce</span></a>'+
+    '<a href="/app/" class="pt-card"><div class="icon">📱</div><h3>App Mobile</h3><p>Application Flutter</p><span class="tag">Flutter</span></a>'+
+    '<a href="/contact/" class="pt-card"><div class="icon">💬</div><h3>Contact</h3><p>Nous contacter</p><span class="tag">Support</span></a>'+
+    '</div></div>'+
+    '<div class="pt-section"><h2>✏️ Mon Profil</h2>'+
+    '<div class="pt-edit">'+
+    '<div class="cg"><label>Nom d\'affichage</label><input id="edName" value="'+(full.displayName||'')+'"></div>'+
+    '<div class="cg"><label>Bio</label><textarea id="edBio" rows="2">'+(full.bio||'')+'</textarea></div>'+
+    '<div class="pt-actions"><button class="btn-p" onclick="saveProfile()" style="padding:.5rem 1.2rem">Sauvegarder</button></div>'+
+    '<div id="ptMsg" class="pt-msg"></div>'+
+    '</div></div>'+
+    '<button class="pt-logout" onclick="doLogout()">Se déconnecter</button>';
+}
+function saveProfile(){
+  var n=document.getElementById('edName').value.trim();
+  var b=document.getElementById('edBio').value.trim();
+  var s=getSession();if(!s)return;
+  s.displayName=n||s.username;s.bio=b;
+  localStorage.setItem('pxl_session',JSON.stringify(s));
+  var u=getUsers();if(u[s.username]){u[s.username].displayName=n||s.username;u[s.username].bio=b;saveUsers(u);}
+  var m=document.getElementById('ptMsg');m.textContent='Profil sauvegardé !';m.className='pt-msg success';m.style.display='block';
+  setTimeout(function(){location.reload()},1000);
+}
+function doLogout(){localStorage.removeItem('pxl_session');window.location.href='/'}
+</script>
+<script src="/static/js/pixsearch.js"></script>
+</body></html>

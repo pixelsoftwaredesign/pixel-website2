@@ -1,0 +1,115 @@
+<!DOCTYPE html>{% load static %}<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PixMail — Email @pxelsoftware-64fcd.web.app | Pixel Software Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<style>
+.pm-hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:8rem 1.5rem 4rem;background:linear-gradient(160deg,#05100D 0%,#0a1a15 40%,#0d2420 100%);position:relative;overflow:hidden}
+.pm-hero::before{content:'';position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(30,180,130,.12) 0%,transparent 70%);top:-200px;right:-200px}
+.pm-hero::after{content:'';position:absolute;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(21,101,192,.1) 0%,transparent 70%);bottom:-100px;left:-100px}
+.pm-hero-inner{position:relative;z-index:1;max-width:700px}
+.pm-hero h1{font-size:2.8rem;line-height:1.15;margin-bottom:1rem}
+.pm-hero h1 span{background:linear-gradient(135deg,var(--accent),#1A9BAF);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.pm-hero p{font-size:1rem;color:var(--muted);margin-bottom:2rem;max-width:500px;margin-left:auto;margin-right:auto}
+.pm-hero .btns{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap}
+.pm-feature{padding:5rem 1.5rem;background:#05100D}
+.pm-feature-inner{max-width:1100px;margin:0 auto}
+.pm-feature h2{text-align:center;font-size:1.6rem;margin-bottom:3rem}
+.pm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem}
+.pm-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:2rem;transition:transform .2s,border-color .2s}
+.pm-card:hover{transform:translateY(-4px);border-color:var(--accent)}
+.pm-card .icon{font-size:2rem;margin-bottom:1rem}
+.pm-card h3{font-size:1rem;margin-bottom:.5rem}
+.pm-card p{font-size:.8rem;color:var(--muted);line-height:1.6}
+.pm-pricing{padding:5rem 1.5rem;background:linear-gradient(180deg,#05100D,#0a1a15)}
+.pm-pricing-inner{max-width:800px;margin:0 auto;text-align:center}
+.pm-plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1.5rem;margin-top:2rem}
+.pm-plan{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:2rem;text-align:left}
+.pm-plan.featured{border-color:var(--accent);position:relative}
+.pm-plan.featured::after{content:'Populaire';position:absolute;top:-10px;right:16px;background:var(--accent);color:#000;font-size:.65rem;padding:3px 10px;border-radius:20px;font-weight:600}
+.pm-plan h3{font-size:1.1rem;margin-bottom:.3rem}
+.pm-plan .price{font-size:1.8rem;font-weight:700;color:var(--accent);margin:.8rem 0}
+.pm-plan .price span{font-size:.8rem;font-weight:400;color:var(--muted)}
+.pm-plan ul{list-style:none;padding:0;margin:1.2rem 0}
+.pm-plan ul li{font-size:.78rem;color:var(--muted);padding:.3rem 0;padding-left:1.2rem;position:relative}
+.pm-plan ul li::before{content:'✓';position:absolute;left:0;color:var(--accent);font-weight:700}
+.pm-step{padding:5rem 1.5rem;background:#05100D}
+.pm-step-inner{max-width:800px;margin:0 auto}
+.pm-step h2{text-align:center;font-size:1.6rem;margin-bottom:3rem}
+.pm-steps-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:2rem;text-align:center}
+.pm-steps-grid .step-num{width:48px;height:48px;border-radius:50%;background:var(--accent);color:#000;font-weight:700;font-size:1.2rem;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem}
+.pm-steps-grid h3{font-size:.95rem;margin-bottom:.5rem}
+.pm-steps-grid p{font-size:.78rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<svg style="display:none"><defs><symbol id="pxl" viewBox="0 0 100 100"><polygon points="50,2 93,26 93,74 50,98 7,74 7,26" fill="none"/><polygon points="50,2 93,26 70,14" fill="#2DBD6E"/><polygon points="50,2 70,14 50,30 30,14" fill="#3DC87A"/><polygon points="50,2 30,14 7,26" fill="#1EB482"/><polygon points="93,26 93,74 78,50" fill="#1A9BAF"/><polygon points="93,26 78,50 70,14" fill="#1CB89A"/><polygon points="70,14 78,50 50,30" fill="#22C490"/><polygon points="50,30 78,50 60,72 40,72 22,50" fill="#1A9BAF"/><polygon points="7,26 30,14 22,50" fill="#1565C0"/><polygon points="30,14 50,30 22,50" fill="#1878C8"/><polygon points="7,26 22,50 7,74" fill="#1565C0"/><polygon points="7,74 22,50 40,72 50,98 30,86" fill="#1A9BAF"/><polygon points="93,74 78,50 60,72 50,98 70,86" fill="#1565C0"/><polygon points="50,98 70,86 93,74" fill="#1878C8"/><polygon points="50,98 30,86 7,74" fill="#1A9BAF"/><polygon points="40,72 60,72 50,98 30,86" fill="#1CB89A"/><path d="M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z" fill="white" opacity="0.92"/></symbol></defs></svg>
+<nav><a href="/" class="logo"><svg><use href="#pxl"/></svg><div class="logo-text"><strong>Pixel Software Design</strong><span>L'architecture de l'innovation</span></div></a><ul class="nav-menu" id="navMenu"><li><a href="/">Accueil</a></li><li><a href="/pixmail/" class="active">PixMail</a></li><li><a href="/prix/">Prix</a></li><li><a href="/faq/">FAQ</a></li><li><a href="/contact/">Contact</a></li><li><a href="/pixsoftpay/wallet/">💰 Wallet</a></li><li><a href="/login/">Connexion</a></li></ul><button class="burger" onclick="document.getElementById('navMenu').classList.toggle('open')" aria-label="Menu"><span></span><span></span><span></span></button></nav>
+
+<section class="pm-hero">
+<div class="pm-hero-inner">
+<h1>Votre email <span>@pxelsoftware-64fcd.web.app</span></h1>
+<p>Email professionnel sécurisé, rapide et intégré à l'écosystème Pixel Software Design. Créez votre adresse @pxelsoftware-64fcd.web.app en quelques secondes.</p>
+<div class="btns">
+<a href="/pixmail/inscription/" class="btn-p">Créer mon email →</a>
+<a href="/pixmail/connexion/" class="btn-p" style="background:transparent;border:1px solid var(--border)">Se connecter</a>
+</div>
+</div>
+</section>
+
+<section class="pm-feature">
+<div class="pm-feature-inner">
+<h2>Pourquoi PixMail ?</h2>
+<div class="pm-grid">
+<div class="pm-card"><div class="icon">🔒</div><h3>Sécurisé & Privé</h3><p>Vos emails sont chiffrés et protégés. Aucune donnée n'est partagée avec des tiers. Votre vie privée est notre priorité.</p></div>
+<div class="pm-card"><div class="icon">⚡</div><h3>Ultra Rapide</h3><p>Interface réactive et synchronisation instantanée. Consultez vos emails en temps réel sur tous vos appareils.</p></div>
+<div class="pm-card"><div class="icon">📁</div><h3>Organisation Intelligente</h3><p>Boîte de réception, envoyés, brouillons, spam, corbeille et dossiers personnalisés. Gérez vos emails comme un pro.</p></div>
+<div class="pm-card"><div class="icon">👤</div><h3>Contacts Intégrés</h3><p>Gestionnaire de contacts intégré. Ajoutez, modifiez et recherchez vos contacts en un clic.</p></div>
+<div class="pm-card"><div class="icon">🎨</div><h3>Design Élégant</h3><p>Interface moderne et intuitive dans les couleurs Pixel Software Design. Une expérience utilisateur agréable au quotidien.</p></div>
+<div class="pm-card"><div class="icon">🔗</div><h3>Intégration Complète</h3><p>PixMail s'intègre nativement avec GestiActiv, le portail client et tous les services Pixel Software Design.</p></div>
+</div>
+</div>
+</section>
+
+<section class="pm-step">
+<div class="pm-step-inner">
+<h2>Comment ça marche ?</h2>
+<div class="pm-steps-grid">
+<div><div class="step-num">1</div><h3>Choisissez votre nom</h3><p>Sélectionnez votre nom d'utilisateur @pixmail.tn unique.</p></div>
+<div><div class="step-num">2</div><h3>Créez votre compte</h3><p>Renseignez vos informations et sécurisez votre mot de passe.</p></div>
+<div><div class="step-num">3</div><h3>Envoyez & Recevez</h3><p>Communiquez instantanément avec vos contacts via votre nouvel email.</p></div>
+</div>
+</div>
+</section>
+
+<section class="pm-pricing">
+<div class="pm-pricing-inner">
+<h2>Plans PixMail</h2>
+<div class="pm-plans">
+<div class="pm-plan">
+<h3>Gratuit</h3>
+<div class="price">0 TND <span>/mois</span></div>
+<ul><li>Adresse @pixmail.tn</li><li>500 Mo de stockage</li><li>Boîte de réception</li><li>Contacts & brouillons</li><li>Support communautaire</li></ul>
+<a href="/pixmail/inscription/" class="btn-p" style="width:100%;justify-content:center;margin-top:.5rem">Commencer →</a>
+</div>
+<div class="pm-plan featured">
+<h3>Pro</h3>
+<div class="price">9.9 TND <span>/mois</span></div>
+<ul><li>5 Go de stockage</li><li>Domaines personnalisés</li><li>Signature avancée</li><li>Fichiers joints (25 Mo)</li><li>Support prioritaire</li></ul>
+<a href="/pixmail/inscription/" class="btn-p" style="width:100%;justify-content:center;margin-top:.5rem">Choisir Pro →</a>
+</div>
+<div class="pm-plan">
+<h3>Entreprise</h3>
+<div class="price">29.9 TND <span>/mois</span></div>
+<ul><li>50 Go de stockage</li><li>Multi-utilisateurs</li><li>Admin console</li><li>API accès complet</li><li>Support dédié 24/7</li></ul>
+<a href="/pixmail/inscription/" class="btn-p" style="width:100%;justify-content:center;margin-top:.5rem">Contacter →</a>
+</div>
+</div>
+</div>
+</section>
+
+<footer><div style="display:flex;align-items:center;gap:10px"><svg width="24" height="24"><use href="#pxl"/></svg><span class="fcopy">© 2026 Pixel Software Design</span></div><div class="flinks"><a href="/">Accueil</a><a href="/pixmail/">PixMail</a><a href="/prix/">Prix</a></div></footer>
+</body>
+</html>

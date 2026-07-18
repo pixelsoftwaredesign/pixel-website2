@@ -1,0 +1,26 @@
+{% extends "studio/pixsoftpay_base.html" %}
+{% block content %}
+<div class="pp-card" style="max-width:480px">
+  <h2 style="margin-bottom:18px">Désactiver la 2FA</h2>
+  <p style="color:#888;margin-bottom:20px;font-size:.9rem">
+    Saisissez un code de votre application d'authentification pour confirmer.
+  </p>
+
+  {% if error %}
+  <p style="color:#ff1744;margin-bottom:12px;font-size:.9rem">{{ error }}</p>
+  {% endif %}
+
+  <form method="POST">
+    {% csrf_token %}
+    <div class="pp-form-group">
+      <label>Code de vérification (6 chiffres)</label>
+      <input type="text" name="code" maxlength="6" pattern="[0-9]{6}" placeholder="000000" required autofocus style="text-align:center;font-size:1.4rem;letter-spacing:8px">
+    </div>
+    <button type="submit" class="pp-btn pp-btn-danger" style="width:100%">Désactiver la 2FA</button>
+  </form>
+
+  <div style="margin-top:16px;text-align:center">
+    <a href="/pixsoftpay/" style="color:#888;font-size:.85rem">← Annuler</a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,16 @@
+{
+  "projects": {},
+  "targets": {
+    "pxelsoftware-64fcd": {
+      "hosting": {
+        "pxelsoftware-64fcd": [
+          "pxelsoftware-64fcd"
+        ],
+        "pixelsoftwaredesign": [
+          "pixelsoftwaredesign"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

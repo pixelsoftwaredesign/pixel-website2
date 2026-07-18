@@ -1,0 +1,191 @@
+<!DOCTYPE html><html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PixSocial — Feed | Pixel Software Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/style.css">
+<style>
+.ps-layout{display:grid;grid-template-columns:260px 1fr 280px;gap:1.5rem;max-width:1200px;margin:2rem auto;padding:0 1.5rem}
+.ps-sidebar{position:sticky;top:6rem;height:fit-content}
+.ps-sidebar-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.5rem;margin-bottom:1rem}
+.ps-sidebar-card h3{font-size:.85rem;margin-bottom:1rem;color:var(--accent)}
+.ps-sidebar-card a{display:flex;align-items:center;gap:.6rem;padding:.5rem .6rem;border-radius:8px;color:var(--text);text-decoration:none;font-size:.82rem;transition:background .2s}
+.ps-sidebar-card a:hover,.ps-sidebar-card a.active{background:rgba(30,180,130,.1);color:var(--accent)}
+.ps-sidebar-card a .icon{font-size:1.1rem}
+.ps-feed{min-width:0}
+.ps-composer{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.5rem;margin-bottom:1.5rem}
+.ps-composer textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:.8rem 1rem;color:var(--text);font-family:inherit;font-size:.85rem;resize:vertical;min-height:60px;margin-bottom:.8rem}
+.ps-composer textarea:focus{outline:none;border-color:var(--accent)}
+.ps-composer .composer-actions{display:flex;justify-content:space-between;align-items:center}
+.ps-composer .composer-actions select{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.4rem .8rem;color:var(--text);font-size:.75rem}
+.ps-post{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.5rem;margin-bottom:1rem;transition:border-color .2s}
+.ps-post:hover{border-color:rgba(30,180,130,.3)}
+.ps-post-header{display:flex;align-items:center;gap:.8rem;margin-bottom:1rem}
+.ps-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#1A9BAF);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;color:#000;flex-shrink:0}
+.ps-post-header .meta{flex:1}
+.ps-post-header .meta .name{font-weight:600;font-size:.85rem}
+.ps-post-header .meta .name a{color:var(--text);text-decoration:none}
+.ps-post-header .meta .name a:hover{color:var(--accent)}
+.ps-post-header .meta .time{font-size:.7rem;color:var(--muted)}
+.ps-post-content{font-size:.88rem;line-height:1.7;margin-bottom:1rem;white-space:pre-wrap;word-break:break-word}
+.ps-post-actions{display:flex;gap:.5rem;padding-top:.8rem;border-top:1px solid var(--border)}
+.ps-post-actions button{background:none;border:none;color:var(--muted);font-size:.78rem;cursor:pointer;padding:.4rem .8rem;border-radius:8px;display:flex;align-items:center;gap:.4rem;transition:all .2s}
+.ps-post-actions button:hover{background:rgba(30,180,130,.1);color:var(--accent)}
+.ps-post-actions button.liked{color:#e74c3c}
+.ps-right{position:sticky;top:6rem;height:fit-content}
+.ps-sidebar-card .user-badge{display:flex;align-items:center;gap:.8rem;margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid var(--border)}
+.ps-sidebar-card .user-badge .av{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#1A9BAF);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;color:#000}
+.ps-sidebar-card .user-badge .info{font-size:.8rem}
+.ps-sidebar-card .user-badge .info strong{display:block}
+.ps-sidebar-card .user-badge .info span{color:var(--muted);font-size:.7rem}
+.ps-empty{text-align:center;padding:4rem 1rem;color:var(--muted)}
+.ps-empty .icon{font-size:3rem;margin-bottom:1rem}
+.ps-empty h3{font-size:1rem;margin-bottom:.5rem}
+.ps-comments{margin-top:.8rem;padding-top:.6rem;border-top:1px solid var(--border)}
+.ps-comment-row{display:flex;gap:.5rem;margin-bottom:.5rem}
+.ps-comment-row input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.4rem .6rem;color:var(--text);font-size:.78rem}
+.ps-comment-row input:focus{outline:none;border-color:var(--accent)}
+.ps-comment-row button{background:none;border:none;color:var(--accent);cursor:pointer;font-size:.8rem}
+.ps-login-msg{text-align:center;padding:3rem 1rem;color:var(--muted);font-size:.85rem}
+.ps-login-msg a{color:var(--accent);text-decoration:none}
+@media(max-width:900px){.ps-layout{grid-template-columns:1fr}.ps-sidebar,.ps-right{display:none}}
+</style>
+</head>
+<body>
+<svg style="display:none"><defs><symbol id="pxl" viewBox="0 0 100 100"><polygon points="50,2 93,26 93,74 50,98 7,74 7,26" fill="none"/><polygon points="50,2 93,26 70,14" fill="#2DBD6E"/><polygon points="50,2 70,14 50,30 30,14" fill="#3DC87A"/><polygon points="50,2 30,14 7,26" fill="#1EB482"/><polygon points="93,26 93,74 78,50" fill="#1A9BAF"/><polygon points="93,26 78,50 70,14" fill="#1CB89A"/><polygon points="70,14 78,50 50,30" fill="#22C490"/><polygon points="50,30 78,50 60,72 40,72 22,50" fill="#1A9BAF"/><polygon points="7,26 30,14 22,50" fill="#1565C0"/><polygon points="30,14 50,30 22,50" fill="#1878C8"/><polygon points="7,26 22,50 7,74" fill="#1565C0"/><polygon points="7,74 22,50 40,72 50,98 30,86" fill="#1A9BAF"/><polygon points="93,74 78,50 60,72 50,98 70,86" fill="#1565C0"/><polygon points="50,98 70,86 93,74" fill="#1878C8"/><polygon points="50,98 30,86 7,74" fill="#1A9BAF"/><polygon points="40,72 60,72 50,98 30,86" fill="#1CB89A"/><path d="M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z" fill="white" opacity="0.92"/></symbol></defs></svg>
+<nav><a href="/" class="logo"><svg><use href="#pxl"/></svg><div class="logo-text"><strong>Pixel Software Design</strong><span>L'architecture de l'innovation</span></div></a><ul class="nav-menu" id="navMenu"><li><a href="/">Accueil</a></li><li><a href="/social/" class="active">Social</a></li><li><a href="/social/messagerie/">Messagerie</a></li><li><a href="/pixmail/">PixMail</a></li><li><a href="https://pixmaps.web.app/search.html" target="_blank">PixMaps</a></li><li><a href="/portfolio/">Portfolio</a></li><li><a href="/login/" id="navAuth">Connexion</a></li></ul><button class="burger" onclick="document.getElementById('navMenu').classList.toggle('open')" aria-label="Menu"><span></span><span></span><span></span></button></nav>
+
+<div class="ps-layout">
+<aside class="ps-sidebar">
+<div class="ps-sidebar-card" id="sidebarUser"></div>
+<div class="ps-sidebar-card">
+<h3>Navigation</h3>
+<a href="/social/" class="active"><span class="icon">🏠</span> Fil d'actualité</a>
+<a href="/social/messagerie/"><span class="icon">💬</span> Messagerie E2E</a>
+<a href="/portfolio/"><span class="icon">🎨</span> Portfolio</a>
+<a href="/pixmail/"><span class="icon">✉️</span> PixMail</a>
+<a href="/portail/"><span class="icon">👤</span> Mon espace</a>
+</div>
+</aside>
+
+<main class="ps-feed" id="feedMain"></main>
+
+<aside class="ps-right">
+<div class="ps-sidebar-card">
+<h3>Suggestions</h3>
+<div id="suggestions"></div>
+</div>
+</aside>
+</div>
+
+<script>
+var S={get:function(k){try{return JSON.parse(localStorage.getItem('pxl_'+k))}catch(e){return null}},set:function(k,v){localStorage.setItem('pxl_'+k,JSON.stringify(v))}};
+var session=S.get('session');
+function timeAgo(iso){try{var d=Date.now()-new Date(iso).getTime();var m=Math.floor(d/60000);if(m<1)return 'à l\'instant';if(m<60)return 'il y a '+m+'min';var h=Math.floor(m/60);if(h<24)return 'il y a '+h+'h';return 'il y a '+Math.floor(h/24)+'j'}catch(e){return ''}}
+function navAuth(){var n=document.getElementById('navAuth');if(session){n.textContent=session.displayName||session.username;n.href='/portail/'}}
+function sidebarUser(){var el=document.getElementById('sidebarUser');if(session){el.innerHTML='<div class="user-badge"><div class="av">'+(session.displayName||session.username)[0].toUpperCase()+'</div><div class="info"><strong>@'+session.username+'</strong><span>'+session.email+'</span></div></div>'}}
+
+function loadFeed(){
+  var posts=S.get('posts')||[];
+  var html='';
+  if(session){
+    html+='<div class="ps-composer"><textarea id="postContent" placeholder="Quoi de neuf, '+session.username+' ?"></textarea><div class="composer-actions"><select id="postVis"><option value="public">🌐 Public</option><option value="followers">👥 Abonnés</option><option value="private">🔒 Privé</option></select><button class="btn-p" onclick="createPost()">Publier</button></div></div>';
+  }else{
+    html+='<div class="ps-login-msg"><a href="/login/">Connectez-vous</a> pour publier et interagir.</div>';
+  }
+  if(posts.length===0){
+    html+='<div class="ps-empty"><div class="icon">📝</div><h3>Aucun post pour l\'instant</h3><p>Soyez le premier à publier quelque chose !</p></div>';
+  }else{
+    posts.sort(function(a,b){return new Date(b.createdAt)-new Date(a.createdAt)});
+    for(var i=0;i<posts.length;i++){
+      var p=posts[i];
+      var isLiked=session&&p.likes&&p.likes.indexOf(session.username)>=0;
+      html+='<div class="ps-post" id="post-'+p.id+'">';
+      html+='<div class="ps-post-header"><div class="ps-avatar">'+p.author[0].toUpperCase()+'</div><div class="meta"><div class="name">'+p.author+'</div><div class="time">'+timeAgo(p.createdAt)+'</div></div></div>';
+      html+='<div class="ps-post-content">'+escHtml(p.content)+'</div>';
+      html+='<div class="ps-post-actions">';
+      html+='<button onclick="likePost(\''+p.id+'\')" class="'+(isLiked?'liked':'')+'">'+(isLiked?'❤️':'🤍')+' '+(p.likes? p.likes.length:0)+'</button>';
+      html+='<button onclick="toggleComments(\''+p.id+'\')">💬 '+(p.comments?p.comments.length:0)+'</button>';
+      html+='</div>';
+      html+='<div class="ps-comments" id="comments-'+p.id+'" style="display:none">';
+      if(p.comments){for(var j=0;j<p.comments.length;j++){var c=p.comments[j];html+='<div class="ps-comment-row"><strong>'+c.author+'</strong>&nbsp;'+escHtml(c.text)+'</div>'}}
+      if(session){html+='<div class="ps-comment-row"><input id="commentInput-'+p.id+'" placeholder="Commenter..."><button onclick="addComment(\''+p.id+'\')">→</button></div>'}
+      html+='</div></div>';
+    }
+  }
+  document.getElementById('feedMain').innerHTML=html;
+  loadSuggestions();
+}
+
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+function createPost(){
+  var content=document.getElementById('postContent').value.trim();
+  var vis=document.getElementById('postVis').value;
+  if(!content||!session)return;
+  var posts=S.get('posts')||[];
+  posts.push({id:'p'+Date.now(),author:session.username,content:content,visibility:vis,imageUrl:'',likes:[],comments:[],sharesCount:0,createdAt:new Date().toISOString()});
+  S.set('posts',posts);
+  loadFeed();
+}
+
+function likePost(id){
+  if(!session){window.location.href='/login/';return}
+  var posts=S.get('posts')||[];
+  for(var i=0;i<posts.length;i++){
+    if(posts[i].id===id){
+      if(!posts[i].likes)posts[i].likes=[];
+      var idx=posts[i].likes.indexOf(session.username);
+      if(idx>=0)posts[i].likes.splice(idx,1);else posts[i].likes.push(session.username);
+      break;
+    }
+  }
+  S.set('posts',posts);
+  loadFeed();
+}
+
+function toggleComments(id){
+  var el=document.getElementById('comments-'+id);
+  if(el)el.style.display=el.style.display==='none'?'block':'none';
+}
+
+function addComment(id){
+  if(!session)return;
+  var input=document.getElementById('commentInput-'+id);
+  var text=input?input.value.trim():'';
+  if(!text)return;
+  var posts=S.get('posts')||[];
+  for(var i=0;i<posts.length;i++){
+    if(posts[i].id===id){
+      if(!posts[i].comments)posts[i].comments=[];
+      posts[i].comments.push({author:session.username,text:text,createdAt:new Date().toISOString()});
+      break;
+    }
+  }
+  S.set('posts',posts);
+  loadFeed();
+  toggleComments(id);
+}
+
+function loadSuggestions(){
+  var users=JSON.parse(localStorage.getItem('pxl_users')||'{}');
+  var html='';
+  var count=0;
+  for(var k in users){
+    if(count>=8)break;
+    if(session&&k===session.username)continue;
+    var u=users[k];
+    html+='<div style="padding:.6rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:.6rem">';
+    html+='<div class="ps-avatar" style="width:32px;height:32px;font-size:.7rem">'+u.displayName[0].toUpperCase()+'</div>';
+    html+='<div><strong style="font-size:.82rem">'+escHtml(u.displayName)+'</strong><div style="font-size:.7rem;color:var(--muted)">@'+k+'</div></div></div>';
+    count++;
+  }
+  if(!html)html='<div style="padding:1rem;text-align:center;color:var(--muted);font-size:.75rem">Aucun utilisateur inscrit</div>';
+  document.getElementById('suggestions').innerHTML=html;
+}
+
+navAuth();sidebarUser();loadFeed();
+</script>
+<script src="/static/js/pixsearch.js"></script>
+</body></html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixSoftPay — Historique</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Space Grotesk',system-ui,sans-serif;background:#0a0a1a;color:#e0e0e0;min-height:100vh}
+a{color:#6c63ff;text-decoration:none}
+.pp-nav{background:#12122a;border-bottom:1px solid #1e1e3a;padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+.pp-nav-brand{font-size:1.3rem;font-weight:700;color:#6c63ff}
+.pp-nav-links{display:flex;gap:16px;align-items:center}
+.pp-nav-links a{color:#888;font-size:.88rem;transition:color .2s}
+.pp-nav-links a:hover,.pp-nav-links a.active{color:#6c63ff}
+.pp-nav-user{color:#00c853;font-weight:600}
+.pp-nav-logout{background:none;border:1px solid #1e1e3a;color:#888;padding:5px 12px;border-radius:8px;cursor:pointer;font-size:.8rem;font-family:inherit}
+.pp-wrap{max-width:860px;margin:0 auto;padding:24px 20px}
+.pp-card{background:#12122a;border:1px solid #1e1e3a;border-radius:14px;padding:28px;margin-bottom:18px}
+.pp-badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:.78rem;font-weight:600}
+.pp-badge-en_attente{background:rgba(255,171,0,.15);color:#ffab00}
+.pp-badge-confirme{background:rgba(0,200,83,.15);color:#00c853}
+.pp-badge-refuse{background:rgba(255,23,68,.15);color:#ff1744}
+.pp-btn{display:inline-flex;padding:6px 14px;border:none;border-radius:8px;font-size:.8rem;font-weight:600;cursor:pointer;font-family:inherit}
+.pp-btn-primary{background:#6c63ff;color:#fff}
+.pp-btn-outline{background:transparent;border:1px solid #1e1e3a;color:#e0e0e0}
+.pp-table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th,td{padding:11px 14px;text-align:left;border-bottom:1px solid #1e1e3a;font-size:.88rem}
+th{color:#888;font-weight:600;font-size:.78rem;text-transform:uppercase}
+tr:hover{background:#16162e}
+.pp-flex{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.pp-loading{text-align:center;padding:40px;color:#888}
+.pp-empty{text-align:center;padding:40px;color:#888}
+</style>
+</head>
+<body>
+<div id="app" style="display:none">
+<nav class="pp-nav">
+  <a href="/pixsoftpay/" class="pp-nav-brand">PixSoftPay</a>
+  <div class="pp-nav-links">
+    <a href="/pixsoftpay/">Dashboard</a>
+    <a href="/pixsoftpay/create/">Nouveau QR</a>
+    <a href="/pixsoftpay/wallet/">Wallet</a>
+    <a href="/pixsoftpay/history/" class="active">Historique</a>
+    <span class="pp-nav-user" id="username"></span>
+    <button class="pp-nav-logout" onclick="logout()">Déconnexion</button>
+    <a href="/">← Site</a>
+  </div>
+</nav>
+<div class="pp-wrap">
+  <div class="pp-flex" style="margin-bottom:20px">
+    <h1>Historique</h1>
+    <div style="display:flex;gap:8px;flex-wrap:wrap" id="filters"></div>
+  </div>
+  <div id="table"><div class="pp-loading">Chargement...</div></div>
+</div>
+</div>
+<script>
+let currentFilter='';
+const STATUS={en_attente:'En attente',confirme:'Payé',refuse:'Refusé',annule:'Annulé'};
+function logout(){fetch('/api/deconnexion/').then(()=>window.location='/pixsoftpay/login/');}
+function renderFilters(){
+  const f=document.getElementById('filters');f.innerHTML='';
+  ['','en_attente','confirme','refuse'].forEach(s=>{
+    const b=document.createElement('button');
+    b.className='pp-btn '+(currentFilter===s?'pp-btn-primary':'pp-btn-outline');
+    b.textContent=s?STATUS[s]:'Tous';
+    b.onclick=()=>{currentFilter=s;renderFilters();load();};
+    f.appendChild(b);
+  });
+}
+function load(){
+  document.getElementById('table').innerHTML='<div class="pp-loading">Chargement...</div>';
+  fetch('/api/pixsoftpay/create/').then(r=>r.json()).then(d=>{
+    let txs=d.payments||[];
+    if(currentFilter)txs=txs.filter(t=>t.status===currentFilter);
+    if(!txs.length){document.getElementById('table').innerHTML='<div class="pp-card pp-empty">Aucune transaction trouvée</div>';return;}
+    let h='<div class="pp-card"><div class="pp-table-wrap"><table><thead><tr><th>Référence</th><th>Montant</th><th>Client</th><th>Méthode</th><th>Statut</th><th>Date</th></tr></thead><tbody>';
+    txs.forEach(t=>{h+=`<tr><td style="font-family:monospace">${t.reference}</td><td><strong>${t.amount} TND</strong></td><td>${t.customer_name||'—'}</td><td>${t.payment_method||t.methode||'wallet'}</td><td><span class="pp-badge pp-badge-${t.status}">${STATUS[t.status]||t.status}</span></td><td>${new Date(t.created_at).toLocaleDateString('fr-FR')}</td></tr>`;});
+    h+='</tbody></table></div></div>';
+    document.getElementById('table').innerHTML=h;
+  }).catch(()=>{document.getElementById('table').innerHTML='<div class="pp-card pp-empty">Erreur de chargement</div>';});
+}
+fetch('/api/me/').then(r=>r.json()).then(d=>{
+  if(d.status!=='success'||!d.user){window.location='/pixsoftpay/login/';return;}
+  document.getElementById('username').textContent=d.user.username;
+  document.getElementById('app').style.display='block';
+  renderFilters();load();
+});
+</script>
+</body>
+</html>

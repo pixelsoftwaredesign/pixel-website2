@@ -8,7 +8,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.utils import timezone
-from .models import UserProfile, ProjetContact, AtelierProfile, PortfolioProject, CodeRepository, GraphismeResource, ERPModule, ERPSubscription, ERPDemoRecord, ERPClient, Moniteur, Candidat, Vehicule, Lecon, Examen, Medecin, Patient, Lit, RendezVous, FacturationSante, ClientHotel, Chambre, ReservationHotel, ServiceHotel, Categorie, Fournisseur, Produit, Vente, ClientJuridique, DossierJuridique, Audience, JournalComptable, EcritureComptable, Facture, DeclarationFiscale, Employe, Contrat, FichePaie, Conge, Formation, MenuItem, TableRestaurant, SoftCodeModule, StudioProject3D, PatisserieRecipe, PatisserieProduct, PlanAbonnement, SouscriptionClient, Paiement, CleActivation, ConfigurationBancaire, ConfigurationPaiementEnLigne, Candidature, MouvementStock, CommandeECommerce, CommandeECommerceItem, Temoignage
+from .models import UserProfile, ProjetContact, AtelierProfile, PortfolioProject, CodeRepository, GraphismeResource, ERPModule, ERPSubscription, ERPDemoRecord, ERPClient, Moniteur, Candidat, Vehicule, Lecon, Examen, Medecin, Patient, Lit, RendezVous, FacturationSante, ClientHotel, Chambre, ReservationHotel, ServiceHotel, Categorie, Fournisseur, Produit, Vente, ClientJuridique, DossierJuridique, Audience, JournalComptable, EcritureComptable, Facture, DeclarationFiscale, Employe, Contrat, FichePaie, Conge, Formation, MenuItem, TableRestaurant, SoftCodeModule, StudioProject3D, PatisserieRecipe, PatisserieProduct, PlanAbonnement, SouscriptionClient, Paiement, CleActivation, ConfigurationBancaire, ConfigurationPaiementEnLigne, Candidature, MouvementStock, CommandeECommerce, CommandeECommerceItem, Temoignage, PixMailAccount, PixMailContact, PixMailMessage, PixMailAttachment, PixMailFolder, PixMailSignature, SocialProfile, Follow, Post, Like, Comment, Notification, Conversation, ConversationMember, EncryptedMessage, Wallet, Transaction, TwoFactorAuth
 from .services import notifier_activation_cle, notifier_confirmation_commande, notifier_statut_commande
 
 def index(request):
@@ -1544,3 +1544,1018 @@ def faq(request):
 def temoignages(request):
     temoignages = Temoignage.objects.filter(actif=True)
     return render(request, 'studio/temoignages.html', {'temoignages': temoignages})
+
+def portfolio(request):
+    projects = PortfolioProject.objects.all().order_by('-created_at')
+    repos = CodeRepository.objects.all().order_by('-created_at')
+    resources = GraphismeResource.objects.all()[:6]
+    return render(request, 'studio/portfolio.html', {
+        'projects': projects, 'repos': repos, 'resources': resources,
+    })
+
+
+# ─── PixMail — Service Email ────────────────────────────────
+import hashlib
+from django.core.mail import send_mail, EmailMessage
+from django.conf import settings
+
+PIXMAIL_DOMAIN = getattr(settings, 'PIXMAIL_DOMAIN', 'pixelsoftwaredesign.com')
+
+def pixmail_landing(request):
+    return render(request, 'studio/pixmail_landing.html')
+
+def pixmail_register(request):
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip().lower()
+        password = request.POST.get('password', '')
+        password2 = request.POST.get('password2', '')
+        display_name = request.POST.get('display_name', '').strip()
+        error = None
+        if not username or not password:
+            error = 'Nom d\'utilisateur et mot de passe requis.'
+        elif len(username) < 3:
+            error = 'Le nom d\'utilisateur doit contenir au moins 3 caractères.'
+        elif not all(c.isalnum() or c in '-_' for c in username):
+            error = 'Le nom d\'utilisateur ne peut contenir que des lettres, chiffres, - et _.'
+        elif password != password2:
+            error = 'Les mots de passe ne correspondent pas.'
+        elif len(password) < 6:
+            error = 'Le mot de passe doit contenir au moins 6 caractères.'
+        elif PixMailAccount.objects.filter(username=username).exists():
+            error = 'Ce nom d\'utilisateur est déjà pris.'
+        if error:
+            return render(request, 'studio/pixmail_register.html', {'error': error, 'username': username, 'display_name': display_name})
+        email = f'{username}@{PIXMAIL_DOMAIN}'
+        password_hash = hashlib.sha256(password.encode()).hexdigest()
+        user = User.objects.create_user(username=f'pixmail_{username}', email=email, password=password)
+        account = PixMailAccount.objects.create(
+            user=user, username=username, email=email,
+            password_hash=password_hash, display_name=display_name or username,
+        )
+        PixMailSignature.objects.create(account=account)
+        login(request, user)
+        return redirect('pixmail_inbox')
+    return render(request, 'studio/pixmail_register.html')
+
+def pixmail_login(request):
+    if request.method == 'POST':
+        username = request.POST.get('username', '').strip().lower()
+        password = request.POST.get('password', '')
+        if not username or not password:
+            return render(request, 'studio/pixmail_login.html', {'error': 'Tous les champs sont requis.', 'username': username})
+        # Accept full email or username
+        if '@' in username:
+            account = PixMailAccount.objects.filter(email=username, is_active=True).first()
+        else:
+            account = PixMailAccount.objects.filter(username=username, is_active=True).first()
+        if not account:
+            return render(request, 'studio/pixmail_login.html', {'error': 'Compte introuvable.', 'username': username})
+        # Try Django auth first, then custom hash
+        django_user = authenticate(username=account.user.username, password=password)
+        if django_user is not None:
+            login(request, django_user)
+            return redirect('pixmail_inbox')
+        password_hash = hashlib.sha256(password.encode()).hexdigest()
+        if account.password_hash == password_hash:
+            login(request, account.user)
+            return redirect('pixmail_inbox')
+        return render(request, 'studio/pixmail_login.html', {'error': 'Mot de passe incorrect.', 'username': username})
+    return render(request, 'studio/pixmail_login.html')
+
+@login_required
+def pixmail_inbox(request):
+    account = getattr(request.user, 'pixmail', None)
+    if not account:
+        return redirect('pixmail_landing')
+    folder = request.GET.get('folder', 'inbox')
+    messages_list = PixMailMessage.objects.filter(folder=folder)
+    if folder == 'inbox':
+        messages_list = messages_list.filter(recipient_email=account.email)
+    elif folder == 'sent':
+        messages_list = messages_list.filter(sender_email=account.email)
+    elif folder == 'spam':
+        messages_list = messages_list.filter(recipient_email=account.email)
+    elif folder == 'trash':
+        messages_list = messages_list.filter(recipient_email=account.email)
+    elif folder == 'archive':
+        messages_list = messages_list.filter(recipient_email=account.email)
+    messages_list = messages_list[:50]
+    unread_count = PixMailMessage.objects.filter(recipient_email=account.email, is_read=False, folder='inbox').count()
+    custom_folders = account.custom_folders.all()
+    return render(request, 'studio/pixmail_inbox.html', {
+        'account': account, 'messages': messages_list,
+        'current_folder': folder, 'unread_count': unread_count,
+        'custom_folders': custom_folders,
+    })
+
+@login_required
+def pixmail_compose(request):
+    account = getattr(request.user, 'pixmail', None)
+    if not account:
+        return redirect('pixmail_landing')
+    if request.method == 'POST':
+        recipient = request.POST.get('recipient', '').strip()
+        subject = request.POST.get('subject', '').strip()
+        body = request.POST.get('body', '').strip()
+        cc = request.POST.get('cc', '').strip()
+        if not recipient or not subject or not body:
+            return render(request, 'studio/pixmail_compose.html', {
+                'account': account, 'error': 'Destinataire, sujet et message requis.',
+                'recipient': recipient, 'subject': subject, 'body': body, 'cc': cc,
+            })
+        msg = PixMailMessage.objects.create(
+            sender=account, sender_email=account.email,
+            recipient_email=recipient, subject=subject, body=body, body_html=body,
+            cc=cc, folder='sent', size_kb=len(body.encode('utf-8')) // 1024,
+        )
+        PixMailMessage.objects.create(
+            sender_email=account.email, recipient_email=recipient,
+            subject=subject, body=body, body_html=body,
+            cc=cc, folder='inbox', size_kb=len(body.encode('utf-8')) // 1024,
+            reply_to=msg,
+        )
+        try:
+            email_msg = EmailMessage(
+                subject=subject, body=body,
+                from_email=f'{account.display_name} <{account.email}>',
+                to=[recipient],
+                cc=[cc] if cc else [],
+                headers={'Reply-To': account.email, 'X-PixMail-Sender': account.email},
+            )
+            email_msg.send(fail_silently=True)
+        except Exception:
+            pass
+        return redirect('pixmail_inbox')
+    reply_to_id = request.GET.get('reply')
+    initial = {}
+    if reply_to_id:
+        orig = get_object_or_404(PixMailMessage, id=reply_to_id)
+        initial['recipient'] = orig.sender_email
+        initial['subject'] = f"Re: {orig.subject}" if not orig.subject.startswith('Re:') else orig.subject
+        initial['body'] = f"\n\n--- Message original ---\n{orig.body}"
+    return render(request, 'studio/pixmail_compose.html', {
+        'account': account, 'initial': initial,
+    })
+
+@login_required
+def pixmail_message(request, msg_id):
+    account = getattr(request.user, 'pixmail', None)
+    if not account:
+        return redirect('pixmail_landing')
+    msg = get_object_or_404(PixMailMessage, id=msg_id)
+    if msg.sender_email != account.email and msg.recipient_email != account.email:
+        return redirect('pixmail_inbox')
+    if not msg.is_read and msg.recipient_email == account.email:
+        msg.is_read = True
+        msg.date_read = timezone.now()
+        msg.save()
+    attachments = msg.attachments.all()
+    return render(request, 'studio/pixmail_message.html', {
+        'account': account, 'msg': msg, 'attachments': attachments,
+    })
+
+@login_required
+def pixmail_delete(request, msg_id):
+    account = getattr(request.user, 'pixmail', None)
+    if not account:
+        return redirect('pixmail_landing')
+    msg = get_object_or_404(PixMailMessage, id=msg_id)
+    if msg.folder == 'trash':
+        msg.delete()
+    else:
+        msg.folder = 'trash'
+        msg.save()
+    return redirect('pixmail_inbox')
+
+@login_required
+def pixmail_star(request, msg_id):
+    account = getattr(request.user, 'pixmail', None)
+    if not account:
+        return redirect('pixmail_landing')
+    msg = get_object_or_404(PixMailMessage, id=msg_id)
+    msg.is_starred = not msg.is_starred
+    msg.save()
+    return redirect(request.META.get('HTTP_REFERER', 'pixmail_inbox'))
+
+@login_required
+def pixmail_contacts(request):
+    account = getattr(request.user, 'pixmail', None)
+    if not account:
+        return redirect('pixmail_landing')
+    contacts = account.contacts.all()
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'add':
+            name = request.POST.get('name', '').strip()
+            email_addr = request.POST.get('email', '').strip()
+            phone = request.POST.get('phone', '').strip()
+            company = request.POST.get('company', '').strip()
+            if name and email_addr:
+                PixMailContact.objects.create(
+                    owner=account, name=name, email=email_addr,
+                    phone=phone, company=company,
+                )
+        elif action == 'delete':
+            cid = request.POST.get('contact_id')
+            PixMailContact.objects.filter(id=cid, owner=account).delete()
+        return redirect('pixmail_contacts')
+    return render(request, 'studio/pixmail_contacts.html', {
+        'account': account, 'contacts': contacts,
+    })
+
+@login_required
+def pixmail_logout(request):
+    logout(request)
+    return redirect('pixmail_landing')
+
+
+# ─── API PixMail ──────────────────────────────────────────────
+@csrf_exempt
+def api_pixmail_register(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            username = data.get('username', '').strip().lower()
+            password = data.get('password', '')
+            display_name = data.get('display_name', '').strip()
+            if not username or not password:
+                return JsonResponse({"status": "error", "message": "Champs requis manquants."}, status=400)
+            if len(username) < 3:
+                return JsonResponse({"status": "error", "message": "Nom trop court (min 3 car.)."}, status=400)
+            if PixMailAccount.objects.filter(username=username).exists():
+                return JsonResponse({"status": "error", "message": "Ce nom d'utilisateur est déjà pris."}, status=400)
+            email = f'{username}@{PIXMAIL_DOMAIN}'
+            password_hash = hashlib.sha256(password.encode()).hexdigest()
+            user = User.objects.create_user(username=f'pixmail_{username}', email=email, password=password)
+            account = PixMailAccount.objects.create(
+                user=user, username=username, email=email,
+                password_hash=password_hash, display_name=display_name or username,
+            )
+            PixMailSignature.objects.create(account=account)
+            return JsonResponse({
+                "status": "success",
+                "message": f"Compte {email} créé avec succès !",
+                "email": email, "username": username,
+            }, status=201)
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+    return JsonResponse({"error": "Méthode non autorisée"}, status=405)
+
+@csrf_exempt
+def api_pixmail_login(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            username = data.get('username', '').strip().lower()
+            password = data.get('password', '')
+            if not username or not password:
+                return JsonResponse({"status": "error", "message": "Champs requis."}, status=400)
+            if '@' in username:
+                account = PixMailAccount.objects.filter(email=username, is_active=True).first()
+            else:
+                account = PixMailAccount.objects.filter(username=username, is_active=True).first()
+            if not account:
+                return JsonResponse({"status": "error", "message": "Compte introuvable."}, status=404)
+            django_user = authenticate(username=account.user.username, password=password)
+            if django_user is not None:
+                return JsonResponse({
+                    "status": "success", "email": account.email,
+                    "username": account.username, "display_name": account.display_name,
+                })
+            password_hash = hashlib.sha256(password.encode()).hexdigest()
+            if account.password_hash == password_hash:
+                return JsonResponse({
+                    "status": "success", "email": account.email,
+                    "username": account.username, "display_name": account.display_name,
+                })
+            return JsonResponse({"status": "error", "message": "Mot de passe incorrect."}, status=401)
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+    return JsonResponse({"error": "Méthode non autorisée"}, status=405)
+
+@csrf_exempt
+def api_pixmail_send(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            sender_email = data.get('sender', '')
+            recipient = data.get('recipient', '')
+            subject = data.get('subject', '')
+            body = data.get('body', '')
+            if not sender_email or not recipient or not subject or not body:
+                return JsonResponse({"status": "error", "message": "Tous les champs requis."}, status=400)
+            account = PixMailAccount.objects.filter(email=sender_email).first()
+            msg = PixMailMessage.objects.create(
+                sender=account, sender_email=sender_email,
+                recipient_email=recipient, subject=subject, body=body,
+                body_html=body, folder='sent', size_kb=len(body.encode('utf-8')) // 1024,
+            )
+            PixMailMessage.objects.create(
+                sender_email=sender_email, recipient_email=recipient,
+                subject=subject, body=body, body_html=body,
+                folder='inbox', size_kb=len(body.encode('utf-8')) // 1024,
+                reply_to=msg,
+            )
+            try:
+                email_msg = EmailMessage(
+                    subject=subject, body=body,
+                    from_email=f'PixMail <{sender_email}>',
+                    to=[recipient],
+                    headers={'Reply-To': sender_email, 'X-PixMail-Sender': sender_email},
+                )
+                email_msg.send(fail_silently=True)
+            except Exception:
+                pass
+            return JsonResponse({"status": "success", "message": "Message envoyé !"}, status=201)
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+    return JsonResponse({"error": "Méthode non autorisée"}, status=405)
+
+@csrf_exempt
+def api_pixmail_messages(request):
+    if request.method == 'GET':
+        email_addr = request.GET.get('email', '')
+        folder = request.GET.get('folder', 'inbox')
+        if not email_addr:
+            return JsonResponse({"error": "Email requis"}, status=400)
+        msgs = PixMailMessage.objects.filter(folder=folder)
+        if folder == 'inbox':
+            msgs = msgs.filter(recipient_email=email_addr)
+        elif folder == 'sent':
+            msgs = msgs.filter(sender_email=email_addr)
+        data = [{
+            'id': m.id, 'sender': m.sender_email, 'recipient': m.recipient_email,
+            'subject': m.subject, 'body': m.body[:200], 'folder': m.folder,
+            'is_read': m.is_read, 'is_starred': m.is_starred,
+            'has_attachments': m.has_attachments, 'size_kb': m.size_kb,
+            'date_sent': m.date_sent.isoformat(),
+        } for m in msgs[:50]]
+        return JsonResponse({'messages': data})
+    return JsonResponse({"error": "Méthode non autorisée"}, status=405)
+
+
+# ════════════════════════════════════════════════════════════
+# SOCIAL MEDIA — Vues & API
+# ════════════════════════════════════════════════════════════
+
+def _get_or_create_profile(user):
+    profile, _ = SocialProfile.objects.get_or_create(user=user)
+    return profile
+
+
+def social_feed(request):
+    if request.user.is_authenticated:
+        following_ids = Follow.objects.filter(follower=request.user).values_list('following_id', flat=True)
+        feed_posts = Post.objects.filter(
+            models.Q(author__in=following_ids) | models.Q(author=request.user),
+            visibility__in=['public', 'followers']
+        ).select_related('author')[:50]
+    else:
+        feed_posts = Post.objects.filter(visibility='public').select_related('author')[:50]
+    return render(request, 'studio/social_feed.html', {'posts': feed_posts})
+
+
+def social_profile(request, username):
+    profile_user = get_object_or_404(User, username=username)
+    profile = _get_or_create_profile(profile_user)
+    posts = Post.objects.filter(author=profile_user).select_related('author')[:30]
+    is_following = False
+    if request.user.is_authenticated and request.user != profile_user:
+        is_following = Follow.objects.filter(follower=request.user, following=profile_user).exists()
+    return render(request, 'studio/social_profile.html', {
+        'profile_user': profile_user,
+        'profile': profile,
+        'posts': posts,
+        'is_following': is_following,
+    })
+
+
+def social_post_detail(request, post_id):
+    post = get_object_or_404(Post.objects.select_related('author'), id=post_id)
+    comments = post.comments.select_related('author').all()
+    is_liked = False
+    if request.user.is_authenticated:
+        is_liked = Like.objects.filter(user=request.user, post=post).exists()
+    return render(request, 'studio/social_post.html', {
+        'post': post, 'comments': comments, 'is_liked': is_liked,
+    })
+
+
+def social_messages(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    convos = Conversation.objects.filter(
+        members__user=request.user
+    ).prefetch_related('members__user', 'messages').annotate(
+        last_msg=models.Max('messages__created_at')
+    ).order_by('-last_msg')
+    return render(request, 'studio/social_messages.html', {'conversations': convos})
+
+
+def social_conversation(request, conv_id):
+    conv = get_object_or_404(Conversation, id=conv_id)
+    if not conv.members.filter(user=request.user).exists():
+        return redirect('social_messages')
+    messages = conv.messages.select_related('sender').all()[:100]
+    members = conv.members.select_related('user').all()
+    return render(request, 'studio/social_conversation.html', {
+        'conversation': conv, 'messages': messages, 'members': members,
+    })
+
+
+# ─── API Social ──────────────────────────────────────────
+
+@csrf_exempt
+def api_social_register(request):
+    if request.method != 'POST':
+        return JsonResponse({"error": "POST requis"}, status=405)
+    try:
+        data = json.loads(request.body)
+        username = data.get('username', '').strip()
+        email = data.get('email', '').strip()
+        password = data.get('password', '')
+        display_name = data.get('display_name', username)
+        if not username or not password:
+            return JsonResponse({"error": "Username et mot de passe requis"}, status=400)
+        if User.objects.filter(username=username).exists():
+            return JsonResponse({"error": "Nom d'utilisateur déjà pris"}, status=409)
+        user = User.objects.create_user(username=username, email=email, password=password)
+        SocialProfile.objects.create(user=user, display_name=display_name)
+        login(request, user)
+        return JsonResponse({"status": "ok", "user": username}, status=201)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
+
+
+@csrf_exempt
+def api_social_login(request):
+    if request.method != 'POST':
+        return JsonResponse({"error": "POST requis"}, status=405)
+    data = json.loads(request.body)
+    username = data.get('username', '')
+    password = data.get('password', '')
+    user = authenticate(request, username=username, password=password)
+    if user:
+        login(request, user)
+        profile = _get_or_create_profile(user)
+        return JsonResponse({
+            "status": "ok", "username": user.username,
+            "display_name": profile.display_name or user.username,
+            "avatar_url": profile.avatar_url,
+        })
+    return JsonResponse({"error": "Identifiants incorrects"}, status=401)
+
+
+@csrf_exempt
+def api_social_profile(request, username):
+    user = get_object_or_404(User, username=username)
+    profile = _get_or_create_profile(user)
+    if request.method == 'GET':
+        return JsonResponse({
+            "username": user.username,
+            "display_name": profile.display_name or user.username,
+            "bio": profile.bio,
+            "avatar_url": profile.avatar_url,
+            "cover_url": profile.cover_url,
+            "location": profile.location,
+            "website": profile.website,
+            "followers": profile.followers_count,
+            "following": profile.following_count,
+            "posts": profile.posts_count,
+        })
+    elif request.method == 'POST' and request.user == user:
+        data = json.loads(request.body)
+        for field in ['display_name', 'bio', 'avatar_url', 'cover_url', 'location', 'website']:
+            if field in data:
+                setattr(profile, field, data[field])
+        profile.save()
+        return JsonResponse({"status": "ok"})
+    return JsonResponse({"error": "Non autorisé"}, status=403)
+
+
+@csrf_exempt
+def api_social_follow(request, username):
+    if request.method != 'POST':
+        return JsonResponse({"error": "POST requis"}, status=405)
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Connexion requise"}, status=401)
+    target = get_object_or_404(User, username=username)
+    if target == request.user:
+        return JsonResponse({"error": "Impossible de se suivre soi-même"}, status=400)
+    follow, created = Follow.objects.get_or_create(follower=request.user, following=target)
+    if not created:
+        follow.delete()
+        return JsonResponse({"status": "unfollowed"})
+    Notification.objects.create(user=target, from_user=request.user, type='follow', message=f"{request.user.username} vous suit")
+    return JsonResponse({"status": "followed"})
+
+
+@csrf_exempt
+def api_social_post(request):
+    if request.method != 'POST':
+        return JsonResponse({"error": "POST requis"}, status=405)
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Connexion requise"}, status=401)
+    data = json.loads(request.body)
+    content = data.get('content', '').strip()
+    if not content:
+        return JsonResponse({"error": "Contenu vide"}, status=400)
+    post = Post.objects.create(
+        author=request.user, content=content,
+        image_url=data.get('image_url', ''),
+        visibility=data.get('visibility', 'public'),
+    )
+    return JsonResponse({
+        "status": "ok", "post_id": post.id,
+        "content": post.content, "created_at": post.created_at.isoformat(),
+    }, status=201)
+
+
+@csrf_exempt
+def api_social_like(request, post_id):
+    if request.method != 'POST':
+        return JsonResponse({"error": "POST requis"}, status=405)
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Connexion requise"}, status=401)
+    post = get_object_or_404(Post, id=post_id)
+    like, created = Like.objects.get_or_create(user=request.user, post=post)
+    if not created:
+        like.delete()
+        post.likes_count = max(0, post.likes_count - 1)
+        post.save()
+        return JsonResponse({"status": "unliked", "likes": post.likes_count})
+    post.likes_count += 1
+    post.save()
+    if post.author != request.user:
+        Notification.objects.create(user=post.author, from_user=request.user, type='like', post=post, message=f"{request.user.username} aime votre post")
+    return JsonResponse({"status": "liked", "likes": post.likes_count})
+
+
+@csrf_exempt
+def api_social_comment(request, post_id):
+    if request.method != 'POST':
+        return JsonResponse({"error": "POST requis"}, status=405)
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Connexion requise"}, status=401)
+    post = get_object_or_404(Post, id=post_id)
+    data = json.loads(request.body)
+    content = data.get('content', '').strip()
+    if not content:
+        return JsonResponse({"error": "Commentaire vide"}, status=400)
+    comment = Comment.objects.create(
+        author=request.user, post=post, content=content,
+        parent_id=data.get('parent_id'),
+    )
+    post.comments_count += 1
+    post.save()
+    if post.author != request.user:
+        Notification.objects.create(user=post.author, from_user=request.user, type='comment', post=post, message=f"{request.user.username} a commenté votre post")
+    return JsonResponse({
+        "status": "ok", "comment_id": comment.id,
+        "content": comment.content, "created_at": comment.created_at.isoformat(),
+    }, status=201)
+
+
+@csrf_exempt
+def api_social_notifications(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"notifications": []})
+    notifs = Notification.objects.filter(user=request.user).select_related('from_user', 'post')[:30]
+    unread = notifs.filter(is_read=False).count()
+    data = [{
+        'id': n.id, 'type': n.type,
+        'from_user': n.from_user.username if n.from_user else None,
+        'message': n.message, 'is_read': n.is_read,
+        'post_id': n.post_id, 'created_at': n.created_at.isoformat(),
+    } for n in notifs]
+    return JsonResponse({'notifications': data, 'unread': unread})
+
+
+@csrf_exempt
+def api_social_feed(request):
+    if request.user.is_authenticated:
+        following_ids = Follow.objects.filter(follower=request.user).values_list('following_id', flat=True)
+        posts = Post.objects.filter(
+            models.Q(author__in=following_ids) | models.Q(author=request.user),
+            visibility__in=['public', 'followers']
+        ).select_related('author')[:30]
+    else:
+        posts = Post.objects.filter(visibility='public').select_related('author')[:30]
+    data = [{
+        'id': p.id, 'author': p.author.username,
+        'content': p.content, 'image_url': p.image_url,
+        'likes_count': p.likes_count, 'comments_count': p.comments_count,
+        'shares_count': p.shares_count,
+        'is_liked': Like.objects.filter(user=request.user, post=p).exists() if request.user.is_authenticated else False,
+        'created_at': p.created_at.isoformat(),
+    } for p in posts]
+    return JsonResponse({'posts': data})
+
+
+# ─── Messenger E2E API ──────────────────────────────────
+
+@csrf_exempt
+def api_conversations(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Connexion requise"}, status=401)
+    if request.method == 'GET':
+        convos = Conversation.objects.filter(members__user=request.user).annotate(
+            last_msg=models.Max('messages__created_at')
+        ).order_by('-last_msg')
+        data = [{
+            'id': c.id, 'title': c.title, 'type': c.type,
+            'avatar_url': c.avatar_url,
+            'members': [m.user.username for m in c.members.select_related('user').all()],
+            'last_message': c.messages.order_by('-created_at').first().encrypted_content[:50] if c.messages.exists() else '',
+            'updated_at': c.updated_at.isoformat(),
+        } for c in convos]
+        return JsonResponse({'conversations': data})
+    elif request.method == 'POST':
+        data = json.loads(request.body)
+        conv_type = data.get('type', 'private')
+        title = data.get('title', '')
+        member_usernames = data.get('members', [])
+        conv = Conversation.objects.create(type=conv_type, title=title, created_by=request.user)
+        ConversationMember.objects.create(conversation=conv, user=request.user, role='admin')
+        for uname in member_usernames:
+            u = User.objects.filter(username=uname).first()
+            if u:
+                ConversationMember.objects.create(conversation=conv, user=u)
+        return JsonResponse({"status": "ok", "conv_id": conv.id}, status=201)
+    return JsonResponse({"error": "Non autorisé"}, status=405)
+
+
+@csrf_exempt
+def api_messages(request, conv_id):
+    conv = get_object_or_404(Conversation, id=conv_id)
+    if not conv.members.filter(user=request.user).exists():
+        return JsonResponse({"error": "Accès refusé"}, status=403)
+    if request.method == 'GET':
+        before = request.GET.get('before')
+        msgs = conv.messages.select_related('sender').all()
+        if before:
+            msgs = msgs.filter(id__lt=before)
+        msgs = msgs[:50]
+        data = [{
+            'id': m.id, 'sender': m.sender.username,
+            'encrypted_content': m.encrypted_content,
+            'encrypted_key': m.encrypted_key,
+            'iv': m.iv, 'message_type': m.message_type,
+            'attachment_url': m.attachment_url,
+            'is_read': m.is_read,
+            'created_at': m.created_at.isoformat(),
+        } for m in msgs]
+        return JsonResponse({'messages': data})
+    elif request.method == 'POST':
+        data = json.loads(request.body)
+        msg = EncryptedMessage.objects.create(
+            conversation=conv, sender=request.user,
+            encrypted_content=data.get('encrypted_content', ''),
+            encrypted_key=data.get('encrypted_key', ''),
+            iv=data.get('iv', ''),
+            message_type=data.get('message_type', 'text'),
+            attachment_url=data.get('attachment_url', ''),
+        )
+        conv.save()
+        members = conv.members.exclude(user=request.user)
+        for m in members:
+            Notification.objects.create(user=m.user, from_user=request.user, type='message', message=f"Nouveau message de {request.user.username}")
+        return JsonResponse({
+            "status": "ok", "msg_id": msg.id,
+            "created_at": msg.created_at.isoformat(),
+        }, status=201)
+    return JsonResponse({"error": "Non autorisé"}, status=405)
+
+
+@csrf_exempt
+def api_exchange_keys(request, conv_id):
+    conv = get_object_or_404(Conversation, id=conv_id)
+    if not conv.members.filter(user=request.user).exists():
+        return JsonResponse({"error": "Accès refusé"}, status=403)
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        member = conv.members.filter(user=request.user).first()
+        if member:
+            member.public_key = data.get('public_key', '')
+            member.save()
+        keys = {}
+        for m in conv.members.select_related('user').all():
+            if m.public_key:
+                keys[m.user.username] = m.public_key
+        return JsonResponse({"keys": keys})
+    elif request.method == 'GET':
+        keys = {}
+        for m in conv.members.select_related('user').all():
+            if m.public_key:
+                keys[m.user.username] = m.public_key
+        return JsonResponse({"keys": keys})
+    return JsonResponse({"error": "Non autorisé"}, status=405)
+
+
+# ─── Docker Health & MongoDB Status ──────────────────────
+
+def docker_health(request):
+    from django.db import connection
+    mongo_ok = False
+    try:
+        from .mongo_service import health_check as mongo_health
+        mongo_ok = mongo_health()
+    except Exception:
+        pass
+
+    db_ok = False
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1")
+            db_ok = True
+    except Exception:
+        pass
+
+    return JsonResponse({
+        "status": "ok" if (db_ok and mongo_ok) else "degraded",
+        "django": "ok",
+        "postgresql": "ok" if db_ok else "error",
+        "mongodb": "ok" if mongo_ok else "error",
+        "version": "1.0.0",
+    })
+
+
+# ─── PixSoftPay — QR Code Payment ──────────────────────────────
+
+def pixsoftpay_dashboard(request):
+    total = Transaction.objects.count()
+    paid = Transaction.objects.filter(statut='confirme').count()
+    pending = Transaction.objects.filter(statut='en_attente').count()
+    expired = Transaction.objects.filter(statut='refuse').count()
+    from django.db.models import Sum
+    revenue = Transaction.objects.filter(statut='confirme').aggregate(total=Sum('montant'))['total'] or 0
+    recent = Transaction.objects.all()[:10]
+    return render(request, 'studio/pixsoftpay_dashboard.html', {
+        'total': total, 'paid': paid, 'pending': pending,
+        'expired': expired, 'revenue': revenue, 'recent': recent,
+    })
+
+
+def pixsoftpay_create(request):
+    if request.method == 'POST':
+        amount = request.POST.get('amount', '').strip()
+        description = request.POST.get('description', '').strip()
+        customer_name = request.POST.get('customer_name', '').strip()
+        customer_email = request.POST.get('customer_email', '').strip()
+        methode = request.POST.get('methode', 'wallet')
+        try:
+            montant = float(amount)
+            if montant <= 0:
+                raise ValueError
+        except (ValueError, TypeError):
+            return render(request, 'studio/pixsoftpay_create.html', {'error': 'Montant invalide'})
+
+        wallet, _ = Wallet.objects.get_or_create(user=request.user if request.user.is_authenticated else User.objects.first())
+        ref = f"PSP-{uuid.uuid4().hex[:8].upper()}"
+        payment_url = f"/pixsoftpay/pay/{ref}/"
+
+        import base64
+        qr_payload = f"PIXSOFTPAY|{ref}|{montant}|{payment_url}"
+        qr_data = base64.b64encode(qr_payload.encode()).decode()
+
+        tx = Transaction.objects.create(
+            wallet=wallet, reference=ref, type_operation='paiement',
+            montant=montant, solde_avant=wallet.solde, solde_apres=wallet.solde,
+            methode=methode, statut='en_attente', description=description,
+            qr_data=qr_data, payment_url=payment_url,
+            customer_name=customer_name, customer_email=customer_email,
+            expires_at=timezone.now() + timezone.timedelta(hours=24),
+        )
+        return render(request, 'studio/pixsoftpay_qr.html', {'transaction': tx})
+
+    return render(request, 'studio/pixsoftpay_create.html')
+
+
+def pixsoftpay_pay(request, reference):
+    tx = get_object_or_404(Transaction, reference=reference)
+    is_expired = tx.expires_at and tx.expires_at < timezone.now()
+    return render(request, 'studio/pixsoftpay_pay.html', {'transaction': tx, 'is_expired': is_expired})
+
+
+def pixsoftpay_confirm(request, reference):
+    tx = get_object_or_404(Transaction, reference=reference)
+    if tx.statut != 'en_attente':
+        return redirect('pixsoftpay_pay', reference=reference)
+    if tx.expires_at and tx.expires_at < timezone.now():
+        tx.statut = 'refuse'
+        tx.save()
+        return redirect('pixsoftpay_pay', reference=reference)
+
+    tx.statut = 'confirme'
+    tx.paid_at = timezone.now()
+    tx.solde_apres = tx.solde_avant + tx.montant
+    tx.save()
+
+    wallet = tx.wallet
+    wallet.solde += tx.montant
+    wallet.save()
+
+    return redirect('pixsoftpay_pay', reference=reference)
+
+
+def pixsoftpay_history(request):
+    status_filter = request.GET.get('status', '')
+    txs = Transaction.objects.all()
+    if status_filter:
+        txs = txs.filter(statut=status_filter)
+    return render(request, 'studio/pixsoftpay_history.html', {
+        'transactions': txs, 'status_filter': status_filter,
+    })
+
+
+def pixsoftpay_wallet(request):
+    wallet, _ = Wallet.objects.get_or_create(user=request.user if request.user.is_authenticated else User.objects.first())
+    txs = wallet.transactions.all()[:20]
+    return render(request, 'studio/pixsoftpay_wallet.html', {'wallet': wallet, 'transactions': txs})
+
+
+# ─── PixSoftPay API (JSON) ─────────────────────────────────────
+
+@csrf_exempt
+def api_pixsoftpay_create(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST requis'}, status=405)
+    try:
+        data = json.loads(request.body)
+        amount = float(data.get('amount', 0))
+        if amount <= 0:
+            return JsonResponse({'error': 'Montant invalide'}, status=400)
+    except (ValueError, TypeError):
+        return JsonResponse({'error': 'Données invalides'}, status=400)
+
+    wallet, _ = Wallet.objects.get_or_create(user=User.objects.first())
+    ref = f"PSP-{uuid.uuid4().hex[:8].upper()}"
+    payment_url = f"/pixsoftpay/pay/{ref}/"
+
+    tx = Transaction.objects.create(
+        wallet=wallet, reference=ref, type_operation='paiement',
+        montant=amount, solde_avant=wallet.solde, solde_apres=wallet.solde,
+        methode=data.get('methode', 'wallet'), statut='en_attente',
+        description=data.get('description', ''),
+        payment_url=payment_url,
+        customer_name=data.get('customer_name', ''),
+        customer_email=data.get('customer_email', ''),
+        expires_at=timezone.now() + timezone.timedelta(hours=24),
+    )
+    return JsonResponse({
+        'reference': tx.reference, 'amount': float(tx.montant),
+        'status': tx.statut, 'payment_url': tx.payment_url,
+        'expires_at': tx.expires_at.isoformat() if tx.expires_at else None,
+    }, status=201)
+
+
+def api_pixsoftpay_status(request, reference):
+    tx = Transaction.objects.filter(reference=reference).first()
+    if not tx:
+        return JsonResponse({'error': 'Non trouvé'}, status=404)
+    return JsonResponse({
+        'reference': tx.reference, 'amount': float(tx.montant),
+        'status': tx.statut, 'paid_at': tx.paid_at.isoformat() if tx.paid_at else None,
+    })
+
+
+@csrf_exempt
+def api_pixsoftpay_confirm(request, reference):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST requis'}, status=405)
+    tx = Transaction.objects.filter(reference=reference).first()
+    if not tx:
+        return JsonResponse({'error': 'Non trouvé'}, status=404)
+    if tx.statut != 'en_attente':
+        return JsonResponse({'error': 'Déjà traité'}, status=400)
+
+    tx.statut = 'confirme'
+    tx.paid_at = timezone.now()
+    tx.solde_apres = tx.solde_avant + tx.montant
+    tx.save()
+    wallet = tx.wallet
+    wallet.solde += tx.montant
+    wallet.save()
+
+    return JsonResponse({'reference': tx.reference, 'status': tx.statut})
+
+
+def api_pixsoftpay_stats(request):
+    from django.db.models import Sum
+    total = Transaction.objects.count()
+    paid = Transaction.objects.filter(statut='confirme').count()
+    pending = Transaction.objects.filter(statut='en_attente').count()
+    revenue = Transaction.objects.filter(statut='confirme').aggregate(t=Sum('montant'))['t'] or 0
+    return JsonResponse({
+        'total': total, 'paid': paid, 'pending': pending,
+        'revenue': float(revenue),
+    })
+
+
+# ─── PixSoftPay — 2FA ─────────────────────────────────────────
+
+def pixsoftpay_2fa_setup(request):
+    if not request.user.is_authenticated:
+        return redirect('pixsoftpay_login')
+
+    tfa, created = TwoFactorAuth.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        code = request.POST.get('code', '').strip()
+        if tfa.verify_code(code):
+            tfa.is_enabled = True
+            tfa.save()
+            return redirect('pixsoftpay_2fa_success')
+        return render(request, 'studio/pixsoftpay_2fa_setup.html', {
+            'tfa': tfa, 'error': 'Code invalide. Réessayez.',
+        })
+
+    return render(request, 'studio/pixsoftpay_2fa_setup.html', {'tfa': tfa})
+
+
+def pixsoftpay_2fa_success(request):
+    if not request.user.is_authenticated:
+        return redirect('pixsoftpay_login')
+    tfa = TwoFactorAuth.objects.filter(user=request.user).first()
+    return render(request, 'studio/pixsoftpay_2fa_success.html', {'tfa': tfa})
+
+
+def pixsoftpay_2fa_disable(request):
+    if not request.user.is_authenticated:
+        return redirect('pixsoftpay_login')
+    if request.method == 'POST':
+        code = request.POST.get('code', '').strip()
+        tfa = TwoFactorAuth.objects.filter(user=request.user).first()
+        if tfa and tfa.verify_code(code):
+            tfa.is_enabled = False
+            tfa.save()
+            return redirect('pixsoftpay_dashboard')
+        return render(request, 'studio/pixsoftpay_2fa_disable.html', {
+            'error': 'Code invalide.'
+        })
+    return render(request, 'studio/pixsoftpay_2fa_disable.html')
+
+
+def pixsoftpay_2fa_verify_login(request):
+    username = request.session.get('2fa_pending_user')
+    if not username:
+        return redirect('pixsoftpay_login')
+
+    if request.method == 'POST':
+        code = request.POST.get('code', '').strip()
+        user = User.objects.filter(username=username).first()
+        if not user:
+            return redirect('pixsoftpay_login')
+
+        tfa = TwoFactorAuth.objects.filter(user=user).first()
+        if not tfa:
+            return redirect('pixsoftpay_login')
+
+        if tfa.verify_code(code) or tfa.verify_backup(code):
+            tfa.last_used = timezone.now()
+            tfa.save()
+            login(request, user)
+            del request.session['2fa_pending_user']
+            return redirect('pixsoftpay_dashboard')
+
+        return render(request, 'studio/pixsoftpay_2fa_verify.html', {
+            'error': 'Code invalide.'
+        })
+
+    return render(request, 'studio/pixsoftpay_2fa_verify.html')
+
+
+@csrf_exempt
+def api_pixsoftpay_2fa_status(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'enabled': False}, status=401)
+    tfa = TwoFactorAuth.objects.filter(user=request.user).first()
+    return JsonResponse({
+        'enabled': tfa.is_enabled if tfa else False,
+        'has_secret': bool(tfa.secret) if tfa else False,
+    })
+
+
+@csrf_exempt
+def api_pixsoftpay_2fa_verify(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST requis'}, status=405)
+    data = json.loads(request.body)
+    username = data.get('username', '')
+    code = data.get('code', '')
+
+    user = User.objects.filter(username=username).first()
+    if not user:
+        return JsonResponse({'error': 'Utilisateur introuvable'}, status=404)
+
+    tfa = TwoFactorAuth.objects.filter(user=user).first()
+    if not tfa or not tfa.is_enabled:
+        return JsonResponse({'error': '2FA non configuré'}, status=400)
+
+    if tfa.verify_code(code) or tfa.verify_backup(code):
+        tfa.last_used = timezone.now()
+        tfa.save()
+        login(request, user)
+        return JsonResponse({'status': 'success', 'message': 'Connexion réussie'})
+
+    return JsonResponse({'error': 'Code invalide'}, status=400)

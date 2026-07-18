@@ -1,0 +1,37 @@
+{% extends "studio/pixsoftpay_base.html" %}
+{% block content %}
+<div class="pp-pay-page">
+  <div class="pp-card">
+    <p style="color:#888;font-size:.9rem">PixSoftPay</p>
+    {% if transaction.description %}<p style="margin-top:8px;font-size:.9rem">{{ transaction.description }}</p>{% endif %}
+    <div class="amount">{{ transaction.montant }} {{ transaction.montant_currency|default:"TND" }}</div>
+    <p style="color:#888;font-size:.82rem">Référence: {{ transaction.reference }}</p>
+
+    {% if transaction.status == 'confirme' %}
+      <div style="margin-top:24px">
+        <span class="pp-badge pp-badge-confirme" style="font-size:1rem;padding:8px 24px">Payé</span>
+        {% if transaction.paid_at %}
+        <p style="margin-top:12px;color:#888;font-size:.82rem">Payé le {{ transaction.paid_at|date:"d/m/Y H:i" }}</p>
+        {% endif %}
+      </div>
+    {% elif is_expired %}
+      <div style="margin-top:24px">
+        <span class="pp-badge pp-badge-refuse" style="font-size:1rem;padding:8px 24px">Expiré</span>
+      </div>
+    {% elif transaction.statut == 'annule' %}
+      <div style="margin-top:24px">
+        <span class="pp-badge pp-badge-annule" style="font-size:1rem;padding:8px 24px">Annulé</span>
+      </div>
+    {% else %}
+      <div style="margin-top:24px">
+        <span class="pp-badge pp-badge-en_attente" style="font-size:1rem;padding:8px 24px">En attente</span>
+        <div style="margin-top:18px">
+          <a href="/pixsoftpay/pay/{{ transaction.reference }}/confirm/">
+            <button class="pp-btn pp-btn-success">Confirmer le paiement</button>
+          </a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixSoftPay — Paiement</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Space Grotesk',system-ui,sans-serif;background:#0a0a1a;color:#e0e0e0;min-height:100vh}
+a{color:#6c63ff;text-decoration:none}
+.pp-wrap{max-width:460px;margin:40px auto;padding:20px}
+.pp-card{background:#12122a;border:1px solid #1e1e3a;border-radius:14px;padding:28px;text-align:center}
+.pp-amount{font-size:2.6rem;font-weight:700;color:#6c63ff;margin:16px 0}
+.pp-badge{display:inline-block;padding:8px 24px;border-radius:20px;font-size:1rem;font-weight:600}
+.pp-badge-en_attente{background:rgba(255,171,0,.15);color:#ffab00}
+.pp-badge-confirme{background:rgba(0,200,83,.15);color:#00c853}
+.pp-badge-refuse{background:rgba(255,23,68,.15);color:#ff1744}
+.pp-btn{display:inline-flex;padding:11px 22px;border:none;border-radius:10px;font-size:.95rem;font-weight:600;cursor:pointer;font-family:inherit}
+.pp-btn-success{background:#00c853;color:#fff}
+.pp-loading{text-align:center;padding:40px;color:#888}
+</style>
+</head>
+<body>
+<div class="pp-wrap">
+  <div class="pp-card">
+    <div id="content"><div class="pp-loading">Chargement...</div></div>
+  </div>
+</div>
+<script>
+const ref=window.location.pathname.split('/pay/')[1]?.replace(/\/$/,'');
+if(!ref){document.getElementById('content').innerHTML='<p style="color:#ff1744">Référence invalide</p>';throw 'no ref';}
+fetch('/api/me/').then(r=>r.json()).then(d=>{
+  if(d.status!=='success'||!d.user){window.location='/pixsoftpay/login/';return;}
+  fetch('/api/pixsoftpay/create/').then(r=>r.json()).then(d2=>{
+    const tx=(d2.payments||[]).find(t=>t.reference===ref);
+    if(!tx){document.getElementById('content').innerHTML='<p style="color:#ff1744">Paiement non trouvé</p>';return;}
+    let statusHtml='';
+    if(tx.status==='confirme')statusHtml='<span class="pp-badge pp-badge-confirme">Payé</span>';
+    else if(tx.status==='refuse')statusHtml='<span class="pp-badge pp-badge-refuse">Expiré</span>';
+    else if(tx.status==='en_attente')statusHtml='<span class="pp-badge pp-badge-en_attente">En attente</span><div style="margin-top:18px"><button class="pp-btn pp-btn-success" onclick="confirmPayment()">Confirmer le paiement</button></div>';
+    else statusHtml='<span class="pp-badge pp-badge-refuse">Annulé</span>';
+    document.getElementById('content').innerHTML='<p style="color:#888;font-size:.9rem">PixSoftPay</p><div class="pp-amount">'+tx.amount+' TND</div><p style="color:#888;font-size:.82rem">Référence: '+tx.reference+'</p><div style="margin-top:24px">'+statusHtml+'</div>';
+    window._txRef=ref;
+  });
+});
+function confirmPayment(){fetch('/api/pixsoftpay/confirm/'+window._txRef+'/',{method:'POST'}).then(r=>r.json()).then(d=>{if(d.error){alert(d.error);return;}location.reload();});}
+</script>
+</body>
+</html>

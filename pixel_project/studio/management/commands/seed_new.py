@@ -44,6 +44,9 @@ class Command(BaseCommand):
             ("Notifications", "Communication", "1.4.0", 800),
             ("Export PDF/ODT", "Productivité", "1.1.0", 0),
             ("Signature électronique", "Sécurité", "1.0.0", 1200),
+            # Projets internes
+            ("Delv", "Projets internes", "1.0.0", 0),
+            ("PixMaps — Web App", "Projets internes", "1.0.0", 0),
         ]
         for nom, cat, ver, prix in modules:
             SoftCodeModule.objects.get_or_create(nom=nom, defaults={"categorie": cat, "version": ver, "prix": prix})

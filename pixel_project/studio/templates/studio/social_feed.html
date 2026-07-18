@@ -1,0 +1,153 @@
+<!DOCTYPE html>{% load static %}<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PixSocial — Feed | Pixel Software Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<style>
+.ps-layout{display:grid;grid-template-columns:260px 1fr 280px;gap:1.5rem;max-width:1200px;margin:2rem auto;padding:0 1.5rem}
+.ps-sidebar{position:sticky;top:6rem;height:fit-content}
+.ps-sidebar-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.5rem;margin-bottom:1rem}
+.ps-sidebar-card h3{font-size:.85rem;margin-bottom:1rem;color:var(--accent)}
+.ps-sidebar-card a{display:flex;align-items:center;gap:.6rem;padding:.5rem .6rem;border-radius:8px;color:var(--text);text-decoration:none;font-size:.82rem;transition:background .2s}
+.ps-sidebar-card a:hover,.ps-sidebar-card a.active{background:rgba(30,180,130,.1);color:var(--accent)}
+.ps-sidebar-card a .icon{font-size:1.1rem}
+.ps-feed{min-width:0}
+.ps-composer{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.5rem;margin-bottom:1.5rem}
+.ps-composer textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:.8rem 1rem;color:var(--text);font-family:inherit;font-size:.85rem;resize:vertical;min-height:60px;margin-bottom:.8rem}
+.ps-composer textarea:focus{outline:none;border-color:var(--accent)}
+.ps-composer .composer-actions{display:flex;justify-content:space-between;align-items:center}
+.ps-composer .composer-actions select{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.4rem .8rem;color:var(--text);font-size:.75rem}
+.ps-post{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.5rem;margin-bottom:1rem;transition:border-color .2s}
+.ps-post:hover{border-color:rgba(30,180,130,.3)}
+.ps-post-header{display:flex;align-items:center;gap:.8rem;margin-bottom:1rem}
+.ps-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#1A9BAF);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;color:#000;flex-shrink:0}
+.ps-avatar.lg{width:56px;height:56px;font-size:1.2rem}
+.ps-avatar.xl{width:80px;height:80px;font-size:1.8rem}
+.ps-post-header .meta{flex:1}
+.ps-post-header .meta .name{font-weight:600;font-size:.85rem}
+.ps-post-header .meta .name a{color:var(--text);text-decoration:none}
+.ps-post-header .meta .name a:hover{color:var(--accent)}
+.ps-post-header .meta .time{font-size:.7rem;color:var(--muted)}
+.ps-post-content{font-size:.88rem;line-height:1.7;margin-bottom:1rem;white-space:pre-wrap;word-break:break-word}
+.ps-post-content img{max-width:100%;border-radius:10px;margin-top:.8rem}
+.ps-post-actions{display:flex;gap:.5rem;padding-top:.8rem;border-top:1px solid var(--border)}
+.ps-post-actions button{background:none;border:none;color:var(--muted);font-size:.78rem;cursor:pointer;padding:.4rem .8rem;border-radius:8px;display:flex;align-items:center;gap:.4rem;transition:all .2s}
+.ps-post-actions button:hover{background:rgba(30,180,130,.1);color:var(--accent)}
+.ps-post-actions button.liked{color:#e74c3c}
+.ps-right{position:sticky;top:6rem;height:fit-content}
+.ps-search{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1rem;margin-bottom:1rem}
+.ps-search input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:.5rem .8rem;color:var(--text);font-size:.82rem}
+.ps-search input:focus{outline:none;border-color:var(--accent)}
+.ps-suggestion{padding:.6rem;border-bottom:1px solid var(--border)}
+.ps-suggestion:last-child{border-bottom:none}
+.ps-suggestion .name{font-size:.82rem;font-weight:600}
+.ps-suggestion .bio{font-size:.7rem;color:var(--muted)}
+.ps-suggestion .btn-sm{font-size:.7rem;margin-top:.4rem}
+.ps-empty{text-align:center;padding:4rem 1rem;color:var(--muted)}
+.ps-empty .icon{font-size:3rem;margin-bottom:1rem}
+.ps-empty h3{font-size:1rem;margin-bottom:.5rem}
+@media(max-width:900px){.ps-layout{grid-template-columns:1fr}.ps-sidebar,.ps-right{display:none}}
+</style>
+</head>
+<body>
+<svg style="display:none"><defs><symbol id="pxl" viewBox="0 0 100 100"><polygon points="50,2 93,26 93,74 50,98 7,74 7,26" fill="none"/><polygon points="50,2 93,26 70,14" fill="#2DBD6E"/><polygon points="50,2 70,14 50,30 30,14" fill="#3DC87A"/><polygon points="50,2 30,14 7,26" fill="#1EB482"/><polygon points="93,26 93,74 78,50" fill="#1A9BAF"/><polygon points="93,26 78,50 70,14" fill="#1CB89A"/><polygon points="70,14 78,50 50,30" fill="#22C490"/><polygon points="50,30 78,50 60,72 40,72 22,50" fill="#1A9BAF"/><polygon points="7,26 30,14 22,50" fill="#1565C0"/><polygon points="30,14 50,30 22,50" fill="#1878C8"/><polygon points="7,26 22,50 7,74" fill="#1565C0"/><polygon points="7,74 22,50 40,72 50,98 30,86" fill="#1A9BAF"/><polygon points="93,74 78,50 60,72 50,98 70,86" fill="#1565C0"/><polygon points="50,98 70,86 93,74" fill="#1878C8"/><polygon points="50,98 30,86 7,74" fill="#1A9BAF"/><polygon points="40,72 60,72 50,98 30,86" fill="#1CB89A"/><path d="M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z" fill="white" opacity="0.92"/></symbol></defs></svg>
+<nav><a href="/" class="logo"><svg><use href="#pxl"/></svg><div class="logo-text"><strong>Pixel Software Design</strong><span>L'architecture de l'innovation</span></div></a><ul class="nav-menu" id="navMenu"><li><a href="/">Accueil</a></li><li><a href="/social/" class="active">Social</a></li><li><a href="/social/messagerie/">Messagerie</a></li><li><a href="/pixmail/">PixMail</a></li><li><a href="/portfolio/">Portfolio</a></li><li><a href="/pixsoftpay/wallet/">💰 Wallet</a></li><li><a href="/login/">Connexion</a></li></ul><button class="burger" onclick="document.getElementById('navMenu').classList.toggle('open')" aria-label="Menu"><span></span><span></span><span></span></button></nav>
+
+<div class="ps-layout">
+<aside class="ps-sidebar">
+<div class="ps-sidebar-card">
+<h3>PixSocial</h3>
+<a href="/social/" class="active"><span class="icon">🏠</span> Fil d'actualité</a>
+<a href="/social/messagerie/"><span class="icon">💬</span> Messagerie E2E</a>
+<a href="/social/profil/{{ request.user.username }}/"><span class="icon">👤</span> Mon profil</a>
+<a href="/social/notifications/"><span class="icon">🔔</span> Notifications</a>
+</div>
+<div class="ps-sidebar-card">
+<h3>Services</h3>
+<a href="/pixmail/"><span class="icon">✉️</span> PixMail</a>
+<a href="/portfolio/"><span class="icon">🎨</span> Portfolio</a>
+<a href="/gestiactiv/"><span class="icon">📊</span> GestiActiv</a>
+<a href="/ecommerce/"><span class="icon">🛒</span> E-Commerce</a>
+</div>
+</aside>
+
+<main class="ps-feed">
+{% if user.is_authenticated %}
+<div class="ps-composer">
+<textarea id="postContent" placeholder="Quoi de neuf, {{ user.username }} ?"></textarea>
+<div class="composer-actions">
+<select id="postVisibility">
+<option value="public">🌐 Public</option>
+<option value="followers">👥 Abonnés</option>
+<option value="private">🔒 Privé</option>
+</select>
+<button class="btn-p" onclick="createPost()">Publier</button>
+</div>
+</div>
+{% else %}
+<div class="ps-composer" style="text-align:center">
+<p style="color:var(--muted);margin-bottom:.8rem"><a href="/login/" style="color:var(--accent)">Connectez-vous</a> pour publier et interagir.</p>
+</div>
+{% endif %}
+
+<div id="feedContainer">
+{% for post in posts %}
+<div class="ps-post" id="post-{{ post.id }}">
+<div class="ps-post-header">
+<div class="ps-avatar">{{ post.author.username|first|upper }}</div>
+<div class="meta">
+<div class="name"><a href="/social/profil/{{ post.author.username }}/">{{ post.author.username }}</a></div>
+<div class="time">{{ post.created_at|timesince }}</div>
+</div>
+</div>
+<div class="ps-post-content">{{ post.content }}</div>
+<div class="ps-post-actions">
+<button onclick="likePost({{ post.id }})" id="like-btn-{{ post.id }}">❤️ {{ post.likes_count }}</button>
+<button onclick="location.href='/social/post/{{ post.id }}/'">💬 {{ post.comments_count }}</button>
+<button>🔄 {{ post.shares_count }}</button>
+</div>
+</div>
+{% empty %}
+<div class="ps-empty">
+<div class="icon">📝</div>
+<h3>Aucun post pour l'instant</h3>
+<p>Soyez le premier à publier quelque chose !</p>
+</div>
+{% endfor %}
+</div>
+</main>
+
+<aside class="ps-right">
+<div class="ps-search">
+<input type="text" placeholder="🔍 Rechercher..." id="searchInput">
+</div>
+<div class="ps-sidebar-card">
+<h3>Suggestions</h3>
+<div class="ps-empty" style="padding:1rem"><p style="font-size:.75rem">Explorez et suivez d'autres utilisateurs</p></div>
+</div>
+</aside>
+</div>
+
+<script>
+async function createPost(){
+  const content=document.getElementById('postContent').value.trim();
+  const visibility=document.getElementById('postVisibility').value;
+  if(!content)return;
+  const res=await fetch('/api/social/post/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content,visibility})});
+  const data=await res.json();
+  if(res.ok){location.reload();}
+  else{alert(data.error||'Erreur');}
+}
+async function likePost(id){
+  const res=await fetch('/api/social/post/'+id+'/like/',{method:'POST',headers:{'Content-Type':'application/json'}});
+  const data=await res.json();
+  if(res.ok){
+    const btn=document.getElementById('like-btn-'+id);
+    btn.innerHTML=(data.status==='liked'?'❤️':'🤍')+' '+data.likes;
+    btn.classList.toggle('liked',data.status==='liked');
+  }
+}
+</script>
+</body></html>

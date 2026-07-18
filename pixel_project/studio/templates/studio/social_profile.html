@@ -1,0 +1,109 @@
+<!DOCTYPE html>{% load static %}<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>{{ profile_user.username }} — PixSocial | Pixel Software Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<style>
+.ps-profile{max-width:800px;margin:2rem auto;padding:0 1.5rem}
+.ps-cover{height:200px;border-radius:14px;background:linear-gradient(135deg,#0a1a15,#1565C0);margin-bottom:-40px;position:relative;overflow:hidden}
+.ps-cover img{width:100%;height:100%;object-fit:cover}
+.ps-profile-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.5rem;position:relative;z-index:1}
+.ps-profile-top{display:flex;gap:1.2rem;align-items:flex-end;margin-bottom:1.2rem}
+.ps-avatar{width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#1A9BAF);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.8rem;color:#000;border:3px solid var(--card);flex-shrink:0}
+.ps-profile-info{flex:1}
+.ps-profile-info h1{font-size:1.3rem;margin:0}
+.ps-profile-info .username{color:var(--muted);font-size:.82rem}
+.ps-profile-info .bio{font-size:.85rem;margin-top:.5rem;line-height:1.6}
+.ps-profile-info .meta-row{display:flex;gap:1.5rem;margin-top:.8rem;font-size:.78rem;color:var(--muted)}
+.ps-profile-info .meta-row strong{color:var(--text)}
+.ps-profile-actions{display:flex;gap:.8rem;margin-top:1rem}
+.ps-stat{display:flex;gap:2rem;margin:1.2rem 0;padding:1rem 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.ps-stat div{text-align:center;flex:1}
+.ps-stat .num{font-size:1.2rem;font-weight:700;color:var(--accent)}
+.ps-stat .label{font-size:.7rem;color:var(--muted);margin-top:.2rem}
+.ps-posts-section{margin-top:1.5rem}
+.ps-posts-section h2{font-size:1rem;margin-bottom:1rem}
+.ps-post{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:1.2rem;margin-bottom:1rem}
+.ps-post .time{font-size:.7rem;color:var(--muted);margin-top:.5rem}
+.ps-post .content{font-size:.85rem;line-height:1.7;white-space:pre-wrap}
+.ps-post .actions{display:flex;gap:.5rem;margin-top:.8rem;padding-top:.6rem;border-top:1px solid var(--border)}
+.ps-post .actions button{background:none;border:none;color:var(--muted);font-size:.75rem;cursor:pointer;padding:.3rem .6rem;border-radius:8px;transition:all .2s}
+.ps-post .actions button:hover{background:rgba(30,180,130,.1);color:var(--accent)}
+@media(max-width:600px){.ps-profile-top{flex-direction:column;align-items:center;text-align:center}}
+</style>
+</head>
+<body>
+<svg style="display:none"><defs><symbol id="pxl" viewBox="0 0 100 100"><polygon points="50,2 93,26 93,74 50,98 7,74 7,26" fill="none"/><polygon points="50,2 93,26 70,14" fill="#2DBD6E"/><polygon points="50,2 70,14 50,30 30,14" fill="#3DC87A"/><polygon points="50,2 30,14 7,26" fill="#1EB482"/><polygon points="93,26 93,74 78,50" fill="#1A9BAF"/><polygon points="93,26 78,50 70,14" fill="#1CB89A"/><polygon points="70,14 78,50 50,30" fill="#22C490"/><polygon points="50,30 78,50 60,72 40,72 22,50" fill="#1A9BAF"/><polygon points="7,26 30,14 22,50" fill="#1565C0"/><polygon points="30,14 50,30 22,50" fill="#1878C8"/><polygon points="7,26 22,50 7,74" fill="#1565C0"/><polygon points="7,74 22,50 40,72 50,98 30,86" fill="#1A9BAF"/><polygon points="93,74 78,50 60,72 50,98 70,86" fill="#1565C0"/><polygon points="50,98 70,86 93,74" fill="#1878C8"/><polygon points="50,98 30,86 7,74" fill="#1A9BAF"/><polygon points="40,72 60,72 50,98 30,86" fill="#1CB89A"/><path d="M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z" fill="white" opacity="0.92"/></symbol></defs></svg>
+<nav><a href="/" class="logo"><svg><use href="#pxl"/></svg><div class="logo-text"><strong>Pixel Software Design</strong><span>L'architecture de l'innovation</span></div></a><ul class="nav-menu" id="navMenu"><li><a href="/">Accueil</a></li><li><a href="/social/" class="active">Social</a></li><li><a href="/social/messagerie/">Messagerie</a></li><li><a href="/pixmail/">PixMail</a></li><li><a href="/pixsoftpay/wallet/">💰 Wallet</a></li><li><a href="/login/">Connexion</a></li></ul><button class="burger" onclick="document.getElementById('navMenu').classList.toggle('open')" aria-label="Menu"><span></span><span></span><span></span></button></nav>
+
+<div class="ps-profile">
+<div class="ps-cover">{% if profile.cover_url %}<img src="{{ profile.cover_url }}" alt="cover">{% endif %}</div>
+<div class="ps-profile-card">
+<div class="ps-profile-top">
+<div class="ps-avatar">{{ profile_user.username|first|upper }}</div>
+<div class="ps-profile-info">
+<h1>{{ profile.display_name|default:profile_user.username }}</h1>
+<div class="username">@{{ profile_user.username }}</div>
+{% if profile.bio %}<div class="bio">{{ profile.bio }}</div>{% endif %}
+<div class="meta-row">
+{% if profile.location %}<span>📍 {{ profile.location }}</span>{% endif %}
+{% if profile.website %}<a href="{{ profile.website }}" style="color:var(--accent);text-decoration:none">🔗 {{ profile.website }}</a>{% endif %}
+<span>📅 Inscrit {{ profile_user.date_joined|timesince }}</span>
+</div>
+</div>
+</div>
+<div class="ps-profile-actions">
+{% if user.is_authenticated and user != profile_user %}
+<button class="btn-p" onclick="followUser('{{ profile_user.username }}')" id="followBtn">
+{% if is_following %}Se désabonner{% else %}Suivre{% endif %}
+</button>
+<a href="/social/messagerie/?new={{ profile_user.username }}" class="btn-p" style="background:transparent;border:1px solid var(--border);text-decoration:none">💬 Message</a>
+{% elif user == profile_user %}
+<a href="/social/profil/{{ user.username }}/edit/" class="btn-p" style="background:transparent;border:1px solid var(--border);text-decoration:none">✏️ Modifier le profil</a>
+{% endif %}
+</div>
+<div class="ps-stat">
+<div><div class="num">{{ profile.posts_count }}</div><div class="label">Publications</div></div>
+<div><div class="num" id="followersCount">{{ profile.followers_count }}</div><div class="label">Abonnés</div></div>
+<div><div class="num">{{ profile.following_count }}</div><div class="label">Abonnements</div></div>
+</div>
+</div>
+
+<div class="ps-posts-section">
+<h2>Publications</h2>
+{% for post in posts %}
+<div class="ps-post">
+<div class="content">{{ post.content }}</div>
+<div class="time">{{ post.created_at|timesince }}</div>
+<div class="actions">
+<button onclick="likePost({{ post.id }})">❤️ {{ post.likes_count }}</button>
+<button onclick="location.href='/social/post/{{ post.id }}/'">💬 {{ post.comments_count }}</button>
+</div>
+</div>
+{% empty %}
+<div style="text-align:center;padding:3rem;color:var(--muted)">
+<p>Aucune publication pour l'instant.</p>
+</div>
+{% endfor %}
+</div>
+</div>
+
+<script>
+async function followUser(username){
+  const res=await fetch('/api/social/follow/'+username+'/',{method:'POST',headers:{'Content-Type':'application/json'}});
+  const data=await res.json();
+  if(res.ok){
+    const btn=document.getElementById('followBtn');
+    btn.textContent=data.status==='followed'?'Se désabonner':'Suivre';
+    const count=document.getElementById('followersCount');
+    count.textContent=parseInt(count.textContent)+(data.status==='followed'?1:-1);
+  }
+}
+async function likePost(id){
+  const res=await fetch('/api/social/post/'+id+'/like/',{method:'POST',headers:{'Content-Type':'application/json'}});
+  if(res.ok)location.reload();
+}
+</script>
+</body></html>

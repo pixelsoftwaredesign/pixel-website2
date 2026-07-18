@@ -1,0 +1,109 @@
+<!DOCTYPE html>{% load static %}<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Contacts — PixMail</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<style>
+.pm-layout{display:flex;min-height:100vh;padding-top:60px}
+.pm-sidebar{width:240px;background:#081511;border-right:1px solid var(--border);padding:1.5rem 0;position:fixed;top:60px;left:0;bottom:0;overflow-y:auto}
+.pm-sidebar .user{padding:0 1.2rem 1.2rem;border-bottom:1px solid var(--border);margin-bottom:1rem}
+.pm-sidebar .user .email{font-size:.75rem;color:var(--accent);font-family:'Space Mono',monospace;margin-top:.3rem}
+.pm-sidebar .user .name{font-size:.9rem;font-weight:600}
+.pm-sidebar a{display:flex;align-items:center;gap:.6rem;padding:.55rem 1.2rem;font-size:.8rem;color:var(--muted);text-decoration:none;transition:all .15s}
+.pm-sidebar a:hover{background:rgba(30,180,130,.08);color:#fff}
+.pm-sidebar a.active{background:rgba(30,180,130,.12);color:var(--accent);border-right:2px solid var(--accent)}
+.pm-sidebar .sep{height:1px;background:var(--border);margin:.8rem 1.2rem}
+.pm-main{flex:1;margin-left:240px;padding:1.5rem 2rem}
+.pm-contacts{max-width:800px}
+.pm-contacts h2{font-size:1.1rem;margin-bottom:1.5rem}
+.pm-add-form{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin-bottom:2rem}
+.pm-add-form h3{font-size:.9rem;margin-bottom:1rem}
+.pm-add-form .row{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:.8rem}
+.pm-add-form .field{display:flex;flex-direction:column;gap:.3rem}
+.pm-add-form .field label{font-size:.65rem;color:var(--muted);font-family:'Space Mono',monospace}
+.pm-add-form .field input{padding:.5rem .7rem;border-radius:6px;border:1px solid var(--border);background:#0a1a15;color:#fff;font-size:.78rem;outline:none}
+.pm-add-form .field input:focus{border-color:var(--accent)}
+.pm-ct-list{display:flex;flex-direction:column;gap:4px}
+.pm-ct{display:flex;align-items:center;gap:1rem;padding:.8rem 1rem;border-radius:8px;background:var(--card);border:1px solid var(--border)}
+.pm-ct .avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#1A9BAF);display:flex;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;color:#000;flex-shrink:0}
+.pm-ct .info{flex:1}
+.pm-ct .info .name{font-size:.85rem;font-weight:500}
+.pm-ct .info .email{font-size:.72rem;color:var(--accent);font-family:'Space Mono',monospace}
+.pm-ct .info .company{font-size:.7rem;color:var(--muted)}
+.pm-ct .actions{display:flex;gap:.5rem}
+.pm-ct .actions a,.pm-ct .actions button{padding:.3rem .6rem;border-radius:4px;font-size:.7rem;text-decoration:none;border:1px solid var(--border);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s}
+.pm-ct .actions a:hover{border-color:var(--accent);color:#fff}
+.pm-ct .actions .del{border-color:rgba(239,68,68,.3);color:#ef4444}
+.pm-ct .actions .del:hover{border-color:#ef4444}
+.pm-empty{text-align:center;padding:3rem;color:var(--muted);font-size:.85rem}
+@media(max-width:768px){.pm-sidebar{display:none}.pm-main{margin-left:0}.pm-add-form .row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<svg style="display:none"><defs><symbol id="pxl" viewBox="0 0 100 100"><polygon points="50,2 93,26 93,74 50,98 7,74 7,26" fill="none"/><polygon points="50,2 93,26 70,14" fill="#2DBD6E"/><polygon points="50,2 70,14 50,30 30,14" fill="#3DC87A"/><polygon points="50,2 30,14 7,26" fill="#1EB482"/><polygon points="93,26 93,74 78,50" fill="#1A9BAF"/><polygon points="93,26 78,50 70,14" fill="#1CB89A"/><polygon points="70,14 78,50 50,30" fill="#22C490"/><polygon points="50,30 78,50 60,72 40,72 22,50" fill="#1A9BAF"/><polygon points="7,26 30,14 22,50" fill="#1565C0"/><polygon points="30,14 50,30 22,50" fill="#1878C8"/><polygon points="7,26 22,50 7,74" fill="#1565C0"/><polygon points="7,74 22,50 40,72 50,98 30,86" fill="#1A9BAF"/><polygon points="93,74 78,50 60,72 50,98 70,86" fill="#1565C0"/><polygon points="50,98 70,86 93,74" fill="#1878C8"/><polygon points="50,98 30,86 7,74" fill="#1A9BAF"/><polygon points="40,72 60,72 50,98 30,86" fill="#1CB89A"/><path d="M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z" fill="white" opacity="0.92"/></symbol></defs></svg>
+<nav><a href="/" class="logo"><svg><use href="#pxl"/></svg><div class="logo-text"><strong>Pixel Software Design</strong><span>L'architecture de l'innovation</span></div></a><ul class="nav-menu" id="navMenu"><li><a href="/">Accueil</a></li><li><a href="/pixmail/boite-reception/" class="active">PixMail</a></li><li><a href="/pixmail/deconnexion/">Déconnexion</a></li></ul><button class="burger" onclick="document.getElementById('navMenu').classList.toggle('open')" aria-label="Menu"><span></span><span></span><span></span></button></nav>
+
+<div class="pm-layout">
+<aside class="pm-sidebar">
+<div class="user"><div class="name">{{ account.display_name }}</div><div class="email">{{ account.email }}</div></div>
+<a href="/pixmail/nouveau/" style="background:var(--accent);color:#000;font-weight:600;border-radius:8px;margin:0 1rem 1rem;padding:.6rem 1rem;justify-content:center">✏️ Nouveau message</a>
+<a href="/pixmail/boite-reception/?folder=inbox">📥 Boîte de réception</a>
+<a href="/pixmail/boite-reception/?folder=sent">📤 Envoyés</a>
+<a href="/pixmail/boite-reception/?folder=trash">🗑️ Corbeille</a>
+<div class="sep"></div>
+<a href="/pixmail/contacts/" class="active">👥 Contacts</a>
+</aside>
+
+<main class="pm-main">
+<div class="pm-contacts">
+<h2>👥 Contacts</h2>
+
+<div class="pm-add-form">
+<h3>Ajouter un contact</h3>
+<form method="POST" action="/pixmail/contacts/">
+{% csrf_token %}
+<input type="hidden" name="action" value="add">
+<div class="row">
+<div class="field"><label>Nom</label><input type="text" name="name" placeholder="Nom complet" required></div>
+<div class="field"><label>Email</label><input type="email" name="email" placeholder="email@pixmail.tn" required></div>
+</div>
+<div class="row">
+<div class="field"><label>Téléphone</label><input type="text" name="phone" placeholder="+216 XX XXX XXX"></div>
+<div class="field"><label>Entreprise</label><input type="text" name="company" placeholder="Nom de l'entreprise"></div>
+</div>
+<button type="submit" class="btn-p" style="margin-top:.5rem">Ajouter →</button>
+</form>
+</div>
+
+{% if contacts %}
+<div class="pm-ct-list">
+{% for ct in contacts %}
+<div class="pm-ct">
+<div class="avatar">{{ ct.name|first }}</div>
+<div class="info">
+<div class="name">{{ ct.name }}</div>
+<div class="email">{{ ct.email }}</div>
+{% if ct.company %}<div class="company">{{ ct.company }}</div>{% endif %}
+</div>
+<div class="actions">
+<a href="/pixmail/nouveau/?reply=0#recipient={{ ct.email }}" title="Envoyer un email">✉️</a>
+<form method="POST" action="/pixmail/contacts/" style="display:inline" onsubmit="return confirm('Supprimer ce contact ?')">
+{% csrf_token %}
+<input type="hidden" name="action" value="delete">
+<input type="hidden" name="contact_id" value="{{ ct.id }}">
+<button type="submit" class="del">🗑️</button>
+</form>
+</div>
+</div>
+{% endfor %}
+</div>
+{% else %}
+<div class="pm-empty">Aucun contact. Ajoutez-en un ci-dessus !</div>
+{% endif %}
+</div>
+</main>
+</div>
+</body>
+</html>

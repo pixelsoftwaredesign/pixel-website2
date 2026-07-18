@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixSoftPay — Vérification 2FA</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Space Grotesk',system-ui,sans-serif;background:#0a0a1a;color:#e0e0e0;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.pp-card{background:#12122a;border:1px solid #1e1e3a;border-radius:14px;padding:36px;width:100%;max-width:420px;margin:20px;text-align:center}
+.pp-card h2{margin-bottom:12px;font-size:1.3rem;color:#6c63ff}
+.pp-form-group{margin:20px 0}
+.pp-form-group input{width:100%;padding:14px;background:#0a0a1a;border:1px solid #1e1e3a;border-radius:10px;color:#e0e0e0;font-size:1.4rem;font-family:inherit;outline:none;text-align:center;letter-spacing:8px}
+.pp-form-group input:focus{border-color:#6c63ff}
+.pp-btn{width:100%;padding:12px;border:none;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;font-family:inherit}
+.pp-btn-primary{background:#6c63ff;color:#fff}
+.pp-error{color:#ff1744;font-size:.85rem;margin-bottom:12px;display:none}
+.pp-back{display:block;margin-top:16px;font-size:.85rem;color:#888}
+</style>
+</head>
+<body>
+<div class="pp-card">
+  <div style="font-size:2.5rem;margin-bottom:12px">🔐</div>
+  <h2>Vérification 2FA</h2>
+  <p style="color:#888;font-size:.9rem">Saisissez le code de votre application d'authentification.</p>
+  <p id="error" class="pp-error"></p>
+  <form id="form2fa">
+    <div class="pp-form-group">
+      <input type="text" id="code" maxlength="6" pattern="[0-9]{6}" placeholder="000000" required>
+    </div>
+    <button type="submit" class="pp-btn pp-btn-primary">Vérifier</button>
+  </form>
+  <a class="pp-back" href="/pixsoftpay/login/">← Retour à la connexion</a>
+</div>
+<script>
+const pendingUser=sessionStorage.getItem('2fa_pending_user');
+if(!pendingUser){window.location='/pixsoftpay/login/';}
+document.getElementById('form2fa').addEventListener('submit',function(e){
+  e.preventDefault();
+  const code=document.getElementById('code').value.trim();
+  const err=document.getElementById('error');
+  fetch('/api/pixsoftpay/2fa/verify/',{
+    method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username:pendingUser,code:code})
+  }).then(r=>r.json()).then(d=>{
+    if(d.status==='success'){sessionStorage.removeItem('2fa_pending_user');window.location='/pixsoftpay/';}
+    else{err.textContent=d.error||'Code invalide';err.style.display='block';}
+  }).catch(()=>{err.textContent='Erreur réseau';err.style.display='block';});
+});
+</script>
+</body>
+</html>

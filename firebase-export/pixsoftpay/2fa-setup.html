@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixSoftPay — Activer la 2FA</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Space Grotesk',system-ui,sans-serif;background:#0a0a1a;color:#e0e0e0;min-height:100vh}
+a{color:#6c63ff;text-decoration:none}
+.pp-nav{background:#12122a;border-bottom:1px solid #1e1e3a;padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+.pp-nav-brand{font-size:1.3rem;font-weight:700;color:#6c63ff}
+.pp-nav-links{display:flex;gap:16px;align-items:center}
+.pp-nav-links a{color:#888;font-size:.88rem}
+.pp-nav-links a:hover,.pp-nav-links a.active{color:#6c63ff}
+.pp-nav-user{color:#00c853;font-weight:600}
+.pp-nav-logout{background:none;border:1px solid #1e1e3a;color:#888;padding:5px 12px;border-radius:8px;cursor:pointer;font-size:.8rem;font-family:inherit}
+.pp-wrap{max-width:520px;margin:0 auto;padding:24px 20px}
+.pp-card{background:#12122a;border:1px solid #1e1e3a;border-radius:14px;padding:28px}
+.pp-form-group{margin-bottom:16px}
+.pp-form-group label{display:block;margin-bottom:6px;font-size:.88rem;color:#888}
+.pp-form-group input{width:100%;padding:14px;background:#0a0a1a;border:1px solid #1e1e3a;border-radius:10px;color:#e0e0e0;font-size:1.4rem;font-family:inherit;outline:none;text-align:center;letter-spacing:8px}
+.pp-form-group input:focus{border-color:#6c63ff}
+.pp-btn{width:100%;padding:12px;border:none;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;font-family:inherit}
+.pp-btn-primary{background:#6c63ff;color:#fff}
+.pp-btn-success{background:#00c853;color:#fff}
+.pp-btn-danger{background:#ff1744;color:#fff}
+.pp-error{color:#ff1744;margin-bottom:12px;font-size:.9rem}
+.pp-secret-box{background:#0a0a1a;border:1px solid #1e1e3a;border-radius:10px;padding:14px;margin:16px 0}
+.pp-secret-box code{color:#6c63ff;font-size:1rem;word-break:break-all}
+.pp-backup{background:#0a0a1a;border:1px solid #1e1e3a;border-radius:10px;padding:16px;margin:16px 0}
+.pp-backup code{display:inline-block;background:#1a1a30;padding:4px 10px;border-radius:6px;margin:3px;font-size:.85rem;color:#ffab00}
+</style>
+</head>
+<body>
+<div id="app" style="display:none">
+<nav class="pp-nav">
+  <a href="/pixsoftpay/" class="pp-nav-brand">PixSoftPay</a>
+  <div class="pp-nav-links">
+    <a href="/pixsoftpay/">Dashboard</a>
+    <a href="/pixsoftpay/wallet/">Wallet</a>
+    <span class="pp-nav-user" id="username"></span>
+    <button class="pp-nav-logout" onclick="fetch('/api/deconnexion/').then(()=>window.location='/pixsoftpay/login/')">Déconnexion</button>
+    <a href="/">← Site</a>
+  </div>
+</nav>
+<div class="pp-wrap">
+  <div id="setup-section">
+    <div class="pp-card">
+      <h2 style="margin-bottom:12px;font-size:1.2rem">Configurer la 2FA</h2>
+      <p style="color:#888;margin-bottom:20px;font-size:.9rem">Scannez le QR code avec Google Authenticator, Authy, ou une autre app TOTP.</p>
+      <div style="text-align:center;margin:20px 0" id="qr-area"></div>
+      <div class="pp-secret-box">
+        <p style="color:#888;font-size:.8rem;margin-bottom:6px">Saisissez ce secret manuellement :</p>
+        <code id="secret-display">...</code>
+      </div>
+      <p id="error" class="pp-error" style="display:none"></p>
+      <form id="setupForm">
+        <div class="pp-form-group">
+          <label>Code de vérification (6 chiffres)</label>
+          <input type="text" id="code" maxlength="6" pattern="[0-9]{6}" placeholder="000000" required>
+        </div>
+        <button type="submit" class="pp-btn pp-btn-primary">Activer la 2FA</button>
+      </form>
+      <div style="text-align:center;margin-top:16px"><a href="/pixsoftpay/" style="color:#888;font-size:.85rem">← Retour</a></div>
+    </div>
+  </div>
+  <div id="success-section" style="display:none">
+    <div class="pp-card" style="text-align:center">
+      <div style="font-size:3rem;margin-bottom:16px">🔐</div>
+      <h2 style="color:#00c853;margin-bottom:12px">2FA activée</h2>
+      <p style="color:#888;margin-bottom:12px;font-size:.9rem">L'authentification à deux facteurs est active.</p>
+      <div class="pp-backup">
+        <p style="color:#888;font-size:.8rem;margin-bottom:8px">📋 Codes de secours :</p>
+        <div id="backup-codes"></div>
+        <p style="color:#ff1744;font-size:.75rem;margin-top:10px">⚠️ Conservez ces codes en lieu sûr. Ils ne seront plus affichés.</p>
+      </div>
+      <a href="/pixsoftpay/"><button class="pp-btn pp-btn-success" style="margin-top:12px">Aller au Dashboard</button></a>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+fetch('/api/me/').then(r=>r.json()).then(d=>{
+  if(d.status!=='success'||!d.user){window.location='/pixsoftpay/login/';return;}
+  document.getElementById('username').textContent=d.user.username;
+  document.getElementById('app').style.display='block';
+});
+document.getElementById('setupForm').addEventListener('submit',function(e){
+  e.preventDefault();
+  const code=document.getElementById('code').value.trim();
+  const err=document.getElementById('error');
+  fetch('/api/pixsoftpay/2fa/setup/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:code})})
+  .then(r=>r.json()).then(d=>{
+    if(d.status==='success'){
+      document.getElementById('setup-section').style.display='none';
+      document.getElementById('success-section').style.display='block';
+      if(d.backup_codes){document.getElementById('backup-codes').innerHTML=d.backup_codes.map(c=>'<code>'+c+'</code>').join(' ');}
+    } else {err.textContent=d.error||'Code invalide';err.style.display='block';}
+  }).catch(()=>{err.textContent='Erreur réseau';err.style.display='block';});
+});
+</script>
+</body>
+</html>

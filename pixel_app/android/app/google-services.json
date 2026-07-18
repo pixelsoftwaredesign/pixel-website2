@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "349866475754",
+    "project_id": "pxelsoftware-64fcd",
+    "storage_bucket": "pxelsoftware-64fcd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:349866475754:android:888183f5e2bf93ca165793",
+        "android_client_info": {
+          "package_name": "com.pixelsoftwaredesign.pixel_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC3t0LIZC82dCZ3hKnJgisVjuARnHXLjt8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

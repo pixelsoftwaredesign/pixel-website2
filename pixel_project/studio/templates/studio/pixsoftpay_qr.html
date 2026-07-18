@@ -1,0 +1,54 @@
+{% extends "studio/pixsoftpay_base.html" %}
+{% block content %}
+<div class="pp-card" style="text-align:center">
+  <h2>QR Code généré</h2>
+  <p style="color:#888;margin-bottom:16px">Référence: <strong style="color:#e0e0e0">{{ transaction.reference }}</strong></p>
+
+  <div class="pp-qr-box">
+    <svg xmlns="http://www.w3.org/2000/svg" width="260" height="260" viewBox="0 0 260 260">
+      <rect width="260" height="260" fill="white" rx="8"/>
+      <text x="130" y="120" text-anchor="middle" font-family="monospace" font-size="11" fill="#333">PSP-{{ transaction.reference }}</text>
+      <text x="130" y="145" text-anchor="middle" font-family="monospace" font-size="18" fill="#6c63ff" font-weight="bold">{{ transaction.montant }} TND</text>
+      <text x="130" y="170" text-anchor="middle" font-family="monospace" font-size="9" fill="#888">Scannez pour payer</text>
+      <rect x="20" y="20" width="40" height="40" rx="4" fill="#1a1a2e"/>
+      <rect x="20" y="70" width="40" height="40" rx="4" fill="#1a1a2e"/>
+      <rect x="70" y="20" width="40" height="40" rx="4" fill="#1a1a2e"/>
+      <rect x="20" y="20" width="15" height="15" fill="#6c63ff"/>
+      <rect x="45" y="20" width="15" height="15" fill="#fff"/>
+      <rect x="20" y="45" width="15" height="15" fill="#fff"/>
+      <rect x="45" y="45" width="15" height="15" fill="#6c63ff"/>
+      <rect x="20" y="70" width="15" height="15" fill="#6c63ff"/>
+      <rect x="45" y="70" width="15" height="15" fill="#fff"/>
+      <rect x="20" y="95" width="15" height="15" fill="#fff"/>
+      <rect x="45" y="95" width="15" height="15" fill="#6c63ff"/>
+      <rect x="200" y="20" width="40" height="40" rx="4" fill="#1a1a2e"/>
+      <rect x="200" y="20" width="15" height="15" fill="#6c63ff"/>
+      <rect x="225" y="20" width="15" height="15" fill="#fff"/>
+      <rect x="200" y="45" width="15" height="15" fill="#fff"/>
+      <rect x="225" y="45" width="15" height="15" fill="#6c63ff"/>
+      <rect x="200" y="70" width="40" height="40" rx="4" fill="#1a1a2e"/>
+      <rect x="200" y="95" width="40" height="40" rx="4" fill="#1a1a2e"/>
+      <rect x="200" y="200" width="40" height="40" rx="4" fill="#1a1a2e"/>
+      <rect x="200" y="200" width="15" height="15" fill="#6c63ff"/>
+      <rect x="225" y="200" width="15" height="15" fill="#fff"/>
+      <rect x="200" y="225" width="15" height="15" fill="#fff"/>
+      <rect x="225" y="225" width="15" height="15" fill="#6c63ff"/>
+      <rect x="120" y="120" width="20" height="20" fill="#6c63ff" rx="3"/>
+      <rect x="125" y="125" width="10" height="10" fill="#fff" rx="2"/>
+    </svg>
+  </div>
+
+  <p style="margin:16px 0;font-size:.92rem;color:#888">
+    Montant: <strong style="color:#6c63ff">{{ transaction.montant }} TND</strong>
+  </p>
+
+  <div style="margin-top:20px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+    <a href="/pixsoftpay/pay/{{ transaction.reference }}/">
+      <button class="pp-btn pp-btn-primary">Voir la page de paiement</button>
+    </a>
+    <a href="/pixsoftpay/create/">
+      <button class="pp-btn pp-btn-outline">Nouveau QR</button>
+    </a>
+  </div>
+</div>
+{% endblock %}

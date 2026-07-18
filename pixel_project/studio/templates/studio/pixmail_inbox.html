@@ -1,0 +1,90 @@
+<!DOCTYPE html>{% load static %}<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PixMail — Boîte de réception</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<style>
+.pm-layout{display:flex;min-height:100vh;padding-top:60px}
+.pm-sidebar{width:240px;background:#081511;border-right:1px solid var(--border);padding:1.5rem 0;position:fixed;top:60px;left:0;bottom:0;overflow-y:auto}
+.pm-sidebar .user{padding:0 1.2rem 1.2rem;border-bottom:1px solid var(--border);margin-bottom:1rem}
+.pm-sidebar .user .email{font-size:.75rem;color:var(--accent);font-family:'Space Mono',monospace;margin-top:.3rem}
+.pm-sidebar .user .name{font-size:.9rem;font-weight:600}
+.pm-sidebar a{display:flex;align-items:center;gap:.6rem;padding:.55rem 1.2rem;font-size:.8rem;color:var(--muted);text-decoration:none;transition:all .15s}
+.pm-sidebar a:hover{background:rgba(30,180,130,.08);color:#fff}
+.pm-sidebar a.active{background:rgba(30,180,130,.12);color:var(--accent);border-right:2px solid var(--accent)}
+.pm-sidebar .badge{background:var(--accent);color:#000;font-size:.6rem;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:auto}
+.pm-sidebar .sep{height:1px;background:var(--border);margin:.8rem 1.2rem}
+.pm-main{flex:1;margin-left:240px;padding:1.5rem 2rem}
+.pm-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem}
+.pm-top h2{font-size:1.2rem}
+.pm-msg-list{display:flex;flex-direction:column;gap:2px}
+.pm-msg{display:flex;align-items:center;gap:1rem;padding:.8rem 1rem;border-radius:8px;text-decoration:none;color:#fff;transition:background .15s;cursor:pointer}
+.pm-msg:hover{background:rgba(30,180,130,.06)}
+.pm-msg.unread{background:rgba(30,180,130,.04)}
+.pm-msg.unread .pm-msg-subj{font-weight:600;color:#fff}
+.pm-msg .pm-msg-star{color:var(--muted);font-size:.8rem;cursor:pointer}
+.pm-msg .pm-msg-star.starred{color:#f59e0b}
+.pm-msg .pm-msg-sender{width:140px;font-size:.78rem;color:var(--muted);flex-shrink:0}
+.pm-msg .pm-msg-subj{flex:1;font-size:.8rem;color:#ccc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pm-msg .pm-msg-date{font-size:.7rem;color:var(--muted);flex-shrink:0}
+.pm-empty{text-align:center;padding:4rem 1rem;color:var(--muted);font-size:.85rem}
+.pm-empty svg{width:64px;height:64px;margin-bottom:1rem;opacity:.3}
+@media(max-width:768px){.pm-sidebar{display:none}.pm-main{margin-left:0}}
+</style>
+</head>
+<body>
+<svg style="display:none"><defs><symbol id="pxl" viewBox="0 0 100 100"><polygon points="50,2 93,26 93,74 50,98 7,74 7,26" fill="none"/><polygon points="50,2 93,26 70,14" fill="#2DBD6E"/><polygon points="50,2 70,14 50,30 30,14" fill="#3DC87A"/><polygon points="50,2 30,14 7,26" fill="#1EB482"/><polygon points="93,26 93,74 78,50" fill="#1A9BAF"/><polygon points="93,26 78,50 70,14" fill="#1CB89A"/><polygon points="70,14 78,50 50,30" fill="#22C490"/><polygon points="50,30 78,50 60,72 40,72 22,50" fill="#1A9BAF"/><polygon points="7,26 30,14 22,50" fill="#1565C0"/><polygon points="30,14 50,30 22,50" fill="#1878C8"/><polygon points="7,26 22,50 7,74" fill="#1565C0"/><polygon points="7,74 22,50 40,72 50,98 30,86" fill="#1A9BAF"/><polygon points="93,74 78,50 60,72 50,98 70,86" fill="#1565C0"/><polygon points="50,98 70,86 93,74" fill="#1878C8"/><polygon points="50,98 30,86 7,74" fill="#1A9BAF"/><polygon points="40,72 60,72 50,98 30,86" fill="#1CB89A"/><path d="M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z" fill="white" opacity="0.92"/></symbol></defs></svg>
+<nav><a href="/" class="logo"><svg><use href="#pxl"/></svg><div class="logo-text"><strong>Pixel Software Design</strong><span>L'architecture de l'innovation</span></div></a><ul class="nav-menu" id="navMenu"><li><a href="/">Accueil</a></li><li><a href="/pixmail/boite-reception/" class="active">PixMail</a></li><li><a href="/portail/">Portail</a></li><li><a href="/pixmail/deconnexion/">Déconnexion</a></li></ul><button class="burger" onclick="document.getElementById('navMenu').classList.toggle('open')" aria-label="Menu"><span></span><span></span><span></span></button></nav>
+
+<div class="pm-layout">
+<aside class="pm-sidebar">
+<div class="user">
+<div class="name">{{ account.display_name }}</div>
+<div class="email">{{ account.email }}</div>
+</div>
+<a href="/pixmail/nouveau/" style="background:var(--accent);color:#000;font-weight:600;border-radius:8px;margin:0 1rem 1rem;padding:.6rem 1rem;justify-content:center">✏️ Nouveau message</a>
+<a href="/pixmail/boite-reception/?folder=inbox" class="{% if current_folder == 'inbox' %}active{% endif %}">📥 Boîte de réception{% if unread_count %}<span class="badge">{{ unread_count }}</span>{% endif %}</a>
+<a href="/pixmail/boite-reception/?folder=sent" class="{% if current_folder == 'sent' %}active{% endif %}">📤 Envoyés</a>
+<a href="/pixmail/boite-reception/?folder=draft" class="{% if current_folder == 'draft' %}active{% endif %}">📝 Brouillons</a>
+<a href="/pixmail/boite-reception/?folder=spam" class="{% if current_folder == 'spam' %}active{% endif %}">⚠️ Spam</a>
+<a href="/pixmail/boite-reception/?folder=trash" class="{% if current_folder == 'trash' %}active{% endif %}">🗑️ Corbeille</a>
+<a href="/pixmail/boite-reception/?folder=archive" class="{% if current_folder == 'archive' %}active{% endif %}">📦 Archives</a>
+<div class="sep"></div>
+<a href="/pixmail/contacts/">👥 Contacts</a>
+<div class="sep"></div>
+<div style="padding:.5rem 1.2rem;font-size:.65rem;color:var(--muted)">
+<div>Stockage: {{ account.storage_used_mb }}/{{ account.storage_limit_mb }} Mo</div>
+<div style="margin-top:.3rem;height:4px;background:#1a2a24;border-radius:2px;overflow:hidden"><div style="width:{{ account.storage_used_mb|floatformat:0 }}%;height:100%;background:var(--accent);border-radius:2px"></div></div>
+</div>
+</aside>
+
+<main class="pm-main">
+<div class="pm-top">
+<h2>{% if current_folder == 'inbox' %}📥 Boîte de réception{% elif current_folder == 'sent' %}📤 Envoyés{% elif current_folder == 'draft' %}📝 Brouillons{% elif current_folder == 'spam' %}⚠️ Spam{% elif current_folder == 'trash' %}🗑️ Corbeille{% elif current_folder == 'archive' %}📦 Archives{% else %}📥 Boîte de réception{% endif %}</h2>
+<span style="font-size:.75rem;color:var(--muted)">{{ messages|length }} message{{ messages|length|pluralize }}</span>
+</div>
+
+{% if messages %}
+<div class="pm-msg-list">
+{% for msg in messages %}
+<a href="/pixmail/message/{{ msg.id }}/" class="pm-msg {% if not msg.is_read and current_folder == 'inbox' %}unread{% endif %}">
+<span class="pm-msg-star {% if msg.is_starred %}starred{% endif %}">★</span>
+<span class="pm-msg-sender">{% if current_folder == 'sent' %}→ {{ msg.recipient_email }}{% else %}{{ msg.sender_email }}{% endif %}</span>
+<span class="pm-msg-subj">{{ msg.subject }}{% if msg.body %} — {{ msg.body|truncatechars:60 }}{% endif %}</span>
+<span class="pm-msg-date">{{ msg.date_sent|date:"d M H:i" }}</span>
+</a>
+{% endfor %}
+</div>
+{% else %}
+<div class="pm-empty">
+<svg style="width:64px;height:64px;opacity:.3"><use href="#pxl"/></svg>
+<p>Aucun message dans cette boîte.</p>
+<a href="/pixmail/nouveau/" class="btn-p" style="display:inline-flex;margin-top:1rem">✏️ Nouveau message</a>
+</div>
+{% endif %}
+</main>
+</div>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html><html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Inscription PixMail — @pxelsoftware-64fcd.web.app</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/style.css">
+<style>
+.auth-page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:6rem 1rem 2rem;background:#05100D}
+.auth-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:2.5rem;width:100%;max-width:420px}
+.auth-box h1{font-size:1.3rem;margin-bottom:.3rem}
+.auth-box .sub{font-size:.75rem;color:var(--muted);margin-bottom:1.5rem}
+.auth-box .cg{margin-bottom:1rem}
+.auth-box .cg label{display:block;font-size:.7rem;color:var(--muted);margin-bottom:.3rem;font-family:'Space Mono',monospace}
+.auth-box .cg input{width:100%;padding:.6rem .8rem;border-radius:6px;border:1px solid var(--border);background:#0a1a15;color:#fff;font-size:.8rem;outline:none;transition:border-color .2s}
+.auth-box .cg input:focus{border-color:var(--accent)}
+.auth-box .cg .email-preview{font-size:.7rem;color:var(--accent);margin-top:.3rem;font-family:'Space Mono',monospace}
+.auth-box .btn-p{width:100%;justify-content:center;padding:.7rem}
+.auth-box .auth-link{text-align:center;margin-top:1rem;font-size:.75rem;color:var(--muted)}
+.auth-box .auth-link a{color:var(--accent);text-decoration:none}
+.auth-box .auth-msg{margin-top:.8rem;font-size:.75rem;text-align:center;padding:.4rem;border-radius:4px}
+.auth-box .auth-msg.error{background:rgba(239,68,68,.15);color:#ef4444}
+.auth-box .auth-msg.success{background:rgba(30,180,130,.15);color:var(--accent)}
+.pm-logo{text-align:center;margin-bottom:1.2rem}
+.pm-logo svg{width:48px;height:48px}
+.pm-badge{display:inline-block;background:linear-gradient(135deg,var(--accent),#1A9BAF);color:#000;font-size:.65rem;font-weight:600;padding:2px 8px;border-radius:20px;margin-top:.3rem}
+</style>
+</head>
+<body>
+<nav><a href="/" class="logo"><svg><use href="#pxl"/></svg><div class="logo-text"><strong>Pixel Software Design</strong><span>L'architecture de l'innovation</span></div></a><ul class="nav-menu" id="navMenu"><li><a href="/">Accueil</a></li><li><a href="/pixmail/">PixMail</a></li><li><a href="https://pixmaps.web.app/search.html" target="_blank">PixMaps</a></li><li><a href="/login/" class="nav-cta">Connexion</a></li></ul><button class="burger" onclick="document.getElementById('navMenu').classList.toggle('open')" aria-label="Menu"><span></span><span></span><span></span></button></nav>
+<svg style="display:none"><defs><symbol id="pxl" viewBox="0 0 100 100"><polygon points="50,2 93,26 93,74 50,98 7,74 7,26" fill="none"/><polygon points="50,2 93,26 70,14" fill="#2DBD6E"/><polygon points="50,2 70,14 50,30 30,14" fill="#3DC87A"/><polygon points="50,2 30,14 7,26" fill="#1EB482"/><polygon points="93,26 93,74 78,50" fill="#1A9BAF"/><polygon points="93,26 78,50 70,14" fill="#1CB89A"/><polygon points="70,14 78,50 50,30" fill="#22C490"/><polygon points="50,30 78,50 60,72 40,72 22,50" fill="#1A9BAF"/><polygon points="7,26 30,14 22,50" fill="#1565C0"/><polygon points="30,14 50,30 22,50" fill="#1878C8"/><polygon points="7,26 22,50 7,74" fill="#1565C0"/><polygon points="7,74 22,50 40,72 50,98 30,86" fill="#1A9BAF"/><polygon points="93,74 78,50 60,72 50,98 70,86" fill="#1565C0"/><polygon points="50,98 70,86 93,74" fill="#1878C8"/><polygon points="50,98 30,86 7,74" fill="#1A9BAF"/><polygon points="40,72 60,72 50,98 30,86" fill="#1CB89A"/><path d="M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z" fill="white" opacity="0.92"/></symbol></defs></svg>
+<div class="auth-page">
+<div class="auth-box">
+<div class="pm-logo"><svg><use href="#pxl"/></svg><div class="pm-badge">PixMail</div></div>
+<h1>Créer votre email @pxelsoftware-64fcd.web.app</h1>
+<p class="sub">Inscrivez-vous et recevez votre adresse email professionnelle</p>
+
+<form method="POST" action="/pixmail/inscription/">
+<input type="hidden" name="csrfmiddlewaretoken" value="oA92OfQ7LeWaOqytxA1qAKeACYYD0lLjZ6PR3sR4dmzr49sOvwmEIzi2CLO2zhEW">
+<div class="cg">
+<label>Nom d'utilisateur</label>
+<input type="text" name="username" value="" placeholder="ex: hajer" required pattern="[a-zA-Z0-9_-]+" minlength="3">
+<div class="email-preview">→ <span id="emailPreview">votre@pxelsoftware-64fcd.web.app</span></div>
+</div>
+<div class="cg"><label>Nom d'affichage</label><input type="text" name="display_name" value="" placeholder="ex: Héjer Ghiloufi"></div>
+<div class="cg"><label>Mot de passe</label><input type="password" name="password" placeholder="Min. 6 caractères" required minlength="6"></div>
+<div class="cg"><label>Confirmer le mot de passe</label><input type="password" name="password2" placeholder="Retapez votre mot de passe" required></div>
+<button type="submit" class="btn-p">Créer mon email →</button>
+</form>
+<p class="auth-link">Déjà un compte ? <a href="/pixmail/connexion/">Se connecter</a></p>
+</div>
+</div>
+<script>
+document.querySelector('input[name="username"]').addEventListener('input',function(){
+document.getElementById('emailPreview').textContent=(this.value||'votre')+'@pxelsoftware-64fcd.web.app'});
+</script>
+<script src="/static/js/pixsearch.js"></script>
+</body>
+</html>

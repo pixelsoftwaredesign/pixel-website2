@@ -1,0 +1,215 @@
+<!DOCTYPE html><html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Portfolio — Pixel Software Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/style.css">
+<style>
+.pf-hero{min-height:60vh;display:flex;align-items:center;padding:9rem 5rem 4rem;background:linear-gradient(160deg,#05100D 0%,#0a1a15 50%,#0d2420 100%);position:relative;overflow:hidden}
+.pf-hero::before{content:'';position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(30,180,130,.1) 0%,transparent 70%);top:-150px;right:-100px}
+.pf-hero-inner{position:relative;z-index:1;max-width:800px}
+.pf-hero .tag{display:inline-flex;align-items:center;gap:.6rem;font-family:'Space Mono',monospace;font-size:.65rem;text-transform:uppercase;letter-spacing:.18em;color:var(--accent);border:1px solid rgba(30,180,130,.3);padding:.35rem .9rem;border-radius:999px;margin-bottom:1.5rem}
+.pf-hero h1{font-size:3rem;line-height:1.15;margin-bottom:1rem}
+.pf-hero h1 span{color:var(--accent)}
+.pf-hero p{font-size:1rem;color:var(--muted);max-width:550px;line-height:1.7}
+
+.pf-stats{display:flex;gap:2rem;padding:3rem 5rem;border-bottom:1px solid var(--border)}
+.pf-stat{text-align:center}
+.pf-stat .num{font-size:2.2rem;font-weight:700;color:var(--accent)}
+.pf-stat .label{font-size:.75rem;color:var(--muted);font-family:'Space Mono',monospace;margin-top:.3rem}
+
+.pf-filters{padding:3rem 5rem 1rem;display:flex;gap:.8rem;flex-wrap:wrap}
+.pf-filter{padding:.5rem 1.2rem;border-radius:999px;border:1px solid var(--border);background:transparent;color:var(--muted);font-size:.8rem;font-family:'Space Grotesk',sans-serif;cursor:pointer;transition:all .2s}
+.pf-filter:hover,.pf-filter.active{background:var(--accent);color:#000;border-color:var(--accent);font-weight:600}
+
+.pf-grid{padding:2rem 5rem 5rem;display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:1.5rem}
+.pf-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:transform .25s,border-color .25s;cursor:pointer}
+.pf-card:hover{transform:translateY(-6px);border-color:var(--accent)}
+.pf-card .thumb{height:220px;overflow:hidden;position:relative}
+.pf-card .thumb img{width:100%;height:100%;object-fit:cover;transition:transform .4s}
+.pf-card:hover .thumb img{transform:scale(1.06)}
+.pf-card .thumb .overlay{position:absolute;inset:0;background:linear-gradient(180deg,transparent 50%,rgba(5,16,13,.85) 100%);opacity:0;transition:opacity .3s;display:flex;align-items:flex-end;padding:1rem}
+.pf-card:hover .thumb .overlay{opacity:1}
+.pf-card .thumb .overlay .btn-view{background:var(--accent);color:#000;padding:.4rem 1rem;border-radius:6px;font-size:.75rem;font-weight:600}
+.pf-card .info{padding:1.2rem 1.4rem}
+.pf-card .info .cat{display:inline-block;font-family:'Space Mono',monospace;font-size:.6rem;color:var(--accent);text-transform:uppercase;letter-spacing:.1em;background:rgba(30,180,130,.1);padding:2px 8px;border-radius:4px;margin-bottom:.6rem}
+.pf-card .info h3{font-size:1rem;margin-bottom:.4rem}
+.pf-card .info p{font-size:.78rem;color:var(--muted);line-height:1.5}
+.pf-card .info .tags{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.8rem}
+.pf-card .info .tags span{font-size:.65rem;color:var(--muted);background:rgba(30,180,130,.06);padding:2px 7px;border-radius:4px;border:1px solid rgba(30,180,130,.1)}
+
+.pf-detail-overlay{display:none;position:fixed;inset:0;z-index:400;background:rgba(5,16,13,.92);backdrop-filter:blur(12px);overflow-y:auto}
+.pf-detail-overlay.open{display:block}
+.pf-detail{max-width:900px;margin:3rem auto;background:var(--card);border:1px solid var(--border);border-radius:16px;overflow:hidden;position:relative}
+.pf-detail .close-btn{position:fixed;top:1.5rem;right:2rem;background:none;border:none;color:var(--muted);font-size:1.5rem;cursor:pointer;z-index:401}
+.pf-detail .close-btn:hover{color:#fff}
+.pf-detail .hero-img{width:100%;height:400px;object-fit:cover}
+.pf-detail .content{padding:2.5rem}
+.pf-detail .content .cat-badge{font-family:'Space Mono',monospace;font-size:.65rem;color:var(--accent);text-transform:uppercase;letter-spacing:.12em;margin-bottom:.8rem}
+.pf-detail .content h2{font-size:1.6rem;margin-bottom:.8rem}
+.pf-detail .content .desc{color:var(--muted);font-size:.88rem;line-height:1.8;margin-bottom:1.5rem}
+.pf-detail .content .meta{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem}
+.pf-detail .content .meta .item{background:#0a1a15;padding:.8rem 1rem;border-radius:8px;border:1px solid var(--border)}
+.pf-detail .content .meta .item .label{font-size:.65rem;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:.3rem}
+.pf-detail .content .meta .item .val{font-size:.85rem;font-weight:500}
+.pf-detail .content .tech-tags{display:flex;gap:.5rem;flex-wrap:wrap}
+.pf-detail .content .tech-tags span{padding:.3rem .8rem;border-radius:6px;font-size:.75rem;background:rgba(30,180,130,.1);border:1px solid var(--border);color:var(--accent)}
+
+.pf-cta{padding:5rem;text-align:center;background:linear-gradient(180deg,#05100D,#0a1a15)}
+.pf-cta h2{font-size:1.8rem;margin-bottom:.8rem}
+.pf-cta p{color:var(--muted);font-size:.9rem;margin-bottom:2rem}
+.pf-cta .btns{display:flex;gap:1rem;justify-content:center;flex-wrap:wrap}
+
+footer{padding:2rem 5rem;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--bg)}
+.fcopy{font-size:.75rem;color:var(--muted)}
+.flinks{display:flex;gap:1.2rem}
+.flinks a{font-size:.75rem;color:var(--muted);transition:color .2s}
+.flinks a:hover{color:var(--accent)}
+
+@media(max-width:960px){
+  .pf-hero{padding:8rem 1.5rem 3rem}
+  .pf-stats{padding:2rem 1.5rem;flex-wrap:wrap}
+  .pf-filters{padding:2rem 1.5rem 1rem}
+  .pf-grid{padding:1rem 1.5rem 3rem;grid-template-columns:1fr}
+  .pf-cta{padding:3rem 1.5rem}
+  footer{padding:1.5rem;flex-direction:column;gap:1rem}
+}
+</style>
+</head>
+<body>
+<svg style="display:none"><defs><symbol id="pxl" viewBox="0 0 100 100"><polygon points="50,2 93,26 93,74 50,98 7,74 7,26" fill="none"/><polygon points="50,2 93,26 70,14" fill="#2DBD6E"/><polygon points="50,2 70,14 50,30 30,14" fill="#3DC87A"/><polygon points="50,2 30,14 7,26" fill="#1EB482"/><polygon points="93,26 93,74 78,50" fill="#1A9BAF"/><polygon points="93,26 78,50 70,14" fill="#1CB89A"/><polygon points="70,14 78,50 50,30" fill="#22C490"/><polygon points="50,30 78,50 60,72 40,72 22,50" fill="#1A9BAF"/><polygon points="7,26 30,14 22,50" fill="#1565C0"/><polygon points="30,14 50,30 22,50" fill="#1878C8"/><polygon points="7,26 22,50 7,74" fill="#1565C0"/><polygon points="7,74 22,50 40,72 50,98 30,86" fill="#1A9BAF"/><polygon points="93,74 78,50 60,72 50,98 70,86" fill="#1565C0"/><polygon points="50,98 70,86 93,74" fill="#1878C8"/><polygon points="50,98 30,86 7,74" fill="#1A9BAF"/><polygon points="40,72 60,72 50,98 30,86" fill="#1CB89A"/><path d="M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z" fill="white" opacity="0.92"/></symbol></defs></svg>
+
+<nav><a href="/" class="logo"><svg><use href="#pxl"/></svg><div class="logo-text"><strong>Pixel Software Design</strong><span>L'architecture de l'innovation</span></div></a><ul class="nav-menu" id="navMenu"><li><a href="/">Accueil</a></li><li class="dropdown"><a href="#" class="nav-link">Logiciels ▾</a><ul class="dropdown-menu"><li><a href="/gestiactiv/">GestiActiv ERP</a></li><li><a href="/restaurant/">Restaurant &amp; Café</a></li><li><a href="/patisserie/">Pâtisserie Gestio &amp; Caisse</a></li><li><a href="/pixelsoftcode/">PixelSoftCode</a></li><li><a href="/innerstudio/">Inner Studio 3D</a></li><li><a href="/uicatalogue/">Atelier Créatif &amp; Dev</a></li><li><a href="/graphisme/">Pixel Graphisme</a></li><li><a href="/pixmail/">✉️ PixMail</a></li><li style="border-top:1px solid var(--border);margin-top:4px;padding-top:4px"><a href="https://pixmaps.web.app/search.html" target="_blank">🗺️ PixMaps</a></li></ul></li><li><a href="/#why">Pourquoi nous</a></li><li><a href="/portfolio/">Portfolio</a></li><li><a href="/social/">Social</a></li><li><a href="/social/messagerie/">Messagerie 🔐</a></li><li><a href="/#process">Processus</a></li><li class="dropdown"><a href="#" class="nav-link">Pages ▾</a><ul class="dropdown-menu"><li><a href="/a-propos/">À propos</a></li><li><a href="/temoignages/">Témoignages</a></li><li><a href="/prix/">Prix</a></li><li><a href="/faq/">FAQ</a></li><li><a href="/contact/">Contact</a></li></ul></li><li><a href="/login/" class="nav-cta">Connexion</a></li></ul><button class="burger" onclick="document.getElementById('navMenu').classList.toggle('open')" aria-label="Menu"><span></span><span></span><span></span></button></nav>
+
+<section class="pf-hero">
+<div class="pf-hero-inner">
+<div class="tag">// Portfolio</div>
+<h1>Nos <span>réalisations</span></h1>
+<p>Découvrez nos projets : du design d'intérieur intelligent aux plateformes logicielles, en passant par l'IA et le multimédia immersif.</p>
+</div>
+</section>
+
+<div class="pf-stats">
+<div class="pf-stat"><div class="num">48+</div><div class="label">Projets livrés</div></div>
+<div class="pf-stat"><div class="num">4</div><div class="label">Disciplines</div></div>
+<div class="pf-stat"><div class="num">100%</div><div class="label">Clients satisfaits</div></div>
+<div class="pf-stat"><div class="num">15+</div><div class="label">Technologies</div></div>
+</div>
+
+<div class="pf-filters">
+<button class="pf-filter active" onclick="filterProjects('all')">Tous</button>
+<button class="pf-filter" onclick="filterProjects('ia')">🤖 IA & Digital</button>
+<button class="pf-filter" onclick="filterProjects('logiciel')">💻 Logiciel & Web</button>
+<button class="pf-filter" onclick="filterProjects('design')">🏛️ Design d'Intérieur</button>
+<button class="pf-filter" onclick="filterProjects('multimedia')">🎬 Multimédia & VR</button>
+<button class="pf-filter" onclick="filterProjects('interne')">🔧 Projets Internes</button>
+</div>
+
+<div class="pf-grid" id="pfGrid">
+
+<div class="pf-card" data-cat="ia design" onclick="openDetail(0)">
+<div class="thumb"><img src="https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=600&h=400&fit=crop" alt="Villa Jasmine" loading="lazy"><div class="overlay"><span class="btn-view">Voir le projet →</span></div></div>
+<div class="info"><span class="cat">Smart Home · IA</span><h3>Villa Jasmine — Résidence Intelligente</h3><p>Domotique complète + IA + design intérieur contemporain. Contrôle vocal, gestion énergétique prédictive.</p><div class="tags"><span>Flutter</span><span>TensorFlow</span><span>IoT</span><span>Design 3D</span></div></div>
+</div>
+
+<div class="pf-card" data-cat="ia logiciel" onclick="openDetail(1)">
+<div class="thumb"><img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&h=400&fit=crop" alt="Noor Analytics" loading="lazy"><div class="overlay"><span class="btn-view">Voir le projet →</span></div></div>
+<div class="info"><span class="cat">Logiciel · IoT · SaaS</span><h3>Noor Analytics — Plateforme Intelligente</h3><p>Dashboard analytics temps réel, prédiction ML, intégration IoT. Réduction coûts de 30% pour le client.</p><div class="tags"><span>Python</span><span>Django</span><span>React</span><span>ML</span></div></div>
+</div>
+
+<div class="pf-card" data-cat="multimedia" onclick="openDetail(2)">
+<div class="thumb"><img src="https://images.unsplash.com/photo-1617802690992-15d93263d3a9?w=600&h=400&fit=crop" alt="Zaytouna" loading="lazy"><div class="overlay"><span class="btn-view">Voir le projet →</span></div></div>
+<div class="info"><span class="cat">VR · 3D · Retail</span><h3>Zaytouna — Visite Virtuelle Immersive</h3><p>Expérience VR photoréaliste pour un espace retail. Visite 360° interactive avec navigation intuitive.</p><div class="tags"><span>Unity</span><span>3D</span><span>WebXR</span><span>Blender</span></div></div>
+</div>
+
+<div class="pf-card" data-cat="interne" onclick="openDetail(3)">
+<div class="thumb"><img src="https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=600&h=400&fit=crop" alt="Delv" loading="lazy"><div class="overlay"><span class="btn-view">Voir le projet →</span></div></div>
+<div class="info"><span class="cat">Interne · Outil</span><h3>Delv — Outil Interne de Développement</h3><p>IDE collaboratif en temps réel pour l'équipe Pixel. Terminal intégré, gestion de version, CI/CD.</p><div class="tags"><span>Dart</span><span>Flutter</span><span>Firebase</span><span>WebSocket</span></div></div>
+</div>
+
+<div class="pf-card" data-cat="interne logiciel" onclick="openDetail(4)">
+<div class="thumb"><img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?w=600&h=400&fit=crop" alt="PixMaps" loading="lazy"><div class="overlay"><span class="btn-view">Voir le projet →</span></div></div>
+<div class="info"><span class="cat">Web App · Cartographie</span><h3>PixMaps — Application Web Cartographique</h3><p>Carte interactive temps réel pour la gestion et visualisation de données géolocalisées.</p><div class="tags"><span>Flutter</span><span>Mapbox</span><span>API REST</span><span>PostgreSQL</span></div></div>
+</div>
+
+<div class="pf-card" data-cat="ia" onclick="openDetail(5)">
+<div class="thumb"><img src="https://images.unsplash.com/photo-1677442136019-21780ecad995?w=600&h=400&fit=crop" alt="Noor AI" loading="lazy"><div class="overlay"><span class="btn-view">Voir le projet →</span></div></div>
+<div class="info"><span class="cat">IA · Chatbot · NLP</span><h3>Noor AI — Assistant Intelligent</h3><p>Chatbot IA multilingue (FR/AR/EN) pour le service client. NLP avancé, intégration CRM, analytics.</p><div class="tags"><span>Python</span><span>GPT</span><span>NLP</span><span>FastAPI</span></div></div>
+</div>
+
+<div class="pf-card" data-cat="design" onclick="openDetail(6)">
+<div class="thumb"><img src="https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=600&h=400&fit=crop" alt="Bureau Noor" loading="lazy"><div class="overlay"><span class="btn-view">Voir le projet →</span></div></div>
+<div class="info"><span class="cat">Design d'Intérieur · Bureau</span><h3>Bureau Noor Analytics — Espace de Travail</h3><p>Aménagement complet d'un espace de travail moderne. Ergonomie, éclairage intelligent, acoustic design.</p><div class="tags"><span>SketchUp</span><span>AutoCAD</span><span>Domotique</span></div></div>
+</div>
+
+<div class="pf-card" data-cat="logiciel" onclick="openDetail(7)">
+<div class="thumb"><img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=600&h=400&fit=crop" alt="GestiActiv" loading="lazy"><div class="overlay"><span class="btn-view">Voir le projet →</span></div></div>
+<div class="info"><span class="cat">ERP · SaaS · Cloud</span><h3>GestiActiv — Suite ERP Modulaire</h3><p>ERP complet pour PME tunisiennes. 12 modules : RH, comptabilité, commerce, santé, hôtellerie, restaurant.</p><div class="tags"><span>Django</span><span>React</span><span>PostgreSQL</span><span>API</span></div></div>
+</div>
+
+<div class="pf-card" data-cat="multimedia design" onclick="openDetail(8)">
+<div class="thumb"><img src="https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=600&h=400&fit=crop" alt="Pixel Graphisme" loading="lazy"><div class="overlay"><span class="btn-view">Voir le projet →</span></div></div>
+<div class="info"><span class="cat">Graphisme · Branding</span><h3>Pixel Graphisme — Plateforme de Ressources</h3><p>Bibliothèque de ressources graphiques : logos, flyers, mockups, templates. Marketplace créative.</p><div class="tags"><span>Figma</span><span>Photoshop</span><span>Illustrator</span><span>UI</span></div></div>
+</div>
+
+</div>
+
+<div class="pf-detail-overlay" id="detailOverlay">
+<button class="close-btn" onclick="closeDetail()">✕</button>
+<div class="pf-detail" id="detailBox"></div>
+</div>
+
+<section class="pf-cta">
+<h2>Vous avez un projet en tête ?</h2>
+<p>De l'idée au déploiement, nous transformons votre vision en réalité numérique et physique.</p>
+<div class="btns">
+<a href="/contact/" class="btn-p">Démarrer un projet →</a>
+<a href="/pixmail/" class="btn-p" style="background:transparent;border:1px solid var(--border)">Nous contacter</a>
+</div>
+</section>
+
+<footer><div style="display:flex;align-items:center;gap:10px"><svg width="24" height="24"><use href="#pxl"/></svg><span class="fcopy">© 2026 Pixel Software Design · Gabès, Tunisie</span></div><div class="flinks"><a href="tel:+21652675027">📞 +216 52 675 027</a><a href="/">Accueil</a><a href="/portfolio/">Portfolio</a><a href="/contact/">Contact</a></div></footer>
+
+<script>
+var projects=[
+{cat:'Smart Home · IA · Design',title:'Villa Jasmine — Résidence Intelligente',img:'https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=900&h=500&fit=crop',desc:'Projet résidentiel haut de gamme intégrant domotique complète, intelligence artificielle et design intérieur contemporain. Le système gère automatiquement l\'éclairage, le climat, la sécurité et l\'énergie via contrôle vocal et prédiction comportementale.',client:'Mehdi Abdelkader',annee:'2025',duree:'4 mois',technologies:['Flutter','TensorFlow','MQTT','KNX','SketchUp','AutoCAD']},
+{cat:'Logiciel · IoT · SaaS',title:'Noor Analytics — Plateforme Intelligente',img:'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=900&h=500&fit=crop',desc:'Plateforme d\'analytics en temps réel avec prédiction ML et intégration IoT. Dashboard interactif, alertes intelligentes, export de rapports automatiques. Réduction des coûts opérationnels de 30% dès le premier trimestre.',client:'Noor Analytics',annee:'2025',duree:'6 mois',technologies:['Python','Django','React','TensorFlow','PostgreSQL','Docker']},
+{cat:'VR · 3D · Retail',title:'Zaytouna — Visite Virtuelle Immersive',img:'https://images.unsplash.com/photo-1617802690992-15d93263d3a9?w=900&h=500&fit=crop',desc:'Expérience VR photoréaliste pour un concept store premium. Visite 360° interactive avec navigation intuitive, affichage de produits en 3D, et intégration e-commerce pour les achats en ligne.',client:'Zaytouna Retail',annee:'2024',duree:'3 mois',technologies:['Unity','Blender','WebXR','Three.js','C#']},
+{cat:'Interne · Outil',title:'Delv — Outil Interne de Développement',img:'https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=900&h=500&fit=crop',desc:'IDE collaboratif en temps réel développé pour l\'équipe Pixel. Terminal intégré, gestion de version, CI/CD, preview live et chat d\'équipe. Augmente la productivité de 40%.',client:'Pixel Software Design',annee:'2025',duree:'5 mois',technologies:['Dart','Flutter','Firebase','WebSocket','Docker']},
+{cat:'Web App · Cartographie',title:'PixMaps — Application Web Cartographique',img:'https://images.unsplash.com/photo-1524661135-423995f22d0b?w=900&h=500&fit=crop',desc:'Carte interactive temps réel pour la gestion et visualisation de données géolocalisées. Couche IA pour analyse spatiale, clustering automatique et prédiction de flux.',client:'Pixel Software Design',annee:'2025',duree:'3 mois',technologies:['Flutter','Mapbox','PostgreSQL','FastAPI','Redis']},
+{cat:'IA · Chatbot · NLP',title:'Noor AI — Assistant Intelligent',img:'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=900&h=500&fit=crop',desc:'Chatbot IA multilingue (FR/AR/EN) pour le service client. NLP avancé avec compréhension contextuelle, intégration CRM, analytics en temps réel. Réduit le temps de réponse de 60%.',client:'Noor Analytics',annee:'2024',duree:'4 mois',technologies:['Python','GPT','NLP','FastAPI','Redis','React']},
+{cat:'Design d\'Intérieur · Bureau',title:'Bureau Noor Analytics — Espace de Travail',img:'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=900&h=500&fit=crop',desc:'Aménagement complet d\'un espace de travail moderne de 200m². Ergonomie avancée, éclairage intelligent adaptatif, acoustic design, zones de collaboration et espaces de concentration.',client:'Noor Analytics',annee:'2025',duree:'2 mois',technologies:['SketchUp','AutoCAD','KNX','Revit']},
+{cat:'ERP · SaaS · Cloud',title:'GestiActiv — Suite ERP Modulaire',img:'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=900&h=500&fit=crop',desc:'ERP complet et modulaire pour PME tunisiennes. 12 modules : RH, comptabilité, commerce, santé, hôtellerie, restaurant, auto-école, juridique. Architecture microservices, déploiement cloud.',client:'Pixel Software Design',annee:'2024–2026',duree:'Continu',technologies:['Django','React','PostgreSQL','Docker','Firebase']},
+{cat:'Graphisme · Branding',title:'Pixel Graphisme — Plateforme de Ressources',img:'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=900&h=500&fit=crop',desc:'Bibliothèque et marketplace de ressources graphiques professionnelles. Logos, cartes de visite, flyers, mockups, templates, polices. Système de téléchargement, favoris et recommandations IA.',client:'Pixel Software Design',annee:'2025',duree:'4 mois',technologies:['Django','React','Figma API','S3','PostgreSQL']}
+];
+
+function openDetail(i){
+var p=projects[i];
+var h='<img class="hero-img" src="'+p.img+'" alt="'+p.title+'"><div class="content">';
+h+='<div class="cat-badge">'+p.cat+'</div><h2>'+p.title+'</h2><p class="desc">'+p.desc+'</p>';
+h+='<div class="meta"><div class="item"><div class="label">Client</div><div class="val">'+p.client+'</div></div>';
+h+='<div class="item"><div class="label">Année</div><div class="val">'+p.annee+'</div></div>';
+h+='<div class="item"><div class="label">Durée</div><div class="val">'+p.duree+'</div></div>';
+h+='<div class="item"><div class="label">Technologies</div><div class="val">'+p.technologies.length+' outils</div></div></div>';
+h+='<div class="tech-tags">';
+p.technologies.forEach(function(t){h+='<span>'+t+'</span>'});
+h+='</div></div>';
+document.getElementById('detailBox').innerHTML=h;
+document.getElementById('detailOverlay').classList.add('open');
+document.body.style.overflow='hidden';
+}
+function closeDetail(){document.getElementById('detailOverlay').classList.remove('open');document.body.style.overflow=''}
+document.getElementById('detailOverlay').addEventListener('click',function(e){if(e.target===this)closeDetail()});
+
+function filterProjects(cat){
+document.querySelectorAll('.pf-filter').forEach(function(b){b.classList.remove('active')});
+event.target.classList.add('active');
+document.querySelectorAll('.pf-card').forEach(function(c){
+if(cat==='all'||c.dataset.cat.indexOf(cat)!==-1){c.style.display=''}else{c.style.display='none'}
+});
+}
+</script>
+<script src="/static/js/pixsearch.js"></script>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixSoftPay — Connexion</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Space Grotesk',system-ui,sans-serif;background:#0a0a1a;color:#e0e0e0;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.pp-card{background:#12122a;border:1px solid #1e1e3a;border-radius:14px;padding:36px;width:100%;max-width:400px;margin:20px}
+.pp-card h2{text-align:center;margin-bottom:24px;font-size:1.3rem;color:#6c63ff}
+.pp-form-group{margin-bottom:16px}
+.pp-form-group label{display:block;margin-bottom:6px;font-size:.88rem;color:#888}
+.pp-form-group input{width:100%;padding:11px 14px;background:#0a0a1a;border:1px solid #1e1e3a;border-radius:10px;color:#e0e0e0;font-size:.95rem;font-family:inherit;outline:none;transition:border .2s}
+.pp-form-group input:focus{border-color:#6c63ff}
+.pp-btn{width:100%;padding:12px;border:none;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;font-family:inherit;transition:background .2s}
+.pp-btn-primary{background:#6c63ff;color:#fff}
+.pp-btn-primary:hover{background:#5a52d5}
+.pp-btn-outline{background:transparent;border:1px solid #1e1e3a;color:#e0e0e0;margin-top:10px}
+.pp-btn-outline:hover{background:#1a1a30}
+.pp-error{color:#ff1744;font-size:.85rem;text-align:center;margin-bottom:12px;display:none}
+.pp-tabs{display:flex;gap:0;margin-bottom:24px}
+.pp-tab{flex:1;padding:10px;text-align:center;border:1px solid #1e1e3a;cursor:pointer;font-size:.9rem;color:#888;transition:all .2s}
+.pp-tab:first-child{border-radius:10px 0 0 10px}
+.pp-tab:last-child{border-radius:0 10px 10px 0}
+.pp-tab.active{background:#6c63ff;color:#fff;border-color:#6c63ff}
+.pp-brand{text-align:center;margin-bottom:24px}
+.pp-brand svg{width:60px;height:60px}
+.pp-brand p{color:#888;font-size:.85rem;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="pp-card">
+  <div class="pp-brand">
+    <svg viewBox="0 0 100 100"><polygon points="50,2 93,26 93,74 50,98 7,74 7,26" fill="%231EB482"/><path d="M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z" fill="white" opacity="0.92"/></svg>
+    <p>Paiement par QR Code</p>
+  </div>
+
+  <div class="pp-tabs">
+    <div class="pp-tab active" onclick="showTab('login')">Connexion</div>
+    <div class="pp-tab" onclick="showTab('register')">Inscription</div>
+  </div>
+
+  <div id="loginForm">
+    <p id="loginError" class="pp-error"></p>
+    <div class="pp-form-group">
+      <label>Identifiant</label>
+      <input type="text" id="loginUsername" placeholder="Votre identifiant" required>
+    </div>
+    <div class="pp-form-group">
+      <label>Mot de passe</label>
+      <input type="password" id="loginPassword" placeholder="Mot de passe" required>
+    </div>
+    <button class="pp-btn pp-btn-primary" onclick="doLogin()">Se connecter</button>
+  </div>
+
+  <div id="registerForm" style="display:none">
+    <p id="regError" class="pp-error"></p>
+    <div class="pp-form-group">
+      <label>Identifiant</label>
+      <input type="text" id="regUsername" placeholder="Choisissez un identifiant" required>
+    </div>
+    <div class="pp-form-group">
+      <label>Email</label>
+      <input type="email" id="regEmail" placeholder="votre@email.com" required>
+    </div>
+    <div class="pp-form-group">
+      <label>Mot de passe</label>
+      <input type="password" id="regPassword" placeholder="Créez un mot de passe" required>
+    </div>
+    <div class="pp-form-group">
+      <label>Nom complet</label>
+      <input type="text" id="regNom" placeholder="Votre nom">
+    </div>
+    <button class="pp-btn pp-btn-primary" onclick="doRegister()">Créer mon compte</button>
+  </div>
+
+  <a href="/" style="display:block;text-align:center;margin-top:16px;font-size:.85rem;color:#888">← Retour au site</a>
+</div>
+
+<script>
+function getCookie(n){const m=document.cookie.match(new RegExp('(^| )'+n+'=([^;]+)'));return m?m[2]:'';}
+function showTab(t){
+  document.querySelectorAll('.pp-tab').forEach(e=>e.classList.remove('active'));
+  if(t==='login'){document.getElementById('loginForm').style.display='block';document.getElementById('registerForm').style.display='none';document.querySelectorAll('.pp-tab')[0].classList.add('active');}
+  else{document.getElementById('loginForm').style.display='none';document.getElementById('registerForm').style.display='block';document.querySelectorAll('.pp-tab')[1].classList.add('active');}
+}
+function doLogin(){
+  const u=document.getElementById('loginUsername').value.trim();
+  const p=document.getElementById('loginPassword').value.trim();
+  const e=document.getElementById('loginError');
+  if(!u||!p){e.textContent='Remplissez tous les champs';e.style.display='block';return;}
+  fetch('/api/connexion/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},body:JSON.stringify({username:u,password:p})})
+  .then(r=>r.json()).then(d=>{
+    if(d.status==='success'){window.location='/pixsoftpay/';}
+    else{e.textContent=d.message||'Erreur de connexion';e.style.display='block';}
+  }).catch(()=>{e.textContent='Erreur réseau';e.style.display='block';});
+}
+function doRegister(){
+  const u=document.getElementById('regUsername').value.trim();
+  const email=document.getElementById('regEmail').value.trim();
+  const p=document.getElementById('regPassword').value.trim();
+  const nom=document.getElementById('regNom').value.trim();
+  const e=document.getElementById('regError');
+  if(!u||!email||!p){e.textContent='Remplissez les champs obligatoires';e.style.display='block';return;}
+  fetch('/api/inscription/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},body:JSON.stringify({username:u,email:u+'@pixsoftpay.local',password:p,entreprise:nom,role:'designer'})})
+  .then(r=>r.json()).then(d=>{
+    if(d.status==='success'){doLogin();}
+    else{e.textContent=d.message||'Erreur d\'inscription';e.style.display='block';}
+  }).catch(()=>{e.textContent='Erreur réseau';e.style.display='block';});
+}
+fetch('/api/me/').then(r=>r.json()).then(d=>{if(d.status==='success'&&d.user){window.location='/pixsoftpay/';}});
+</script>
+</body>
+</html>

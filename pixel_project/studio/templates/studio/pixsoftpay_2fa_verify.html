@@ -1,0 +1,26 @@
+{% extends "studio/pixsoftpay_base.html" %}
+{% block content %}
+<div class="pp-card" style="max-width:480px;margin:40px auto;text-align:center">
+  <div style="font-size:2.5rem;margin-bottom:16px">🔐</div>
+  <h2 style="margin-bottom:12px">Vérification 2FA</h2>
+  <p style="color:#888;margin-bottom:20px;font-size:.9rem">
+    Saisissez le code à 6 chiffres de votre application d'authentification.
+  </p>
+
+  {% if error %}
+  <p style="color:#ff1744;margin-bottom:12px;font-size:.9rem">{{ error }}</p>
+  {% endif %}
+
+  <form method="POST">
+    {% csrf_token %}
+    <div class="pp-form-group">
+      <input type="text" name="code" maxlength="6" pattern="[0-9]{6}" placeholder="000000" required autofocus style="text-align:center;font-size:1.4rem;letter-spacing:8px;width:100%;padding:14px;background:#0a0a1a;border:1px solid #1e1e3a;border-radius:10px;color:#e0e0e0;font-family:inherit;outline:none">
+    </div>
+    <button type="submit" class="pp-btn pp-btn-primary" style="width:100%;margin-top:8px">Vérifier</button>
+  </form>
+
+  <div style="margin-top:16px">
+    <a href="/pixsoftpay/login/" style="color:#888;font-size:.85rem">← Retour à la connexion</a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "studio/pixsoftpay_base.html" %}
+{% block content %}
+<div class="pp-flex" style="margin-bottom:20px">
+  <h1>Historique</h1>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <a href="/pixsoftpay/history/" class="pp-btn {% if not status_filter %}pp-btn-primary{% else %}pp-btn-outline{% endif %}" style="font-size:.8rem;padding:6px 14px">Tous</a>
+    <a href="/pixsoftpay/history/?status=en_attente" class="pp-btn {% if status_filter == 'en_attente' %}pp-btn-primary{% else %}pp-btn-outline{% endif %}" style="font-size:.8rem;padding:6px 14px">En attente</a>
+    <a href="/pixsoftpay/history/?status=confirme" class="pp-btn {% if status_filter == 'confirme' %}pp-btn-primary{% else %}pp-btn-outline{% endif %}" style="font-size:.8rem;padding:6px 14px">Payées</a>
+    <a href="/pixsoftpay/history/?status=refuse" class="pp-btn {% if status_filter == 'refuse' %}pp-btn-primary{% else %}pp-btn-outline{% endif %}" style="font-size:.8rem;padding:6px 14px">Refusées</a>
+  </div>
+</div>
+
+{% if transactions %}
+<div class="pp-card">
+  <div class="pp-table-wrap">
+    <table>
+      <thead><tr><th>Référence</th><th>Type</th><th>Montant</th><th>Client</th><th>Méthode</th><th>Statut</th><th>Date</th></tr></thead>
+      <tbody>
+      {% for tx in transactions %}
+      <tr>
+        <td style="font-family:monospace">{{ tx.reference }}</td>
+        <td>{{ tx.get_type_operation_display }}</td>
+        <td><strong>{{ tx.montant }} TND</strong></td>
+        <td>{{ tx.customer_name|default:"—" }}</td>
+        <td>{{ tx.get_methode_display }}</td>
+        <td><span class="pp-badge pp-badge-{{ tx.statut }}">{{ tx.get_statut_display }}</span></td>
+        <td>{{ tx.date_creation|date:"d/m/Y H:i" }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="pp-card pp-empty">Aucune transaction trouvée</div>
+{% endif %}
+{% endblock %}

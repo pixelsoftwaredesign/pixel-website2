@@ -1,0 +1,73 @@
+{
+  "firestore": {
+    "rules": "firebase-export/firestore.rules"
+  },
+  "hosting": [
+    {
+      "target": "pxelsoftware-64fcd",
+      "public": "firebase-export",
+      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "rewrites": [
+        { "source": "/pixsoftpay/login", "destination": "/pixsoftpay/login.html" },
+        { "source": "/pixsoftpay/pay/**", "destination": "/pixsoftpay/pay.html" },
+        { "source": "/pixsoftpay/create", "destination": "/pixsoftpay/create.html" },
+        { "source": "/pixsoftpay/wallet", "destination": "/pixsoftpay/wallet.html" },
+        { "source": "/pixsoftpay/history", "destination": "/pixsoftpay/history.html" },
+        { "source": "/pixsoftpay/**", "destination": "/pixsoftpay/index.html" },
+        { "source": "/app/**", "destination": "/app/index.html" },
+        { "source": "/social/profil/**", "destination": "/social/index.html" },
+        { "source": "/social/post/**", "destination": "/social/index.html" },
+        { "source": "/social/messagerie/**", "destination": "/social/messagerie/index.html" }
+      ],
+      "headers": [
+        {
+          "source": "/static/**",
+          "headers": [
+            { "key": "Cache-Control", "value": "public, max-age=31536000" }
+          ]
+        },
+        {
+          "source": "/app/**",
+          "headers": [
+            { "key": "Cache-Control", "value": "no-cache" }
+          ]
+        }
+      ],
+      "cleanUrls": true,
+      "trailingSlash": true
+    },
+    {
+      "target": "pixelsoftwaredesign",
+      "public": "firebase-export",
+      "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+      "rewrites": [
+        { "source": "/pixsoftpay/login", "destination": "/pixsoftpay/login.html" },
+        { "source": "/pixsoftpay/pay/**", "destination": "/pixsoftpay/pay.html" },
+        { "source": "/pixsoftpay/create", "destination": "/pixsoftpay/create.html" },
+        { "source": "/pixsoftpay/wallet", "destination": "/pixsoftpay/wallet.html" },
+        { "source": "/pixsoftpay/history", "destination": "/pixsoftpay/history.html" },
+        { "source": "/pixsoftpay/**", "destination": "/pixsoftpay/index.html" },
+        { "source": "/app/**", "destination": "/app/index.html" },
+        { "source": "/social/profil/**", "destination": "/social/index.html" },
+        { "source": "/social/post/**", "destination": "/social/index.html" },
+        { "source": "/social/messagerie/**", "destination": "/social/messagerie/index.html" }
+      ],
+      "headers": [
+        {
+          "source": "/static/**",
+          "headers": [
+            { "key": "Cache-Control", "value": "public, max-age=31536000" }
+          ]
+        },
+        {
+          "source": "/app/**",
+          "headers": [
+            { "key": "Cache-Control", "value": "no-cache" }
+          ]
+        }
+      ],
+      "cleanUrls": true,
+      "trailingSlash": true
+    }
+  ]
+}

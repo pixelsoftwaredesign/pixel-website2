@@ -1,0 +1,77 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixSoftPay — Paiement par QR Code</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,2 93,26 93,74 50,98 7,74 7,26' fill='%231EB482'/%3E%3Cpath d='M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z' fill='white' opacity='0.92'/%3E%3C/svg%3E">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Space Grotesk',system-ui,sans-serif;background:#0a0a1a;color:#e0e0e0;min-height:100vh}
+a{color:#6c63ff;text-decoration:none}
+.pp-nav{background:#12122a;border-bottom:1px solid #1e1e3a;padding:16px 24px;display:flex;align-items:center;justify-content:space-between}
+.pp-nav-brand{font-size:1.3rem;font-weight:700;color:#6c63ff}
+.pp-nav a{color:#888;font-size:.9rem;transition:color .2s}
+.pp-nav a:hover,.pp-nav a.active{color:#6c63ff}
+.pp-nav-links{display:flex;gap:18px}
+.pp-wrap{max-width:860px;margin:0 auto;padding:24px 20px}
+.pp-card{background:#12122a;border:1px solid #1e1e3a;border-radius:14px;padding:28px;margin-bottom:18px}
+.pp-card h2{margin-bottom:18px;font-size:1.15rem}
+.pp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:14px;margin-bottom:24px}
+.pp-stat{background:#12122a;border:1px solid #1e1e3a;border-radius:14px;padding:22px;text-align:center}
+.pp-stat .val{font-size:2rem;font-weight:700;color:#6c63ff}
+.pp-stat .lbl{font-size:.82rem;color:#888;margin-top:4px}
+.pp-form-group{margin-bottom:16px}
+.pp-form-group label{display:block;margin-bottom:6px;font-size:.88rem;color:#888}
+.pp-form-group input,.pp-form-group select,.pp-form-group textarea{width:100%;padding:11px 14px;background:#0a0a1a;border:1px solid #1e1e3a;border-radius:10px;color:#e0e0e0;font-size:.95rem;font-family:inherit;outline:none;transition:border .2s}
+.pp-form-group input:focus,.pp-form-group select:focus{border-color:#6c63ff}
+.pp-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 22px;border:none;border-radius:10px;font-size:.95rem;font-weight:600;cursor:pointer;transition:background .2s,transform .1s;font-family:inherit}
+.pp-btn:active{transform:scale(.97)}
+.pp-btn-primary{background:#6c63ff;color:#fff}
+.pp-btn-primary:hover{background:#5a52d5}
+.pp-btn-success{background:#00c853;color:#fff}
+.pp-btn-danger{background:#ff1744;color:#fff}
+.pp-btn-outline{background:transparent;border:1px solid #1e1e3a;color:#e0e0e0}
+.pp-btn-outline:hover{background:#1a1a30}
+.pp-qr-box{text-align:center;padding:28px;background:#fff;border-radius:14px;margin:18px auto;max-width:320px;display:inline-block}
+.pp-badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:.78rem;font-weight:600}
+.pp-badge-en_attente{background:rgba(255,171,0,.15);color:#ffab00}
+.pp-badge-confirme{background:rgba(0,200,83,.15);color:#00c853}
+.pp-badge-refuse{background:rgba(255,23,68,.15);color:#ff1744}
+.pp-badge-annule{background:rgba(136,136,136,.15);color:#888}
+.pp-table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse}
+th,td{padding:11px 14px;text-align:left;border-bottom:1px solid #1e1e3a;font-size:.88rem}
+th{color:#888;font-weight:600;font-size:.78rem;text-transform:uppercase}
+tr:hover{background:#16162e}
+.pp-pay-page{max-width:460px;margin:40px auto;text-align:center}
+.pp-pay-page .amount{font-size:2.6rem;font-weight:700;color:#6c63ff;margin:16px 0}
+.pp-pay-page .merchant{font-size:1.05rem;color:#888;margin-bottom:24px}
+.pp-flex{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.pp-error{color:#ff1744;margin-bottom:12px}
+.pp-empty{text-align:center;padding:40px;color:#888}
+.pp-loading{text-align:center;padding:40px;color:#888}
+</style>
+</head>
+<body>
+
+<nav class="pp-nav">
+  <a href="/pixsoftpay/" class="pp-nav-brand">PixSoftPay</a>
+  <div class="pp-nav-links">
+    <a href="/pixsoftpay/" class="{% if request.resolver_match.url_name == 'pixsoftpay_dashboard' %}active{% endif %}">Dashboard</a>
+    <a href="/pixsoftpay/create/" class="{% if request.resolver_match.url_name == 'pixsoftpay_create' %}active{% endif %}">Nouveau QR</a>
+    <a href="/pixsoftpay/wallet/" class="{% if request.resolver_match.url_name == 'pixsoftpay_wallet' %}active{% endif %}">Wallet</a>
+    <a href="/pixsoftpay/history/" class="{% if request.resolver_match.url_name == 'pixsoftpay_history' %}active{% endif %}">Historique</a>
+    <a href="/">← Site</a>
+  </div>
+</nav>
+
+<div class="pp-wrap">
+{% block content %}{% endblock %}
+</div>
+
+</body>
+</html>

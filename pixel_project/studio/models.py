@@ -880,3 +880,435 @@ class Candidature(models.Model):
         ordering = ['-created_at']
     def __str__(self):
         return f"{self.get_type_candidature_display()} — {self.nom} ({self.email})"
+
+
+# ─── PixMail — Service Email ────────────────────────────────
+class PixMailAccount(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='pixmail')
+    username = models.CharField(max_length=30, unique=True, verbose_name="Nom d'utilisateur")
+    email = models.EmailField(unique=True, verbose_name="Adresse email")
+    password_hash = models.CharField(max_length=200, verbose_name="Mot de passe")
+    display_name = models.CharField(max_length=100, blank=True, verbose_name="Nom d'affichage")
+    avatar_url = models.URLField(blank=True, verbose_name="Avatar")
+    storage_used_mb = models.DecimalField(max_digits=8, decimal_places=2, default=0, verbose_name="Stockage utilisé (Mo)")
+    storage_limit_mb = models.DecimalField(max_digits=8, decimal_places=2, default=500, verbose_name="Stockage max (Mo)")
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Compte PixMail"
+        verbose_name_plural = "Comptes PixMail"
+
+    def __str__(self):
+        return self.email
+
+    def save(self, *args, **kwargs):
+        if not self.email:
+            self.email = f"{self.username}@pixmail.tn"
+        super().save(*args, **kwargs)
+
+
+class PixMailContact(models.Model):
+    owner = models.ForeignKey(PixMailAccount, on_delete=models.CASCADE, related_name='contacts')
+    name = models.CharField(max_length=150, verbose_name="Nom")
+    email = models.EmailField(verbose_name="Email")
+    phone = models.CharField(max_length=20, blank=True, verbose_name="Téléphone")
+    company = models.CharField(max_length=100, blank=True, verbose_name="Entreprise")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Contact PixMail"
+        verbose_name_plural = "Contacts PixMail"
+        ordering = ['name']
+
+    def __str__(self):
+        return f"{self.name} <{self.email}>"
+
+
+class PixMailMessage(models.Model):
+    FOLDER_CHOICES = [
+        ('inbox', 'Boîte de réception'),
+        ('sent', 'Envoyés'),
+        ('draft', 'Brouillons'),
+        ('spam', 'Spam'),
+        ('trash', 'Corbeille'),
+        ('archive', 'Archives'),
+    ]
+    sender = models.ForeignKey(PixMailAccount, on_delete=models.SET_NULL, null=True, blank=True, related_name='sent_messages')
+    sender_email = models.EmailField(verbose_name="Expéditeur")
+    recipient_email = models.EmailField(verbose_name="Destinataire")
+    cc = models.EmailField(blank=True, verbose_name="CC")
+    bcc = models.EmailField(blank=True, verbose_name="CCI")
+    subject = models.CharField(max_length=500, verbose_name="Objet")
+    body = models.TextField(verbose_name="Corps du message")
+    body_html = models.TextField(blank=True, verbose_name="Corps HTML")
+    folder = models.CharField(max_length=20, choices=FOLDER_CHOICES, default='inbox')
+    is_read = models.BooleanField(default=False, verbose_name="Lu")
+    is_starred = models.BooleanField(default=False, verbose_name="Favori")
+    has_attachments = models.BooleanField(default=False)
+    size_kb = models.IntegerField(default=0, verbose_name="Taille (Ko)")
+    reply_to = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='replies')
+    date_sent = models.DateTimeField(auto_now_add=True)
+    date_read = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Message PixMail"
+        verbose_name_plural = "Messages PixMail"
+        ordering = ['-date_sent']
+
+    def __str__(self):
+        return f"[{self.folder}] {self.subject} — {self.recipient_email}"
+
+
+class PixMailAttachment(models.Model):
+    message = models.ForeignKey(PixMailMessage, on_delete=models.CASCADE, related_name='attachments')
+    filename = models.CharField(max_length=255, verbose_name="Nom du fichier")
+    file = models.FileField(upload_to='pixmail/attachments/', verbose_name="Fichier")
+    size_kb = models.IntegerField(default=0, verbose_name="Taille (Ko)")
+    mime_type = models.CharField(max_length=100, blank=True, verbose_name="Type MIME")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Pièce jointe PixMail"
+        verbose_name_plural = "Pièces jointes PixMail"
+
+    def __str__(self):
+        return self.filename
+
+
+class PixMailFolder(models.Model):
+    account = models.ForeignKey(PixMailAccount, on_delete=models.CASCADE, related_name='custom_folders')
+    name = models.CharField(max_length=100, verbose_name="Nom du dossier")
+    icon = models.CharField(max_length=10, default='📁', verbose_name="Icône")
+    color = models.CharField(max_length=7, default='#1EB482', verbose_name="Couleur")
+    order = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Dossier PixMail"
+        verbose_name_plural = "Dossiers PixMail"
+        ordering = ['order']
+
+    def __str__(self):
+        return f"{self.name} ({self.account.email})"
+
+
+class PixMailSignature(models.Model):
+    account = models.OneToOneField(PixMailAccount, on_delete=models.CASCADE, related_name='signature')
+    content = models.TextField(blank=True, verbose_name="Signature")
+    include_name = models.BooleanField(default=True, verbose_name="Inclure le nom")
+    include_email = models.BooleanField(default=True, verbose_name="Inclure l'email")
+    include_phone = models.BooleanField(default=False, verbose_name="Inclure le téléphone")
+    include_company = models.BooleanField(default=True, verbose_name="Inclure l'entreprise")
+
+    class Meta:
+        verbose_name = "Signature PixMail"
+        verbose_name_plural = "Signatures PixMail"
+
+    def __str__(self):
+        return f"Signature — {self.account.email}"
+
+
+# ─── Social Media ─────────────────────────────────────────
+class SocialProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='social')
+    display_name = models.CharField(max_length=80, blank=True)
+    bio = models.TextField(max_length=500, blank=True)
+    avatar_url = models.URLField(blank=True)
+    cover_url = models.URLField(blank=True)
+    location = models.CharField(max_length=100, blank=True)
+    website = models.URLField(blank=True)
+    is_private = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Profil Social"
+        verbose_name_plural = "Profils Sociaux"
+
+    def __str__(self):
+        return self.display_name or self.user.username
+
+    @property
+    def followers_count(self):
+        return Follow.objects.filter(following=self.user).count()
+
+    @property
+    def following_count(self):
+        return Follow.objects.filter(follower=self.user).count()
+
+    @property
+    def posts_count(self):
+        return Post.objects.filter(author=self.user).count()
+
+
+class Follow(models.Model):
+    follower = models.ForeignKey(User, on_delete=models.CASCADE, related_name='following_set')
+    following = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followers_set')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('follower', 'following')
+        verbose_name = "Abonnement"
+        verbose_name_plural = "Abonnements"
+
+    def __str__(self):
+        return f"{self.follower.username} → {self.following.username}"
+
+
+class Post(models.Model):
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='social_posts')
+    content = models.TextField(max_length=5000)
+    image_url = models.URLField(blank=True)
+    visibility = models.CharField(max_length=20, choices=[
+        ('public', 'Public'),
+        ('followers', 'Abonnés'),
+        ('private', 'Privé'),
+    ], default='public')
+    likes_count = models.IntegerField(default=0)
+    comments_count = models.IntegerField(default=0)
+    shares_count = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Post"
+        verbose_name_plural = "Posts"
+
+    def __str__(self):
+        return f"{self.author.username}: {self.content[:50]}"
+
+
+class Like(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='social_likes')
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='likes')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'post')
+
+    def __str__(self):
+        return f"{self.user.username} likes {self.post.id}"
+
+
+class Comment(models.Model):
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='social_comments')
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
+    content = models.TextField(max_length=2000)
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+        verbose_name = "Commentaire"
+        verbose_name_plural = "Commentaires"
+
+    def __str__(self):
+        return f"{self.author.username}: {self.content[:40]}"
+
+
+class Notification(models.Model):
+    TYPE_CHOICES = [
+        ('like', 'Like'),
+        ('comment', 'Commentaire'),
+        ('follow', 'Abonnement'),
+        ('share', 'Partage'),
+        ('message', 'Message'),
+    ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='social_notifications')
+    from_user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, related_name='notifications_sent')
+    type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, null=True, blank=True)
+    message = models.TextField(blank=True)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Notification"
+        verbose_name_plural = "Notifications"
+
+    def __str__(self):
+        return f"{self.type} → {self.user.username}"
+
+
+# ─── Messenger E2E ────────────────────────────────────────
+class Conversation(models.Model):
+    TYPE_CHOICES = [
+        ('private', 'Privé'),
+        ('group', 'Groupe'),
+    ]
+    title = models.CharField(max_length=100, blank=True)
+    type = models.CharField(max_length=10, choices=TYPE_CHOICES, default='private')
+    avatar_url = models.URLField(blank=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='created_conversations')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-updated_at']
+        verbose_name = "Conversation"
+        verbose_name_plural = "Conversations"
+
+    def __str__(self):
+        return self.title or f"Conv {self.id}"
+
+
+class ConversationMember(models.Model):
+    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name='members')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='conversations')
+    role = models.CharField(max_length=20, choices=[('admin', 'Admin'), ('member', 'Membre')], default='member')
+    public_key = models.TextField(blank=True, verbose_name="Clé publique E2E")
+    joined_at = models.DateTimeField(auto_now_add=True)
+    last_read = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('conversation', 'user')
+
+    def __str__(self):
+        return f"{self.user.username} in {self.conversation}"
+
+
+class EncryptedMessage(models.Model):
+    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name='messages')
+    sender = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_encrypted')
+    encrypted_content = models.TextField(verbose_name="Contenu chiffré (AES-GCM)")
+    encrypted_key = models.TextField(verbose_name="Clé AES chiffrée (RSA-OAEP)")
+    iv = models.CharField(max_length=64, verbose_name="Nonce IV")
+    message_type = models.CharField(max_length=20, choices=[
+        ('text', 'Texte'),
+        ('image', 'Image'),
+        ('file', 'Fichier'),
+    ], default='text')
+    attachment_url = models.URLField(blank=True)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+        verbose_name = "Message Chiffré"
+        verbose_name_plural = "Messages Chiffrés"
+
+    def __str__(self):
+        return f"[E2E] {self.sender.username} → Conv {self.conversation.id}"
+
+# ─── PixSoftPay — Wallet & Transactions ────────────────────────
+class Wallet(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='wallet')
+    solde = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="Solde (TND)")
+    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Wallet"
+        verbose_name_plural = "Wallets"
+
+    def __str__(self):
+        return f"{self.user.username} — {self.solde} TND"
+
+
+class Transaction(models.Model):
+    TYPE_CHOICES = [
+        ('depot', 'Dépôt'),
+        ('retrait', 'Retrait'),
+        ('paiement', 'Paiement'),
+        ('remboursement', 'Remboursement'),
+    ]
+    STATUT_CHOICES = [
+        ('en_attente', 'En attente'),
+        ('confirme', 'Confirmé'),
+        ('refuse', 'Refusé'),
+        ('annule', 'Annulé'),
+    ]
+    METHODE_CHOICES = [
+        ('d17', 'D17'),
+        ('flouci', 'Flouci'),
+        ('konnect', 'Konnect'),
+        ('wallet', 'Wallet'),
+        ('carte', 'Carte bancaire'),
+        ('especes', 'Espèces'),
+        ('virement', 'Virement bancaire'),
+    ]
+
+    wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE, related_name='transactions')
+    reference = models.CharField(max_length=100, unique=True, verbose_name="Référence")
+    type_operation = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    montant = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Montant (TND)")
+    solde_avant = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Solde avant")
+    solde_apres = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Solde après")
+    methode = models.CharField(max_length=20, choices=METHODE_CHOICES, default='wallet')
+    statut = models.CharField(max_length=20, choices=STATUT_CHOICES, default='en_attente')
+    description = models.TextField(blank=True, verbose_name="Description")
+    qr_data = models.TextField(blank=True, verbose_name="QR Code data")
+    payment_url = models.URLField(blank=True, verbose_name="Lien de paiement")
+    customer_name = models.CharField(max_length=200, blank=True, verbose_name="Nom client")
+    customer_email = models.EmailField(blank=True, verbose_name="Email client")
+    paid_at = models.DateTimeField(null=True, blank=True)
+    expires_at = models.DateTimeField(null=True, blank=True)
+    date_creation = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Transaction"
+        verbose_name_plural = "Transactions"
+        ordering = ['-date_creation']
+
+    def __str__(self):
+        return f"{self.reference} — {self.get_type_operation_display()} {self.montant} TND ({self.get_statut_display()})"
+
+    def save(self, *args, **kwargs):
+        if not self.reference:
+            import uuid
+            self.reference = f"PSP-{uuid.uuid4().hex[:8].upper()}"
+        super().save(*args, **kwargs)
+
+
+# ─── PixSoftPay — 2FA (Two-Factor Authentication) ──────────────
+class TwoFactorAuth(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='twofactor')
+    secret = models.CharField(max_length=32, verbose_name="Secret TOTP")
+    is_enabled = models.BooleanField(default=False, verbose_name="2FA activée")
+    backup_codes = models.TextField(blank=True, verbose_name="Codes de secours")
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_used = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Authentification 2FA"
+        verbose_name_plural = "Authentifications 2FA"
+
+    def __str__(self):
+        return f"2FA {self.user.username} — {'Activée' if self.is_enabled else 'Désactivée'}"
+
+    def save(self, *args, **kwargs):
+        if not self.secret:
+            import pyotp
+            self.secret = pyotp.random_base32()
+        if not self.backup_codes:
+            import secrets
+            codes = [secrets.token_hex(4).upper() for _ in range(8)]
+            self.backup_codes = '\n'.join(codes)
+        super().save(*args, **kwargs)
+
+    def get_totp_uri(self):
+        import pyotp
+        return pyotp.totp.TOTP(self.secret).provisioning_uri(
+            name=self.user.email or self.user.username,
+            issuer_name='PixSoftPay'
+        )
+
+    def verify_code(self, code):
+        import pyotp
+        totp = pyotp.totp.TOTP(self.secret)
+        return totp.verify(code, valid_window=1)
+
+    def verify_backup(self, code):
+        codes = [c.strip() for c in self.backup_codes.split('\n') if c.strip()]
+        code = code.strip().upper()
+        if code in codes:
+            codes.remove(code)
+            self.backup_codes = '\n'.join(codes)
+            self.save()
+            return True
+        return False
+
+    def get_backup_codes_list(self):
+        return [c.strip() for c in self.backup_codes.split('\n') if c.strip()]

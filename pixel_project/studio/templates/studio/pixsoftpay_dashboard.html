@@ -1,0 +1,40 @@
+{% extends "studio/pixsoftpay_base.html" %}
+{% block content %}
+<h1 style="margin-bottom:24px">Dashboard PixSoftPay</h1>
+
+<div class="pp-grid">
+  <div class="pp-stat"><div class="val">{{ total }}</div><div class="lbl">Total transactions</div></div>
+  <div class="pp-stat"><div class="val" style="color:#00c853">{{ paid }}</div><div class="lbl">Payées</div></div>
+  <div class="pp-stat"><div class="val" style="color:#ffab00">{{ pending }}</div><div class="lbl">En attente</div></div>
+  <div class="pp-stat"><div class="val" style="color:#ff1744">{{ expired }}</div><div class="lbl">Refusées</div></div>
+  <div class="pp-stat"><div class="val">{{ revenue|floatformat:2 }}</div><div class="lbl">Revenu (TND)</div></div>
+</div>
+
+<div class="pp-card">
+  <div class="pp-flex" style="margin-bottom:18px">
+    <h2 style="margin:0">Transactions récentes</h2>
+    <a href="/pixsoftpay/create/"><button class="pp-btn pp-btn-primary">+ Nouveau QR</button></a>
+  </div>
+  {% if recent %}
+  <div class="pp-table-wrap">
+    <table>
+      <thead><tr><th>Référence</th><th>Type</th><th>Montant</th><th>Méthode</th><th>Statut</th><th>Date</th></tr></thead>
+      <tbody>
+      {% for tx in recent %}
+      <tr>
+        <td style="font-family:monospace">{{ tx.reference }}</td>
+        <td>{{ tx.get_type_operation_display }}</td>
+        <td><strong>{{ tx.montant }} TND</strong></td>
+        <td>{{ tx.get_methode_display }}</td>
+        <td><span class="pp-badge pp-badge-{{ tx.statut }}">{{ tx.get_statut_display }}</span></td>
+        <td>{{ tx.date_creation|date:"d/m/Y H:i" }}</td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="pp-empty">Aucune transaction pour le moment</div>
+  {% endif %}
+</div>
+{% endblock %}

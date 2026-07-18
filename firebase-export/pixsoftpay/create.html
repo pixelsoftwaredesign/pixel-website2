@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixSoftPay — Créer un QR Code</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Space Grotesk',system-ui,sans-serif;background:#0a0a1a;color:#e0e0e0;min-height:100vh}
+a{color:#6c63ff;text-decoration:none}
+.pp-nav{background:#12122a;border-bottom:1px solid #1e1e3a;padding:14px 24px;display:flex;align-items:center;justify-content:space-between}
+.pp-nav-brand{font-size:1.3rem;font-weight:700;color:#6c63ff}
+.pp-nav-links{display:flex;gap:16px;align-items:center}
+.pp-nav-links a{color:#888;font-size:.88rem;transition:color .2s}
+.pp-nav-links a:hover,.pp-nav-links a.active{color:#6c63ff}
+.pp-nav-user{color:#00c853;font-weight:600}
+.pp-nav-logout{background:none;border:1px solid #1e1e3a;color:#888;padding:5px 12px;border-radius:8px;cursor:pointer;font-size:.8rem;font-family:inherit}
+.pp-wrap{max-width:860px;margin:0 auto;padding:24px 20px}
+.pp-card{background:#12122a;border:1px solid #1e1e3a;border-radius:14px;padding:28px;margin-bottom:18px}
+.pp-form-group{margin-bottom:16px}
+.pp-form-group label{display:block;margin-bottom:6px;font-size:.88rem;color:#888}
+.pp-form-group input,.pp-form-group select{width:100%;padding:11px 14px;background:#0a0a1a;border:1px solid #1e1e3a;border-radius:10px;color:#e0e0e0;font-size:.95rem;font-family:inherit;outline:none;transition:border .2s}
+.pp-form-group input:focus,.pp-form-group select:focus{border-color:#6c63ff}
+.pp-btn{display:inline-flex;padding:11px 22px;border:none;border-radius:10px;font-size:.95rem;font-weight:600;cursor:pointer;font-family:inherit}
+.pp-btn-primary{background:#6c63ff;color:#fff}
+.pp-btn-outline{background:transparent;border:1px solid #1e1e3a;color:#e0e0e0}
+.pp-qr-box{text-align:center;padding:28px;background:#fff;border-radius:14px;margin:18px auto;max-width:320px;display:inline-block}
+.pp-error{color:#ff1744;margin-bottom:12px}
+</style>
+</head>
+<body>
+<div id="app" style="display:none">
+<nav class="pp-nav">
+  <a href="/pixsoftpay/" class="pp-nav-brand">PixSoftPay</a>
+  <div class="pp-nav-links">
+    <a href="/pixsoftpay/">Dashboard</a>
+    <a href="/pixsoftpay/create/" class="active">Nouveau QR</a>
+    <a href="/pixsoftpay/wallet/">Wallet</a>
+    <a href="/pixsoftpay/history/">Historique</a>
+    <span class="pp-nav-user" id="username"></span>
+    <button class="pp-nav-logout" onclick="logout()">Déconnexion</button>
+    <a href="/">← Site</a>
+  </div>
+</nav>
+<div class="pp-wrap">
+  <div id="form-section">
+    <div class="pp-card" style="max-width:520px">
+      <h2 style="margin-bottom:18px">Créer un paiement QR Code</h2>
+      <p id="error" class="pp-error" style="display:none"></p>
+      <form id="createForm">
+        <div class="pp-form-group"><label>Montant (TND)</label><input type="number" id="amount" step="0.01" min="0.01" placeholder="0.00" required></div>
+        <div class="pp-form-group"><label>Description</label><input type="text" id="description" placeholder="Ex: Paiement commande #123"></div>
+        <div class="pp-form-group"><label>Nom du client</label><input type="text" id="customer_name" placeholder="Nom complet"></div>
+        <div class="pp-form-group"><label>Email du client</label><input type="email" id="customer_email" placeholder="email@exemple.com"></div>
+        <div class="pp-form-group"><label>Méthode de paiement</label><select id="methode"><option value="wallet">Wallet mobile</option><option value="d17">D17</option><option value="flouci">Flouci</option><option value="konnect">Konnect</option><option value="carte">Carte bancaire</option></select></div>
+        <button type="submit" class="pp-btn pp-btn-primary" style="width:100%">Générer le QR Code</button>
+      </form>
+    </div>
+  </div>
+  <div id="result-section" style="display:none">
+    <div class="pp-card" style="text-align:center">
+      <h2 style="margin-bottom:16px">QR Code généré</h2>
+      <p style="color:#888;margin-bottom:16px">Référence: <strong id="ref-display" style="color:#e0e0e0"></strong></p>
+      <div class="pp-qr-box"><div id="qr-container"></div></div>
+      <p style="margin:16px 0;font-size:.92rem;color:#888">Montant: <strong id="amount-display" style="color:#6c63ff"></strong></p>
+      <div style="margin-top:20px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+        <a id="pay-link"><button class="pp-btn pp-btn-primary">Voir la page de paiement</button></a>
+        <button class="pp-btn pp-btn-outline" onclick="location.reload()">Nouveau QR</button>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+<script>
+function logout(){fetch('/api/deconnexion/').then(()=>window.location='/pixsoftpay/login/');}
+fetch('/api/me/').then(r=>r.json()).then(d=>{
+  if(d.status!=='success'||!d.user){window.location='/pixsoftpay/login/';return;}
+  document.getElementById('username').textContent=d.user.username;
+  document.getElementById('app').style.display='block';
+});
+document.getElementById('createForm').addEventListener('submit',function(e){
+  e.preventDefault();
+  const data={amount:parseFloat(document.getElementById('amount').value),description:document.getElementById('description').value,customer_name:document.getElementById('customer_name').value,customer_email:document.getElementById('customer_email').value,methode:document.getElementById('methode').value};
+  fetch('/api/pixsoftpay/create/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}).then(r=>r.json()).then(d=>{
+    if(d.error){document.getElementById('error').textContent=d.error;document.getElementById('error').style.display='block';return;}
+    document.getElementById('form-section').style.display='none';
+    document.getElementById('result-section').style.display='block';
+    document.getElementById('ref-display').textContent=d.reference;
+    document.getElementById('amount-display').textContent=d.amount+' TND';
+    document.getElementById('pay-link').href='/pixsoftpay/pay/'+d.reference+'/';
+    const qr=document.getElementById('qr-container');
+    const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+    svg.setAttribute('width','250');svg.setAttribute('height','250');svg.setAttribute('viewBox','0 0 250 250');
+    svg.innerHTML='<rect width="250" height="250" fill="white" rx="8"/><text x="125" y="110" text-anchor="middle" font-family="monospace" font-size="12" fill="#333">'+d.reference+'</text><text x="125" y="135" text-anchor="middle" font-family="monospace" font-size="16" fill="#6c63ff" font-weight="bold">'+d.amount+' TND</text><text x="125" y="155" text-anchor="middle" font-family="monospace" font-size="9" fill="#888">Scannez pour payer</text><rect x="15" y="15" width="40" height="40" rx="4" fill="#6c63ff"/><rect x="195" y="15" width="40" height="40" rx="4" fill="#6c63ff"/><rect x="15" y="195" width="40" height="40" rx="4" fill="#6c63ff"/><rect x="195" y="195" width="40" height="40" rx="4" fill="#6c63ff"/>';
+    qr.appendChild(svg);
+  });
+});
+</script>
+</body>
+</html>

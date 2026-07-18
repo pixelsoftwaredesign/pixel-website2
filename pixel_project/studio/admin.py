@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import UserProfile, ProjetContact, AtelierProfile, PortfolioProject, CodeRepository, GraphismeResource, ERPClient, ERPModule, ERPSubscription, ERPDemoRecord, Moniteur, Candidat, Vehicule, Lecon, Examen, Medecin, Patient, Lit, RendezVous, FacturationSante, ClientHotel, Chambre, ReservationHotel, ServiceHotel, Categorie, Fournisseur, Produit, Vente, ClientJuridique, DossierJuridique, Audience, JournalComptable, EcritureComptable, Facture, DeclarationFiscale, Employe, Contrat, FichePaie, Conge, Formation, MenuItem, TableRestaurant, SoftCodeModule, StudioProject3D, PatisserieRecipe, PatisserieProduct, PlanAbonnement, SouscriptionClient, Paiement, CleActivation, ConfigurationBancaire, ConfigurationPaiementEnLigne, Candidature, MouvementStock, CommandeECommerce, CommandeECommerceItem, Temoignage
+from .models import UserProfile, ProjetContact, AtelierProfile, PortfolioProject, CodeRepository, GraphismeResource, ERPClient, ERPModule, ERPSubscription, ERPDemoRecord, Moniteur, Candidat, Vehicule, Lecon, Examen, Medecin, Patient, Lit, RendezVous, FacturationSante, ClientHotel, Chambre, ReservationHotel, ServiceHotel, Categorie, Fournisseur, Produit, Vente, ClientJuridique, DossierJuridique, Audience, JournalComptable, EcritureComptable, Facture, DeclarationFiscale, Employe, Contrat, FichePaie, Conge, Formation, MenuItem, TableRestaurant, SoftCodeModule, StudioProject3D, PatisserieRecipe, PatisserieProduct, PlanAbonnement, SouscriptionClient, Paiement, CleActivation, ConfigurationBancaire, ConfigurationPaiementEnLigne, Candidature, MouvementStock, CommandeECommerce, CommandeECommerceItem, Temoignage, PixMailAccount, PixMailContact, PixMailMessage, PixMailAttachment, PixMailFolder, PixMailSignature, SocialProfile, Follow, Post, Like, Comment, Notification, Conversation, ConversationMember, EncryptedMessage, Wallet, Transaction, TwoFactorAuth
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
@@ -184,3 +184,97 @@ class MouvementStockAdmin(admin.ModelAdmin): list_display = ('produit','type','q
 class CommandeECommerceAdmin(admin.ModelAdmin): list_display = ('reference','client_nom','total_ttc','statut','methode_paiement','date_commande')
 @admin.register(CommandeECommerceItem)
 class CommandeECommerceItemAdmin(admin.ModelAdmin): list_display = ('commande','nom_produit','quantite','prix_unitaire')
+
+# ─── PixMail ───
+@admin.register(PixMailAccount)
+class PixMailAccountAdmin(admin.ModelAdmin):
+    list_display = ('username', 'email', 'is_active', 'storage_used_mb', 'created_at')
+    search_fields = ('username', 'email')
+    list_filter = ('is_active',)
+
+@admin.register(PixMailContact)
+class PixMailContactAdmin(admin.ModelAdmin):
+    list_display = ('name', 'email', 'owner', 'company', 'created_at')
+    search_fields = ('name', 'email')
+
+@admin.register(PixMailMessage)
+class PixMailMessageAdmin(admin.ModelAdmin):
+    list_display = ('subject', 'sender_email', 'recipient_email', 'folder', 'is_read', 'date_sent')
+    list_filter = ('folder', 'is_read', 'is_starred')
+    search_fields = ('subject', 'sender_email', 'recipient_email')
+
+@admin.register(PixMailAttachment)
+class PixMailAttachmentAdmin(admin.ModelAdmin):
+    list_display = ('filename', 'message', 'size_kb', 'created_at')
+
+@admin.register(PixMailFolder)
+class PixMailFolderAdmin(admin.ModelAdmin):
+    list_display = ('name', 'account', 'icon', 'order')
+
+@admin.register(PixMailSignature)
+class PixMailSignatureAdmin(admin.ModelAdmin):
+    list_display = ('account', 'include_name', 'include_email')
+
+# ─── Social Media ───
+@admin.register(SocialProfile)
+class SocialProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'display_name', 'location', 'is_private', 'created_at')
+    search_fields = ('user__username', 'display_name')
+
+@admin.register(Follow)
+class FollowAdmin(admin.ModelAdmin):
+    list_display = ('follower', 'following', 'created_at')
+
+@admin.register(Post)
+class PostAdmin(admin.ModelAdmin):
+    list_display = ('author', 'content', 'visibility', 'likes_count', 'comments_count', 'created_at')
+    list_filter = ('visibility',)
+    search_fields = ('author__username', 'content')
+
+@admin.register(Like)
+class LikeAdmin(admin.ModelAdmin):
+    list_display = ('user', 'post', 'created_at')
+
+@admin.register(Comment)
+class CommentAdmin(admin.ModelAdmin):
+    list_display = ('author', 'post', 'content', 'created_at')
+    search_fields = ('author__username', 'content')
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ('user', 'from_user', 'type', 'is_read', 'created_at')
+    list_filter = ('type', 'is_read')
+
+# ─── Messenger E2E ───
+@admin.register(Conversation)
+class ConversationAdmin(admin.ModelAdmin):
+    list_display = ('id', 'title', 'type', 'created_by', 'updated_at')
+    list_filter = ('type',)
+
+@admin.register(ConversationMember)
+class ConversationMemberAdmin(admin.ModelAdmin):
+    list_display = ('conversation', 'user', 'role', 'joined_at')
+
+@admin.register(EncryptedMessage)
+class EncryptedMessageAdmin(admin.ModelAdmin):
+    list_display = ('id', 'conversation', 'sender', 'message_type', 'is_read', 'created_at')
+    list_filter = ('message_type', 'is_read')
+
+# ─── PixSoftPay ───
+@admin.register(Wallet)
+class WalletAdmin(admin.ModelAdmin):
+    list_display = ('user', 'solde', 'updated_at', 'created_at')
+    search_fields = ('user__username',)
+
+@admin.register(Transaction)
+class TransactionAdmin(admin.ModelAdmin):
+    list_display = ('reference', 'type_operation', 'montant', 'methode', 'statut', 'customer_name', 'date_creation')
+    list_filter = ('statut', 'type_operation', 'methode')
+    search_fields = ('reference', 'customer_name', 'customer_email')
+
+# ─── PixSoftPay 2FA ───
+@admin.register(TwoFactorAuth)
+class TwoFactorAuthAdmin(admin.ModelAdmin):
+    list_display = ('user', 'is_enabled', 'last_used', 'created_at')
+    list_filter = ('is_enabled',)
+    search_fields = ('user__username',)

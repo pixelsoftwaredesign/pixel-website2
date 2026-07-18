@@ -1,0 +1,36 @@
+{% extends "studio/pixsoftpay_base.html" %}
+{% block content %}
+<div class="pp-card" style="max-width:520px">
+  <h2 style="margin-bottom:18px">Configurer la 2FA</h2>
+  <p style="color:#888;margin-bottom:20px;font-size:.9rem">
+    Scannez le QR code ci-dessous avec votre application d'authentification
+    (Google Authenticator, Authy, etc.)
+  </p>
+
+  <div style="text-align:center;margin:20px 0">
+    <img src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data={{ tfa.get_totp_uri|urlencode }}" alt="QR Code 2FA" style="border-radius:10px;background:#fff;padding:10px">
+  </div>
+
+  <div style="background:#0a0a1a;border:1px solid #1e1e3a;border-radius:10px;padding:14px;margin:16px 0">
+    <p style="color:#888;font-size:.8rem;margin-bottom:6px">Saisissez ce secret manuellement :</p>
+    <code style="color:#6c63ff;font-size:1rem;word-break:break-all">{{ tfa.secret }}</code>
+  </div>
+
+  {% if error %}
+  <p style="color:#ff1744;margin-bottom:12px;font-size:.9rem">{{ error }}</p>
+  {% endif %}
+
+  <form method="POST">
+    {% csrf_token %}
+    <div class="pp-form-group">
+      <label>Code de vérification (6 chiffres)</label>
+      <input type="text" name="code" maxlength="6" pattern="[0-9]{6}" placeholder="000000" required autofocus style="text-align:center;font-size:1.4rem;letter-spacing:8px">
+    </div>
+    <button type="submit" class="pp-btn pp-btn-primary" style="width:100%">Activer la 2FA</button>
+  </form>
+
+  <div style="margin-top:16px;text-align:center">
+    <a href="/pixsoftpay/" style="color:#888;font-size:.85rem">← Retour au dashboard</a>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,182 @@
+<!DOCTYPE html>{% load static %}<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>{{ conversation.title|default:"Conversation" }} — PixSocial E2E</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<style>
+.ps-chat{display:grid;grid-template-columns:1fr;max-width:800px;margin:0 auto;height:calc(100vh - 60px);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-top:1rem}
+.ps-chat-header{background:var(--card);border-bottom:1px solid var(--border);padding:1rem 1.5rem;display:flex;align-items:center;gap:1rem}
+.ps-chat-header .avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#1A9BAF);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.8rem;color:#000}
+.ps-chat-header .info{flex:1}
+.ps-chat-header .info h3{font-size:.9rem;margin:0}
+.ps-chat-header .info span{font-size:.7rem;color:var(--muted)}
+.ps-chat-header .e2e{display:inline-flex;align-items:center;gap:.3rem;background:rgba(30,180,130,.1);color:var(--accent);font-size:.65rem;padding:3px 8px;border-radius:10px}
+.ps-chat-messages{flex:1;overflow-y:auto;padding:1.5rem;display:flex;flex-direction:column;gap:.8rem;background:var(--bg)}
+.ps-msg{max-width:75%;padding:.7rem 1rem;border-radius:14px;font-size:.82rem;line-height:1.6;word-break:break-word}
+.ps-msg.sent{align-self:flex-end;background:var(--accent);color:#000;border-bottom-right-radius:4px}
+.ps-msg.received{align-self:flex-start;background:var(--card);border:1px solid var(--border);border-bottom-left-radius:4px}
+.ps-msg .sender{font-size:.65rem;font-weight:600;margin-bottom:.2rem;opacity:.7}
+.ps-msg .time{font-size:.6rem;opacity:.6;margin-top:.3rem;text-align:right}
+.ps-msg .lock{font-size:.6rem;opacity:.5}
+.ps-chat-input{background:var(--card);border-top:1px solid var(--border);padding:1rem 1.5rem;display:flex;gap:.8rem;align-items:flex-end}
+.ps-chat-input textarea{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:.6rem 1rem;color:var(--text);font-family:inherit;font-size:.82rem;resize:none;min-height:40px;max-height:120px}
+.ps-chat-input textarea:focus{outline:none;border-color:var(--accent)}
+.ps-chat-input button{background:var(--accent);color:#000;border:none;border-radius:10px;padding:.6rem 1.2rem;font-weight:600;cursor:pointer;font-size:.82rem;transition:opacity .2s}
+.ps-chat-input button:hover{opacity:.85}
+.ps-chat-input button:disabled{opacity:.4;cursor:not-allowed}
+.ps-key-exchange{text-align:center;padding:2rem;color:var(--muted);font-size:.8rem}
+.ps-key-exchange .icon{font-size:2rem;margin-bottom:.5rem}
+</style>
+</head>
+<body>
+<svg style="display:none"><defs><symbol id="pxl" viewBox="0 0 100 100"><polygon points="50,2 93,26 93,74 50,98 7,74 7,26" fill="none"/><polygon points="50,2 93,26 70,14" fill="#2DBD6E"/><polygon points="50,2 70,14 50,30 30,14" fill="#3DC87A"/><polygon points="50,2 30,14 7,26" fill="#1EB482"/><polygon points="93,26 93,74 78,50" fill="#1A9BAF"/><polygon points="93,26 78,50 70,14" fill="#1CB89A"/><polygon points="70,14 78,50 50,30" fill="#22C490"/><polygon points="50,30 78,50 60,72 40,72 22,50" fill="#1A9BAF"/><polygon points="7,26 30,14 22,50" fill="#1565C0"/><polygon points="30,14 50,30 22,50" fill="#1878C8"/><polygon points="7,26 22,50 7,74" fill="#1565C0"/><polygon points="7,74 22,50 40,72 50,98 30,86" fill="#1A9BAF"/><polygon points="93,74 78,50 60,72 50,98 70,86" fill="#1565C0"/><polygon points="50,98 70,86 93,74" fill="#1878C8"/><polygon points="50,98 30,86 7,74" fill="#1A9BAF"/><polygon points="40,72 60,72 50,98 30,86" fill="#1CB89A"/><path d="M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z" fill="white" opacity="0.92"/></symbol></defs></svg>
+
+<div class="ps-chat">
+<div class="ps-chat-header">
+<div class="avatar">{{ conversation.title|first|upper|default:"?" }}</div>
+<div class="info">
+<h3>{{ conversation.title|default:"Sans titre" }}</h3>
+<span>{% for m in members %}{{ m.user.username }}{% if not forloop.last %}, {% endif %}{% endfor %}</span>
+</div>
+<span class="e2e">🔐 Chiffrement de bout en bout</span>
+<a href="/social/messagerie/" style="color:var(--muted);text-decoration:none;font-size:.82rem">← Retour</a>
+</div>
+
+<div class="ps-chat-messages" id="chatMessages">
+<div class="ps-key-exchange">
+<div class="icon">🔑</div>
+<p>Échange de clés publiques en cours...</p>
+<p style="font-size:.7rem;margin-top:.3rem">Les messages sont chiffrés localement avec AES-256-GCM</p>
+</div>
+</div>
+
+<div class="ps-chat-input">
+<textarea id="msgInput" placeholder="Message chiffré..." rows="1"></textarea>
+<button onclick="sendMessage()" id="sendBtn">Envoyer 🔐</button>
+</div>
+</div>
+
+<script>
+const CONV_ID = {{ conversation.id }};
+const USERNAME = '{{ request.user.username }}';
+let myKeys = null;
+let peerKeys = {};
+
+function generateKeys(){
+  return crypto.subtle.generateKey(
+    {name:'RSA-OAEP',modulusLength:2048,publicExponent:new Uint8Array([1,0,1]),hash:'SHA-256'},
+    true,['encrypt','decrypt']
+  );
+}
+
+function generateAESKey(){
+  return crypto.subtle.generateKey({name:'AES-GCM',length:256},true,['encrypt','decrypt']);
+}
+
+async function exportPublicKey(key){
+  const buf = await crypto.subtle.exportKey('spki',key);
+  return btoa(String.fromCharCode(...new Uint8Array(buf)));
+}
+
+async function importPublicKey(b64){
+  const raw = Uint8Array.from(atob(b64),c=>c.charCodeAt(0));
+  return crypto.subtle.importKey('spki',raw,{name:'RSA-OAEP',hash:'SHA-256'},true,['encrypt']);
+}
+
+async function encryptMessage(text, recipientPublicKeyB64){
+  const aesKey = await generateAESKey();
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const encoded = new TextEncoder().encode(text);
+  const ciphertext = await crypto.subtle.encrypt({name:'AES-GCM',iv},aesKey,encoded);
+  const aesRaw = await crypto.subtle.exportKey('raw',aesKey);
+  const recipientKey = await importPublicKey(recipientPublicKeyB64);
+  const encryptedAes = await crypto.subtle.encrypt({name:'RSA-OAEP'},recipientKey,aesRaw);
+  return {
+    encrypted_content: btoa(String.fromCharCode(...new Uint8Array(ciphertext))),
+    iv: btoa(String.fromCharCode(...iv)),
+    encrypted_key: btoa(String.fromCharCode(...new Uint8Array(encryptedAes)))
+  };
+}
+
+async function decryptMessage(encryptedContent, encryptedKeyB64, ivB64){
+  if(!myKeys)return encryptedContent;
+  try{
+    const ct = Uint8Array.from(atob(encryptedContent),c=>c.charCodeAt(0));
+    const iv = Uint8Array.from(atob(ivB64),c=>c.charCodeAt(0));
+    const ek = Uint8Array.from(atob(encryptedKeyB64),c=>c.charCodeAt(0));
+    const aesRaw = await crypto.subtle.decrypt({name:'RSA-OAEP'},myKeys.privateKey,ek);
+    const aesKey = await crypto.subtle.importKey('raw',aesRaw,{name:'AES-GCM',length:256},false,['decrypt']);
+    const plain = await crypto.subtle.decrypt({name:'AES-GCM',iv},aesKey,ct);
+    return new TextDecoder().decode(plain);
+  }catch(e){return '[Chiffré]';}
+}
+
+async function initChat(){
+  myKeys = await generateKeys();
+  const pubB64 = await exportPublicKey(myKeys.publicKey);
+  const res = await fetch('/api/social/conversations/'+CONV_ID+'/keys/',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({public_key:pubB64})
+  });
+  const data = await res.json();
+  peerKeys = data.keys;
+  delete peerKeys[USERNAME];
+  await loadMessages();
+}
+
+async function loadMessages(){
+  const res = await fetch('/api/social/conversations/'+CONV_ID+'/messages/');
+  const data = await res.json();
+  const container = document.getElementById('chatMessages');
+  container.innerHTML = '';
+  const msgs = data.messages.reverse();
+  for(const m of msgs){
+    const isMine = m.sender === USERNAME;
+    let content = m.encrypted_content;
+    if(!isMine && myKeys){
+      content = await decryptMessage(m.encrypted_content, m.encrypted_key, m.iv);
+    }else if(isMine){
+      try{content = await decryptMessage(m.encrypted_content, m.encrypted_key, m.iv);}catch(e){content=m.encrypted_content;}
+    }
+    const div = document.createElement('div');
+    div.className = 'ps-msg '+(isMine?'sent':'received');
+    div.innerHTML = (!isMine?'<div class="sender">'+m.sender+'</div>':'')+
+      '<div>'+content+'</div>'+
+      '<div class="time">'+new Date(m.created_at).toLocaleTimeString('fr',{hour:'2-digit',minute:'2-digit'})+' <span class="lock">🔐</span></div>';
+    container.appendChild(div);
+  }
+  container.scrollTop = container.scrollHeight;
+}
+
+async function sendMessage(){
+  const input = document.getElementById('msgInput');
+  const text = input.value.trim();
+  if(!text)return;
+  input.value = '';
+  const peerUsernames = Object.keys(peerKeys);
+  if(peerUsernames.length === 0){
+    await fetch('/api/social/conversations/'+CONV_ID+'/messages/',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({encrypted_content:text,encrypted_key:'',iv:''})
+    });
+  }else{
+    const peerKey = peerUsernames[0];
+    const encrypted = await encryptMessage(text, peerKeys[peerKey]);
+    await fetch('/api/social/conversations/'+CONV_ID+'/messages/',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(encrypted)
+    });
+  }
+  await loadMessages();
+}
+
+document.getElementById('msgInput').addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}
+});
+
+initChat();
+setInterval(loadMessages,5000);
+</script>
+</body></html>
