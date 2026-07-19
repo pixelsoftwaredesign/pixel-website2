@@ -9,7 +9,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.utils import timezone
-from .models import UserProfile, ProjetContact, AtelierProfile, PortfolioProject, CodeRepository, GraphismeResource, ERPModule, ERPSubscription, ERPDemoRecord, ERPClient, Moniteur, Candidat, Vehicule, Lecon, Examen, Medecin, Patient, Lit, RendezVous, FacturationSante, ClientHotel, Chambre, ReservationHotel, ServiceHotel, Categorie, Fournisseur, Produit, Vente, ClientJuridique, DossierJuridique, Audience, JournalComptable, EcritureComptable, Facture, DeclarationFiscale, Employe, Contrat, FichePaie, Conge, Formation, MenuItem, TableRestaurant, SoftCodeModule, StudioProject3D, PatisserieRecipe, PatisserieProduct, PlanAbonnement, SouscriptionClient, Paiement, CleActivation, ConfigurationBancaire, ConfigurationPaiementEnLigne, Candidature, MouvementStock, CommandeECommerce, CommandeECommerceItem, Temoignage, PixMailAccount, PixMailContact, PixMailMessage, PixMailAttachment, PixMailFolder, PixMailSignature, SocialProfile, Follow, Post, Like, Comment, Notification, Conversation, ConversationMember, EncryptedMessage, Wallet, Transaction, TwoFactorAuth, Referral, REFERRAL_BONUS_AMOUNT, REFERRAL_THRESHOLD
+from .models import UserProfile, ProjetContact, AtelierProfile, PortfolioProject, CodeRepository, GraphismeResource, ERPModule, ERPSubscription, ERPDemoRecord, ERPClient, Moniteur, Candidat, Vehicule, Lecon, Examen, Medecin, Patient, Lit, RendezVous, FacturationSante, ClientHotel, Chambre, ReservationHotel, ServiceHotel, Categorie, Fournisseur, Produit, Vente, ClientJuridique, DossierJuridique, Audience, JournalComptable, EcritureComptable, Facture, DeclarationFiscale, Employe, Contrat, FichePaie, Conge, Formation, MenuItem, TableRestaurant, SoftCodeModule, StudioProject3D, PatisserieRecipe, PatisserieProduct, PlanAbonnement, SouscriptionClient, Paiement, CleActivation, ConfigurationBancaire, ConfigurationPaiementEnLigne, Candidature, MouvementStock, CommandeECommerce, CommandeECommerceItem, Temoignage, PixMailAccount, PixMailContact, PixMailMessage, PixMailAttachment, PixMailFolder, PixMailSignature, SocialProfile, Follow, Post, Like, Comment, Notification, Conversation, ConversationMember, EncryptedMessage, Wallet, Transaction, TwoFactorAuth, Referral, REFERRAL_BONUS_AMOUNT, REFERRAL_THRESHOLD, KYCVerification
 from .services import notifier_activation_cle, notifier_confirmation_commande, notifier_statut_commande
 
 def index(request):
@@ -2619,4 +2619,56 @@ def api_pixsoftpay_referral_info(request):
             {'username': r.referred.username, 'date': r.created_at.isoformat(), 'bonus_given': r.bonus_given}
             for r in referrals[:50]
         ],
+    })
+
+
+# ─── Vérification d'identité (KYC) ─────────────────────────────
+def pixsoftpay_kyc(request):
+    if not request.user.is_authenticated:
+        return redirect('pixsoftpay_login')
+    kyc = KYCVerification.objects.filter(user=request.user).first()
+    return render(request, 'studio/pixsoftpay_kyc.html', {'kyc': kyc})
+
+
+@csrf_exempt
+def api_pixsoftpay_kyc_submit(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Non authentifié'}, status=401)
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST requis'}, status=405)
+
+    existing = KYCVerification.objects.filter(user=request.user, status='pending').first()
+    if existing:
+        return JsonResponse({'error': 'Vous avez déjà une demande en cours'}, status=400)
+
+    doc_type = request.POST.get('doc_type', '')
+    doc_number = request.POST.get('doc_number', '').strip()
+    full_name = request.POST.get('full_name', '').strip()
+    bank_rib = request.POST.get('bank_rib', '').strip()
+    front_image = request.FILES.get('front_image')
+    back_image = request.FILES.get('back_image')
+
+    if not doc_type or not doc_number or not full_name or not front_image:
+        return JsonResponse({'error': 'Champs obligatoires manquants'}, status=400)
+
+    kyc = KYCVerification.objects.create(
+        user=request.user, doc_type=doc_type, doc_number=doc_number,
+        full_name=full_name, front_image=front_image, back_image=back_image,
+        bank_rib=bank_rib,
+    )
+    return JsonResponse({'status': 'success', 'message': 'Demande soumise. En attente de vérification.'}, status=201)
+
+
+@csrf_exempt
+def api_pixsoftpay_kyc_status(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Non authentifié'}, status=401)
+    kyc = KYCVerification.objects.filter(user=request.user).order_by('-created_at').first()
+    if not kyc:
+        return JsonResponse({'status': 'none', 'verified': False})
+    return JsonResponse({
+        'status': kyc.status,
+        'verified': kyc.status == 'approved',
+        'doc_type': kyc.get_doc_type_display(),
+        'submitted_at': kyc.created_at.isoformat(),
     })

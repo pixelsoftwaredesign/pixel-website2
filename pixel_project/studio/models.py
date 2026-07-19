@@ -1342,3 +1342,36 @@ class Referral(models.Model):
 
     def __str__(self):
         return f"{self.referrer.username} → {self.referred.username}"
+
+
+# ─── PixSoftPay — Vérification d'identité (KYC) ────────────────
+class KYCVerification(models.Model):
+    TYPE_CHOICES = [
+        ('cin', 'Carte d\'identité nationale'),
+        ('passport', 'Passeport'),
+        ('bank_account', 'Relevé bancaire'),
+    ]
+    STATUS_CHOICES = [
+        ('pending', 'En attente'),
+        ('approved', 'Approuvé'),
+        ('rejected', 'Rejeté'),
+    ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='kyc_verifications')
+    doc_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    doc_number = models.CharField(max_length=50, verbose_name="Numéro du document")
+    full_name = models.CharField(max_length=200, verbose_name="Nom complet")
+    front_image = models.ImageField(upload_to='kyc/front/', verbose_name="Recto")
+    back_image = models.ImageField(upload_to='kyc/back/', verbose_name="Verso", blank=True, null=True)
+    bank_rib = models.CharField(max_length=50, blank=True, verbose_name="RIB bancaire")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    admin_note = models.TextField(blank=True, verbose_name="Note admin")
+    reviewed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Vérification KYC"
+        verbose_name_plural = "Vérifications KYC"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"KYC {self.user.username} — {self.get_doc_type_display()} ({self.get_status_display()})"

@@ -144,4 +144,8 @@ urlpatterns = [
     # ─── Parrainage ──────────────────────────────────────────
     path('pixsoftpay/referral/', views.pixsoftpay_referral, name='pixsoftpay_referral'),
     path('api/pixsoftpay/referral/info/', views.api_pixsoftpay_referral_info, name='api_pixsoftpay_referral_info'),
+    # ─── Vérification identité (KYC) ────────────────────────
+    path('pixsoftpay/kyc/', views.pixsoftpay_kyc, name='pixsoftpay_kyc'),
+    path('api/pixsoftpay/kyc/submit/', views.api_pixsoftpay_kyc_submit, name='api_pixsoftpay_kyc_submit'),
+    path('api/pixsoftpay/kyc/status/', views.api_pixsoftpay_kyc_status, name='api_pixsoftpay_kyc_status'),
 ]

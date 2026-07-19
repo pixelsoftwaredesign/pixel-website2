@@ -1,0 +1,123 @@
+{% extends 'studio/pixsoftpay_base.html' %}
+{% block content %}
+<div class="pp-page">
+  <div class="pp-header">
+    <h2>Vérification d'identité</h2>
+    <a href="/pixsoftpay/" class="pp-nav-link">← Dashboard</a>
+  </div>
+
+  {% if kyc %}
+  <div class="pp-card">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+      <h3 style="font-size:1rem">Demande en cours</h3>
+      <span class="pp-badge pp-badge-{{ kyc.status }}">
+        {% if kyc.status == 'pending' %}En attente
+        {% elif kyc.status == 'approved' %}Approuvé ✓
+        {% else %}Rejeté ✗{% endif %}
+      </span>
+    </div>
+    <table>
+      <tr><td style="color:#888;width:140px">Document</td><td>{{ kyc.get_doc_type_display }}</td></tr>
+      <tr><td style="color:#888">Numéro</td><td>{{ kyc.doc_number }}</td></tr>
+      <tr><td style="color:#888">Nom complet</td><td>{{ kyc.full_name }}</td></tr>
+      {% if kyc.bank_rib %}<tr><td style="color:#888">RIB</td><td>{{ kyc.bank_rib }}</td></tr>{% endif %}
+      <tr><td style="color:#888">Soumis le</td><td>{{ kyc.created_at|date:"d/m/Y H:i" }}</td></tr>
+      {% if kyc.admin_note %}<tr><td style="color:#888">Note</td><td>{{ kyc.admin_note }}</td></tr>{% endif %}
+    </table>
+
+    {% if kyc.status == 'approved' %}
+    <div style="margin-top:16px;padding:14px;background:rgba(0,200,83,.1);border-radius:10px;color:#00c853;text-align:center">
+      Votre identité a été vérifiée. Vous pouvez utiliser toutes les fonctionnalités PixSoftPay.
+    </div>
+    {% endif %}
+
+    {% if kyc.status == 'rejected' %}
+    <p style="margin-top:16px;color:#888;font-size:.85rem">Vous pouvez soumettre une nouvelle demande.</p>
+    {% endif %}
+  </div>
+
+  {% if kyc.status != 'pending' %}
+  {% endif %}
+  {% endif %}
+
+  {% if not kyc or kyc.status == 'rejected' %}
+  <div class="pp-card">
+    <h3 style="margin-bottom:18px;font-size:1rem">Soumettre vos documents</h3>
+    <form id="kycForm" enctype="multipart/form-data">
+      <div class="pp-form-group">
+        <label>Type de document</label>
+        <select name="doc_type" id="kycDocType" required>
+          <option value="">Sélectionnez...</option>
+          <option value="cin">Carte d'identité nationale (CIN)</option>
+          <option value="passport">Passeport</option>
+          <option value="bank_account">Relevé bancaire</option>
+        </select>
+      </div>
+
+      <div class="pp-form-group">
+        <label>Nom complet ( tel que sur le document )</label>
+        <input type="text" name="full_name" placeholder="Prénom NOM" required>
+      </div>
+
+      <div class="pp-form-group">
+        <label>Numéro du document</label>
+        <input type="text" name="doc_number" placeholder="Ex: 12345678" required>
+      </div>
+
+      <div class="pp-form-group" id="ribGroup" style="display:none">
+        <label>RIB Bancaire</label>
+        <input type="text" name="bank_rib" placeholder="07 123 4567890123456789">
+      </div>
+
+      <div class="pp-form-group">
+        <label>Photo recto ( CIN / Passeport / Relevé )</label>
+        <input type="file" name="front_image" accept="image/*" required style="padding:8px">
+      </div>
+
+      <div class="pp-form-group">
+        <label>Photo verso ( optionnel )</label>
+        <input type="file" name="back_image" accept="image/*" style="padding:8px">
+      </div>
+
+      <p id="kycError" class="pp-error" style="display:none"></p>
+      <p id="kycSuccess" style="color:#00c853;display:none;margin-bottom:12px"></p>
+
+      <button type="submit" class="pp-btn pp-btn-primary" style="width:100%">Envoyer pour vérification</button>
+    </form>
+  </div>
+  {% endif %}
+
+  <div class="pp-card" style="border-color:#1EB482">
+    <h3 style="font-size:.95rem;color:#1EB482;margin-bottom:8px">Pourquoi vérifier ?</h3>
+    <ul style="color:#888;font-size:.85rem;line-height:1.8;padding-left:18px">
+      <li>Retirer de l'argent de votre wallet</li>
+      <li>Recevoir des virements bancaires</li>
+      <li>Augmenter les limites de transaction</li>
+      <li>Conformité réglementaire Tunisie</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+document.getElementById('kycDocType').addEventListener('change', function(){
+  document.getElementById('ribGroup').style.display = this.value === 'bank_account' ? 'block' : 'none';
+});
+
+document.getElementById('kycForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  var fd = new FormData(this);
+  var errEl = document.getElementById('kycError');
+  var okEl = document.getElementById('kycSuccess');
+  errEl.style.display = 'none';
+  okEl.style.display = 'none';
+
+  fetch('/api/pixsoftpay/kyc/submit/', {method:'POST', body:fd})
+  .then(function(r){return r.json()})
+  .then(function(d){
+    if(d.status==='success'){okEl.textContent=d.message;okEl.style.display='block';setTimeout(function(){location.reload()},1500);}
+    else{errEl.textContent=d.error||'Erreur';errEl.style.display='block';}
+  })
+  .catch(function(){errEl.textContent='Erreur réseau';errEl.style.display='block';});
+});
+</script>
+{% endblock %}

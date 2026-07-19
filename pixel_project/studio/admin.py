@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import UserProfile, ProjetContact, AtelierProfile, PortfolioProject, CodeRepository, GraphismeResource, ERPClient, ERPModule, ERPSubscription, ERPDemoRecord, Moniteur, Candidat, Vehicule, Lecon, Examen, Medecin, Patient, Lit, RendezVous, FacturationSante, ClientHotel, Chambre, ReservationHotel, ServiceHotel, Categorie, Fournisseur, Produit, Vente, ClientJuridique, DossierJuridique, Audience, JournalComptable, EcritureComptable, Facture, DeclarationFiscale, Employe, Contrat, FichePaie, Conge, Formation, MenuItem, TableRestaurant, SoftCodeModule, StudioProject3D, PatisserieRecipe, PatisserieProduct, PlanAbonnement, SouscriptionClient, Paiement, CleActivation, ConfigurationBancaire, ConfigurationPaiementEnLigne, Candidature, MouvementStock, CommandeECommerce, CommandeECommerceItem, Temoignage, PixMailAccount, PixMailContact, PixMailMessage, PixMailAttachment, PixMailFolder, PixMailSignature, SocialProfile, Follow, Post, Like, Comment, Notification, Conversation, ConversationMember, EncryptedMessage, Wallet, Transaction, TwoFactorAuth
+from .models import UserProfile, ProjetContact, AtelierProfile, PortfolioProject, CodeRepository, GraphismeResource, ERPClient, ERPModule, ERPSubscription, ERPDemoRecord, Moniteur, Candidat, Vehicule, Lecon, Examen, Medecin, Patient, Lit, RendezVous, FacturationSante, ClientHotel, Chambre, ReservationHotel, ServiceHotel, Categorie, Fournisseur, Produit, Vente, ClientJuridique, DossierJuridique, Audience, JournalComptable, EcritureComptable, Facture, DeclarationFiscale, Employe, Contrat, FichePaie, Conge, Formation, MenuItem, TableRestaurant, SoftCodeModule, StudioProject3D, PatisserieRecipe, PatisserieProduct, PlanAbonnement, SouscriptionClient, Paiement, CleActivation, ConfigurationBancaire, ConfigurationPaiementEnLigne, Candidature, MouvementStock, CommandeECommerce, CommandeECommerceItem, Temoignage, PixMailAccount, PixMailContact, PixMailMessage, PixMailAttachment, PixMailFolder, PixMailSignature, SocialProfile, Follow, Post, Like, Comment, Notification, Conversation, ConversationMember, EncryptedMessage, Wallet, Transaction, TwoFactorAuth, Referral, KYCVerification
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
@@ -278,3 +278,30 @@ class TwoFactorAuthAdmin(admin.ModelAdmin):
     list_display = ('user', 'is_enabled', 'last_used', 'created_at')
     list_filter = ('is_enabled',)
     search_fields = ('user__username',)
+
+@admin.register(Referral)
+class ReferralAdmin(admin.ModelAdmin):
+    list_display = ('referrer', 'referred', 'bonus_given', 'created_at')
+    list_filter = ('bonus_given',)
+    search_fields = ('referrer__username', 'referred__username')
+
+@admin.register(KYCVerification)
+class KYCVerificationAdmin(admin.ModelAdmin):
+    list_display = ('user', 'doc_type', 'doc_number', 'full_name', 'status', 'created_at', 'reviewed_at')
+    list_filter = ('status', 'doc_type')
+    search_fields = ('user__username', 'full_name', 'doc_number')
+    readonly_fields = ('created_at',)
+
+    def approve_kyc(self, request, queryset):
+        from django.utils import timezone
+        count = queryset.filter(status='pending').update(status='approved', reviewed_at=timezone.now())
+        self.message_user(request, f'{count} demande(s) approuvée(s)')
+    approve_kyc.short_description = "Approuver la vérification"
+
+    def reject_kyc(self, request, queryset):
+        from django.utils import timezone
+        count = queryset.filter(status='pending').update(status='rejected', reviewed_at=timezone.now())
+        self.message_user(request, f'{count} demande(s) rejetée(s)')
+    reject_kyc.short_description = "Rejeter la vérification"
+
+    actions = [approve_kyc, reject_kyc]
