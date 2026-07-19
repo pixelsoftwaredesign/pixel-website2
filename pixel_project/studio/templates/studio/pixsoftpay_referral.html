@@ -1,0 +1,65 @@
+{% extends 'studio/pixsoftpay_base.html' %}
+{% block content %}
+<div class="pp-page">
+  <div class="pp-header">
+    <h2>Programme de Parrainage</h2>
+    <a href="/pixsoftpay/" class="pp-nav-link">← Dashboard</a>
+  </div>
+
+  <div class="pp-card" style="text-align:center;margin-bottom:24px">
+    <p style="color:#888;font-size:.9rem;margin-bottom:8px">Invitez 5 amis et recevez</p>
+    <p style="font-size:2.2rem;font-weight:700;color:#6c63ff">{{ bonus_amount }} TND</p>
+    <p style="color:#888;font-size:.85rem;margin-top:4px">de bonus par palier de 5 filleuls</p>
+  </div>
+
+  <div class="pp-card" style="margin-bottom:24px">
+    <p style="color:#888;font-size:.85rem;margin-bottom:8px">Votre code de parrainage</p>
+    <div style="display:flex;align-items:center;gap:12px">
+      <input type="text" id="refCode" value="{{ wallet.referral_code }}" readonly
+             style="flex:1;padding:12px;background:#0a0a1a;border:1px solid #1e1e3a;border-radius:10px;color:#6c63ff;font-size:1.2rem;font-weight:600;text-align:center;letter-spacing:2px">
+      <button onclick="copyCode()" class="pp-btn pp-btn-primary" style="width:auto;padding:12px 20px">Copier</button>
+    </div>
+    <p style="color:#888;font-size:.8rem;margin-top:8px">
+      Lien : <span id="refLink" style="color:#6c63ff">...</span>
+    </p>
+  </div>
+
+  <div class="pp-card" style="margin-bottom:24px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+      <span style="color:#888">Progression</span>
+      <span style="color:#6c63ff;font-weight:600">{{ referral_count }} / {{ referral_threshold }}</span>
+    </div>
+    <div style="background:#0a0a1a;border-radius:8px;height:12px;overflow:hidden">
+      <div style="background:linear-gradient(90deg,#6c63ff,#1EB482);height:100%;width:{{ referral_count|floatformat:0 }}%;border-radius:8px;transition:width .5s"></div>
+    </div>
+    {% if referral_count >= referral_threshold %}
+    <p style="color:#1EB482;font-size:.85rem;margin-top:8px">✓ Bonus de {{ bonus_amount }} TND versé sur votre wallet !</p>
+    {% else %}
+    <p style="color:#888;font-size:.85rem;margin-top:8px">Encore {{ referral_count|floatformat:0 }} filleul{{ referral_count|pluralize }} pour débloquer le bonus</p>
+    {% endif %}
+  </div>
+
+  {% if referrals %}
+  <div class="pp-card">
+    <h3 style="margin-bottom:16px;font-size:1rem">Mes filleuls ({{ referral_count }})</h3>
+    {% for r in referrals %}
+    <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #1e1e3a">
+      <span>{{ r.referred.username }}</span>
+      <span style="color:{% if r.bonus_given %}#1EB482{% else %}#888{% endif %};font-size:.85rem">
+        {% if r.bonus_given %}✓ Bonus donné{% else %}{{ r.created_at|date:"d/m/Y" }}{% endif %}
+      </span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>
+
+<script>
+document.getElementById('refLink').textContent = window.location.origin + '/pixsoftpay/login/?ref=' + '{{ wallet.referral_code }}';
+function copyCode(){
+  navigator.clipboard.writeText('{{ wallet.referral_code }}');
+  event.target.textContent = 'Copié !';
+  setTimeout(()=>event.target.textContent='Copier',2000);
+}
+</script>
+{% endblock %}

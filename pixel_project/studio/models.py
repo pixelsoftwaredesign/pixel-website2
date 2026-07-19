@@ -1196,6 +1196,7 @@ class EncryptedMessage(models.Model):
 class Wallet(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='wallet')
     solde = models.DecimalField(max_digits=12, decimal_places=2, default=0, verbose_name="Solde (TND)")
+    referral_code = models.CharField(max_length=12, unique=True, blank=True, verbose_name="Code parrainage")
     updated_at = models.DateTimeField(auto_now=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -1205,6 +1206,16 @@ class Wallet(models.Model):
 
     def __str__(self):
         return f"{self.user.username} — {self.solde} TND"
+
+    def save(self, *args, **kwargs):
+        if not self.referral_code:
+            import secrets
+            self.referral_code = secrets.token_hex(4).upper()
+        super().save(*args, **kwargs)
+
+    @property
+    def referral_count(self):
+        return Referral.objects.filter(referrer=self.user).count()
 
 
 class Transaction(models.Model):
@@ -1312,3 +1323,22 @@ class TwoFactorAuth(models.Model):
 
     def get_backup_codes_list(self):
         return [c.strip() for c in self.backup_codes.split('\n') if c.strip()]
+
+
+# ─── PixSoftPay — Parrainage (Referral) ────────────────────────
+REFERRAL_BONUS_AMOUNT = 10.00
+REFERRAL_THRESHOLD = 5
+
+
+class Referral(models.Model):
+    referrer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='referrals_made')
+    referred = models.OneToOneField(User, on_delete=models.CASCADE, related_name='referred_by_link')
+    bonus_given = models.BooleanField(default=False, verbose_name="Bonus versé")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Parrainage"
+        verbose_name_plural = "Parrainages"
+
+    def __str__(self):
+        return f"{self.referrer.username} → {self.referred.username}"

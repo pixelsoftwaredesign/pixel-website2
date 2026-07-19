@@ -1,4 +1,5 @@
 import json, uuid, random, string
+from decimal import Decimal
 from datetime import datetime, date
 from django.db import models
 from django.shortcuts import render, get_object_or_404, redirect
@@ -8,7 +9,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.utils import timezone
-from .models import UserProfile, ProjetContact, AtelierProfile, PortfolioProject, CodeRepository, GraphismeResource, ERPModule, ERPSubscription, ERPDemoRecord, ERPClient, Moniteur, Candidat, Vehicule, Lecon, Examen, Medecin, Patient, Lit, RendezVous, FacturationSante, ClientHotel, Chambre, ReservationHotel, ServiceHotel, Categorie, Fournisseur, Produit, Vente, ClientJuridique, DossierJuridique, Audience, JournalComptable, EcritureComptable, Facture, DeclarationFiscale, Employe, Contrat, FichePaie, Conge, Formation, MenuItem, TableRestaurant, SoftCodeModule, StudioProject3D, PatisserieRecipe, PatisserieProduct, PlanAbonnement, SouscriptionClient, Paiement, CleActivation, ConfigurationBancaire, ConfigurationPaiementEnLigne, Candidature, MouvementStock, CommandeECommerce, CommandeECommerceItem, Temoignage, PixMailAccount, PixMailContact, PixMailMessage, PixMailAttachment, PixMailFolder, PixMailSignature, SocialProfile, Follow, Post, Like, Comment, Notification, Conversation, ConversationMember, EncryptedMessage, Wallet, Transaction, TwoFactorAuth
+from .models import UserProfile, ProjetContact, AtelierProfile, PortfolioProject, CodeRepository, GraphismeResource, ERPModule, ERPSubscription, ERPDemoRecord, ERPClient, Moniteur, Candidat, Vehicule, Lecon, Examen, Medecin, Patient, Lit, RendezVous, FacturationSante, ClientHotel, Chambre, ReservationHotel, ServiceHotel, Categorie, Fournisseur, Produit, Vente, ClientJuridique, DossierJuridique, Audience, JournalComptable, EcritureComptable, Facture, DeclarationFiscale, Employe, Contrat, FichePaie, Conge, Formation, MenuItem, TableRestaurant, SoftCodeModule, StudioProject3D, PatisserieRecipe, PatisserieProduct, PlanAbonnement, SouscriptionClient, Paiement, CleActivation, ConfigurationBancaire, ConfigurationPaiementEnLigne, Candidature, MouvementStock, CommandeECommerce, CommandeECommerceItem, Temoignage, PixMailAccount, PixMailContact, PixMailMessage, PixMailAttachment, PixMailFolder, PixMailSignature, SocialProfile, Follow, Post, Like, Comment, Notification, Conversation, ConversationMember, EncryptedMessage, Wallet, Transaction, TwoFactorAuth, Referral, REFERRAL_BONUS_AMOUNT, REFERRAL_THRESHOLD
 from .services import notifier_activation_cle, notifier_confirmation_commande, notifier_statut_commande
 
 def index(request):
@@ -754,6 +755,7 @@ def api_inscription(request):
             password = data.get('password', '')
             entreprise = data.get('entreprise', '').strip()
             role = data.get('role', 'designer')
+            referral_code = data.get('referral_code', '').strip()
             if not username or not email or not password:
                 return JsonResponse({"status": "error", "message": "Champs obligatoires manquants."}, status=400)
             if User.objects.filter(username=username).exists():
@@ -763,7 +765,29 @@ def api_inscription(request):
             user = User.objects.create_user(username=username, email=email, password=password)
             UserProfile.objects.create(user=user, entreprise=entreprise)
             AtelierProfile.objects.create(user=user, role=role)
-            Wallet.objects.get_or_create(user=user)
+            wallet, _ = Wallet.objects.get_or_create(user=user)
+
+            if referral_code:
+                referrer_wallet = Wallet.objects.filter(referral_code=referral_code).first()
+                if referrer_wallet and referrer_wallet.user != user:
+                    Referral.objects.get_or_create(referrer=referrer_wallet.user, referred=user)
+                    count = Referral.objects.filter(referrer=referrer_wallet.user).count()
+                    if count == REFERRAL_THRESHOLD:
+                        bonus = Decimal(str(REFERRAL_BONUS_AMOUNT))
+                        referrer_wallet.solde += bonus
+                        referrer_wallet.save()
+                        Transaction.objects.create(
+                            wallet=referrer_wallet,
+                            reference=f"REF-BONUS-{uuid.uuid4().hex[:8].upper()}",
+                            type_operation='depot',
+                            montant=bonus,
+                            solde_avant=referrer_wallet.solde - bonus,
+                            solde_apres=referrer_wallet.solde,
+                            methode='wallet',
+                            statut='confirme',
+                            description=f"Bonus parrainage : {count} filleuls inscrits",
+                        )
+
             login(request, user)
             return JsonResponse({"status": "success", "message": "Inscription réussie !"}, status=201)
         except Exception:
@@ -2560,3 +2584,39 @@ def api_pixsoftpay_2fa_verify(request):
         return JsonResponse({'status': 'success', 'message': 'Connexion réussie'})
 
     return JsonResponse({'error': 'Code invalide'}, status=400)
+
+
+# ─── Parrainage (Referral) ─────────────────────────────────────
+def pixsoftpay_referral(request):
+    if not request.user.is_authenticated:
+        return redirect('pixsoftpay_login')
+    wallet, _ = Wallet.objects.get_or_create(user=request.user)
+    referrals = Referral.objects.filter(referrer=request.user).select_related('referred')
+    return render(request, 'studio/pixsoftpay_referral.html', {
+        'wallet': wallet,
+        'referrals': referrals,
+        'referral_count': referrals.count(),
+        'referral_threshold': REFERRAL_THRESHOLD,
+        'bonus_amount': REFERRAL_BONUS_AMOUNT,
+    })
+
+
+@csrf_exempt
+def api_pixsoftpay_referral_info(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Non authentifié'}, status=401)
+    wallet, _ = Wallet.objects.get_or_create(user=request.user)
+    referrals = Referral.objects.filter(referrer=request.user)
+    count = referrals.count()
+    return JsonResponse({
+        'referral_code': wallet.referral_code,
+        'referral_count': count,
+        'threshold': REFERRAL_THRESHOLD,
+        'bonus_amount': REFERRAL_BONUS_AMOUNT,
+        'remaining': max(0, REFERRAL_THRESHOLD - count),
+        'bonus_earned': float(REFERRAL_BONUS_AMOUNT) if count >= REFERRAL_THRESHOLD else 0,
+        'referrals': [
+            {'username': r.referred.username, 'date': r.created_at.isoformat(), 'bonus_given': r.bonus_given}
+            for r in referrals[:50]
+        ],
+    })

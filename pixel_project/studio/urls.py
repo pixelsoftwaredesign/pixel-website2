@@ -141,4 +141,7 @@ urlpatterns = [
     path('pixsoftpay/2fa/verify-login/', views.pixsoftpay_2fa_verify_login, name='pixsoftpay_2fa_verify_login'),
     path('api/pixsoftpay/2fa/status/', views.api_pixsoftpay_2fa_status, name='api_pixsoftpay_2fa_status'),
     path('api/pixsoftpay/2fa/verify/', views.api_pixsoftpay_2fa_verify, name='api_pixsoftpay_2fa_verify'),
+    # ─── Parrainage ──────────────────────────────────────────
+    path('pixsoftpay/referral/', views.pixsoftpay_referral, name='pixsoftpay_referral'),
+    path('api/pixsoftpay/referral/info/', views.api_pixsoftpay_referral_info, name='api_pixsoftpay_referral_info'),
 ]
