@@ -763,6 +763,7 @@ def api_inscription(request):
             user = User.objects.create_user(username=username, email=email, password=password)
             UserProfile.objects.create(user=user, entreprise=entreprise)
             AtelierProfile.objects.create(user=user, role=role)
+            Wallet.objects.get_or_create(user=user)
             login(request, user)
             return JsonResponse({"status": "success", "message": "Inscription réussie !"}, status=201)
         except Exception:
@@ -2310,7 +2311,7 @@ def pixsoftpay_create(request):
         except (ValueError, TypeError):
             return render(request, 'studio/pixsoftpay_create.html', {'error': 'Montant invalide'})
 
-        wallet, _ = Wallet.objects.get_or_create(user=request.user if request.user.is_authenticated else User.objects.first())
+        wallet, _ = Wallet.objects.get_or_create(user=request.user)
         ref = f"PSP-{uuid.uuid4().hex[:8].upper()}"
         payment_url = f"/pixsoftpay/pay/{ref}/"
 
@@ -2369,7 +2370,7 @@ def pixsoftpay_history(request):
 
 
 def pixsoftpay_wallet(request):
-    wallet, _ = Wallet.objects.get_or_create(user=request.user if request.user.is_authenticated else User.objects.first())
+    wallet, _ = Wallet.objects.get_or_create(user=request.user)
     txs = wallet.transactions.all()[:20]
     return render(request, 'studio/pixsoftpay_wallet.html', {'wallet': wallet, 'transactions': txs})
 
@@ -2388,7 +2389,7 @@ def api_pixsoftpay_create(request):
     except (ValueError, TypeError):
         return JsonResponse({'error': 'Données invalides'}, status=400)
 
-    wallet, _ = Wallet.objects.get_or_create(user=User.objects.first())
+    wallet, _ = Wallet.objects.get_or_create(user=request.user)
     ref = f"PSP-{uuid.uuid4().hex[:8].upper()}"
     payment_url = f"/pixsoftpay/pay/{ref}/"
 
