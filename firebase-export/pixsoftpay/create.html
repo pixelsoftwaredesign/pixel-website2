@@ -73,16 +73,17 @@ a{color:#6c63ff;text-decoration:none}
 </div>
 </div>
 <script>
-function logout(){fetch('/api/deconnexion/').then(()=>window.location='/pixsoftpay/login/');}
-fetch('/api/me/').then(r=>r.json()).then(d=>{
-  if(d.status!=='success'||!d.user){window.location='/pixsoftpay/login/';return;}
+const API='https://pixel-website2-production.up.railway.app';
+function logout(){fetch(API+'/api/deconnexion/',{credentials:'include'}).then(()=>window.location='https://pixel-website2-production.up.railway.app/pixsoftpay/login/');}
+fetch(API+'/api/me/',{credentials:'include'}).then(r=>r.json()).then(d=>{
+  if(d.status!=='success'||!d.user){window.location='https://pixel-website2-production.up.railway.app/pixsoftpay/login/';return;}
   document.getElementById('username').textContent=d.user.username;
   document.getElementById('app').style.display='block';
 });
 document.getElementById('createForm').addEventListener('submit',function(e){
   e.preventDefault();
   const data={amount:parseFloat(document.getElementById('amount').value),description:document.getElementById('description').value,customer_name:document.getElementById('customer_name').value,customer_email:document.getElementById('customer_email').value,methode:document.getElementById('methode').value};
-  fetch('/api/pixsoftpay/create/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}).then(r=>r.json()).then(d=>{
+  fetch(API+'/api/pixsoftpay/create/',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify(data)}).then(r=>r.json()).then(d=>{
     if(d.error){document.getElementById('error').textContent=d.error;document.getElementById('error').style.display='block';return;}
     document.getElementById('form-section').style.display='none';
     document.getElementById('result-section').style.display='block';

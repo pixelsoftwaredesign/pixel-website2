@@ -58,9 +58,10 @@ tr:hover{background:#16162e}
 </div>
 </div>
 <script>
+const API='https://pixel-website2-production.up.railway.app';
 let currentFilter='';
 const STATUS={en_attente:'En attente',confirme:'Payé',refuse:'Refusé',annule:'Annulé'};
-function logout(){fetch('/api/deconnexion/').then(()=>window.location='/pixsoftpay/login/');}
+function logout(){fetch(API+'/api/deconnexion/',{credentials:'include'}).then(()=>window.location='https://pixel-website2-production.up.railway.app/pixsoftpay/login/');}
 function renderFilters(){
   const f=document.getElementById('filters');f.innerHTML='';
   ['','en_attente','confirme','refuse'].forEach(s=>{
@@ -73,7 +74,7 @@ function renderFilters(){
 }
 function load(){
   document.getElementById('table').innerHTML='<div class="pp-loading">Chargement...</div>';
-  fetch('/api/pixsoftpay/create/').then(r=>r.json()).then(d=>{
+  fetch(API+'/api/pixsoftpay/create/',{credentials:'include'}).then(r=>r.json()).then(d=>{
     let txs=d.payments||[];
     if(currentFilter)txs=txs.filter(t=>t.status===currentFilter);
     if(!txs.length){document.getElementById('table').innerHTML='<div class="pp-card pp-empty">Aucune transaction trouvée</div>';return;}
@@ -83,8 +84,8 @@ function load(){
     document.getElementById('table').innerHTML=h;
   }).catch(()=>{document.getElementById('table').innerHTML='<div class="pp-card pp-empty">Erreur de chargement</div>';});
 }
-fetch('/api/me/').then(r=>r.json()).then(d=>{
-  if(d.status!=='success'||!d.user){window.location='/pixsoftpay/login/';return;}
+fetch(API+'/api/me/',{credentials:'include'}).then(r=>r.json()).then(d=>{
+  if(d.status!=='success'||!d.user){window.location='https://pixel-website2-production.up.railway.app/pixsoftpay/login/';return;}
   document.getElementById('username').textContent=d.user.username;
   document.getElementById('app').style.display='block';
   renderFilters();load();

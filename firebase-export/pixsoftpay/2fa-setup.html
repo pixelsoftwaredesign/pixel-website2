@@ -41,7 +41,7 @@ a{color:#6c63ff;text-decoration:none}
     <a href="/pixsoftpay/">Dashboard</a>
     <a href="/pixsoftpay/wallet/">Wallet</a>
     <span class="pp-nav-user" id="username"></span>
-    <button class="pp-nav-logout" onclick="fetch('/api/deconnexion/').then(()=>window.location='/pixsoftpay/login/')">Déconnexion</button>
+    <button class="pp-nav-logout" onclick="fetch(API+'/api/deconnexion/',{credentials:'include'}).then(()=>window.location='https://pixel-website2-production.up.railway.app/pixsoftpay/login/')">Déconnexion</button>
     <a href="/">← Site</a>
   </div>
 </nav>
@@ -82,8 +82,9 @@ a{color:#6c63ff;text-decoration:none}
 </div>
 </div>
 <script>
-fetch('/api/me/').then(r=>r.json()).then(d=>{
-  if(d.status!=='success'||!d.user){window.location='/pixsoftpay/login/';return;}
+const API='https://pixel-website2-production.up.railway.app';
+fetch(API+'/api/me/',{credentials:'include'}).then(r=>r.json()).then(d=>{
+  if(d.status!=='success'||!d.user){window.location='https://pixel-website2-production.up.railway.app/pixsoftpay/login/';return;}
   document.getElementById('username').textContent=d.user.username;
   document.getElementById('app').style.display='block';
 });
@@ -91,7 +92,7 @@ document.getElementById('setupForm').addEventListener('submit',function(e){
   e.preventDefault();
   const code=document.getElementById('code').value.trim();
   const err=document.getElementById('error');
-  fetch('/api/pixsoftpay/2fa/setup/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:code})})
+  fetch(API+'/api/pixsoftpay/2fa/setup/',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({code:code})})
   .then(r=>r.json()).then(d=>{
     if(d.status==='success'){
       document.getElementById('setup-section').style.display='none';

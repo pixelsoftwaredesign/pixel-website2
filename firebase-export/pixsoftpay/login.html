@@ -80,6 +80,7 @@ body{font-family:'Space Grotesk',system-ui,sans-serif;background:#0a0a1a;color:#
 </div>
 
 <script>
+const API='https://pixel-website2-production.up.railway.app';
 function getCookie(n){const m=document.cookie.match(new RegExp('(^| )'+n+'=([^;]+)'));return m?m[2]:'';}
 function showTab(t){
   document.querySelectorAll('.pp-tab').forEach(e=>e.classList.remove('active'));
@@ -91,9 +92,9 @@ function doLogin(){
   const p=document.getElementById('loginPassword').value.trim();
   const e=document.getElementById('loginError');
   if(!u||!p){e.textContent='Remplissez tous les champs';e.style.display='block';return;}
-  fetch('/api/connexion/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},body:JSON.stringify({username:u,password:p})})
+  fetch(API+'/api/connexion/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},credentials:'include',body:JSON.stringify({username:u,password:p})})
   .then(r=>r.json()).then(d=>{
-    if(d.status==='success'){window.location='/pixsoftpay/';}
+    if(d.status==='success'){window.location='https://pixel-website2-production.up.railway.app/pixsoftpay/';}
     else{e.textContent=d.message||'Erreur de connexion';e.style.display='block';}
   }).catch(()=>{e.textContent='Erreur réseau';e.style.display='block';});
 }
@@ -104,13 +105,13 @@ function doRegister(){
   const nom=document.getElementById('regNom').value.trim();
   const e=document.getElementById('regError');
   if(!u||!email||!p){e.textContent='Remplissez les champs obligatoires';e.style.display='block';return;}
-  fetch('/api/inscription/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},body:JSON.stringify({username:u,email:u+'@pixsoftpay.local',password:p,entreprise:nom,role:'designer'})})
+  fetch(API+'/api/inscription/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},credentials:'include',body:JSON.stringify({username:u,email:u+'@pixsoftpay.local',password:p,entreprise:nom,role:'designer'})})
   .then(r=>r.json()).then(d=>{
     if(d.status==='success'){doLogin();}
     else{e.textContent=d.message||'Erreur d\'inscription';e.style.display='block';}
   }).catch(()=>{e.textContent='Erreur réseau';e.style.display='block';});
 }
-fetch('/api/me/').then(r=>r.json()).then(d=>{if(d.status==='success'&&d.user){window.location='/pixsoftpay/';}});
+fetch(API+'/api/me/',{credentials:'include'}).then(r=>r.json()).then(d=>{if(d.status==='success'&&d.user){window.location='https://pixel-website2-production.up.railway.app/pixsoftpay/';}});
 </script>
 </body>
 </html>

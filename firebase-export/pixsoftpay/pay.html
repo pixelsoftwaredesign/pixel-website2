@@ -28,11 +28,12 @@ a{color:#6c63ff;text-decoration:none}
   </div>
 </div>
 <script>
+const API='https://pixel-website2-production.up.railway.app';
 const ref=window.location.pathname.split('/pay/')[1]?.replace(/\/$/,'');
 if(!ref){document.getElementById('content').innerHTML='<p style="color:#ff1744">Référence invalide</p>';throw 'no ref';}
-fetch('/api/me/').then(r=>r.json()).then(d=>{
-  if(d.status!=='success'||!d.user){window.location='/pixsoftpay/login/';return;}
-  fetch('/api/pixsoftpay/create/').then(r=>r.json()).then(d2=>{
+fetch(API+'/api/me/',{credentials:'include'}).then(r=>r.json()).then(d=>{
+  if(d.status!=='success'||!d.user){window.location='https://pixel-website2-production.up.railway.app/pixsoftpay/login/';return;}
+  fetch(API+'/api/pixsoftpay/create/',{credentials:'include'}).then(r=>r.json()).then(d2=>{
     const tx=(d2.payments||[]).find(t=>t.reference===ref);
     if(!tx){document.getElementById('content').innerHTML='<p style="color:#ff1744">Paiement non trouvé</p>';return;}
     let statusHtml='';
@@ -44,7 +45,7 @@ fetch('/api/me/').then(r=>r.json()).then(d=>{
     window._txRef=ref;
   });
 });
-function confirmPayment(){fetch('/api/pixsoftpay/confirm/'+window._txRef+'/',{method:'POST'}).then(r=>r.json()).then(d=>{if(d.error){alert(d.error);return;}location.reload();});}
+function confirmPayment(){fetch(API+'/api/pixsoftpay/confirm/'+window._txRef+'/',{method:'POST',credentials:'include'}).then(r=>r.json()).then(d=>{if(d.error){alert(d.error);return;}location.reload();});}
 </script>
 </body>
 </html>

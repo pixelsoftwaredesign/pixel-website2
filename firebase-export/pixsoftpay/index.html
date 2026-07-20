@@ -66,20 +66,21 @@ tr:hover{background:#16162e}
 </div>
 </div>
 <script>
+const API='https://pixel-website2-production.up.railway.app';
 function getCookie(n){const m=document.cookie.match(new RegExp('(^| )'+n+'=([^;]+)'));return m?m[2]:'';}
-function logout(){fetch('/api/deconnexion/').then(()=>window.location='/pixsoftpay/login/');}
-fetch('/api/me/').then(r=>r.json()).then(d=>{
-  if(d.status!=='success'||!d.user){window.location='/pixsoftpay/login/';return;}
+function logout(){fetch(API+'/api/deconnexion/',{credentials:'include'}).then(()=>window.location='https://pixel-website2-production.up.railway.app/pixsoftpay/login/');}
+fetch(API+'/api/me/',{credentials:'include'}).then(r=>r.json()).then(d=>{
+  if(d.status!=='success'||!d.user){window.location='https://pixel-website2-production.up.railway.app/pixsoftpay/login/';return;}
   document.getElementById('username').textContent=d.user.username;
   document.getElementById('app').style.display='block';
-  fetch('/api/pixsoftpay/stats/').then(r=>r.json()).then(s=>{
+  fetch(API+'/api/pixsoftpay/stats/',{credentials:'include'}).then(r=>r.json()).then(s=>{
     document.getElementById('stats').innerHTML=`
       <div class="pp-stat"><div class="val">${s.total||0}</div><div class="lbl">Total</div></div>
       <div class="pp-stat"><div class="val" style="color:#00c853">${s.paid||0}</div><div class="lbl">Payées</div></div>
       <div class="pp-stat"><div class="val" style="color:#ffab00">${s.pending||0}</div><div class="lbl">En attente</div></div>
       <div class="pp-stat"><div class="val">${(s.revenue||0).toFixed(2)}</div><div class="lbl">Revenu (TND)</div></div>`;
   });
-  fetch('/api/pixsoftpay/create/').then(r=>r.json()).then(d2=>{
+  fetch(API+'/api/pixsoftpay/create/',{credentials:'include'}).then(r=>r.json()).then(d2=>{
     const txs=d2.payments||[];
     if(!txs.length){document.getElementById('recent').innerHTML='<div class="pp-empty">Aucune transaction</div>';return;}
     let h='<div class="pp-table-wrap"><table><thead><tr><th>Référence</th><th>Montant</th><th>Statut</th><th>Date</th></tr></thead><tbody>';

@@ -1,3 +1,5 @@
+const API='https://pixel-website2-production.up.railway.app';
+
 // ── BURGER MENU ──
 const burgerBtn = document.getElementById('burgerBtn');
 const navMenu = document.getElementById('navMenu');
@@ -30,9 +32,10 @@ function executerConnexion() {
   const username = document.getElementById('loginUsername').value.trim();
   const password = document.getElementById('loginPassword').value.trim();
   const status = document.getElementById('authStatus');
-  fetch('/api/connexion/', {
+  fetch(API+'/api/connexion/', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+    credentials: 'include',
     body: JSON.stringify({ username, password })
   }).then(r => r.json()).then(d => {
     status.style.color = d.status === 'success' ? 'var(--accent)' : '#FF6B6B';
@@ -47,9 +50,10 @@ function executerInscription() {
   const entreprise = document.getElementById('regEntreprise').value.trim();
   const role = (document.getElementById('regRole')||{}).value || 'designer';
   const status = document.getElementById('regStatus');
-  fetch('/api/inscription/', {
+  fetch(API+'/api/inscription/', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+    credentials: 'include',
     body: JSON.stringify({ username, email, password, entreprise, role })
   }).then(r => r.json()).then(d => {
     status.style.color = d.status === 'success' ? 'var(--accent)' : '#FF6B6B';
@@ -58,14 +62,14 @@ function executerInscription() {
   });
 }
 function executerDeconnexion() {
-  fetch('/api/deconnexion/').then(r => r.json()).then(() => location.reload());
+  fetch(API+'/api/deconnexion/',{credentials:'include'}).then(r => r.json()).then(() => location.reload());
 }
 function getCookie(name) {
   const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
   return match ? match[2] : '';
 }
 // Check auth state on load
-fetch('/api/me/').then(r => r.json()).then(d => {
+fetch(API+'/api/me/',{credentials:'include'}).then(r => r.json()).then(d => {
   if (d.status === 'success' && d.user) {
     document.getElementById('authNav').innerHTML = `<a href="#" class="nav-link" onclick="toggleAuthModal()" style="color:var(--accent)">${d.user.username}</a>`;
     document.getElementById('authLogin').style.display = 'none';
@@ -84,9 +88,10 @@ function handleFormSubmit(event) {
     usermessage: document.getElementById('usermessage').value.trim()
   };
   const statusDiv = document.getElementById('formStatus');
-  fetch('/api/contact/', {
+  fetch(API+'/api/contact/', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+    credentials: 'include',
     body: JSON.stringify(payload)
   }).then(r => r.json()).then(data => {
     statusDiv.className = data.status === 'success' ? 'success' : 'error';
