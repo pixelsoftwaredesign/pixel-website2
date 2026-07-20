@@ -1,16 +1,20 @@
 """
 PixSoftMoney — ECDSA Cryptographic Module
-Elliptic Curve Digital Signature Algorithm for wallet generation,
-transaction signing, and signature verification.
+Elliptic Curve Digital Signature Algorithm with canonical message format.
+
+Message signé = SHA256(sender || receiver || amount || nonce)
+Cela garantit l'immutabilité: toute modification annule la signature.
 """
 import hashlib
 import json
-import os
+import time
 import base64
-from datetime import datetime, timezone
+from typing import Optional
 
 from ecdsa import SigningKey, VerifyingKey, SECP256k1, BadSignatureError
 
+
+# ─── Wallet Generation ───────────────────────────────────────
 
 def generate_private_key() -> str:
     sk = SigningKey.generate(curve=SECP256k1)
@@ -29,7 +33,9 @@ def address_from_public_key(pub_hex: str) -> str:
     sha = hashlib.sha256(bytes.fromhex(pub_hex)).hexdigest()
     ripemd = hashlib.new('ripemd160', bytes.fromhex(sha)).hexdigest()
     payload = '50' + ripemd
-    checksum = hashlib.sha256(hashlib.sha256(bytes.fromhex(payload)).digest()).hexdigest()[:8]
+    checksum = hashlib.sha256(
+        hashlib.sha256(bytes.fromhex(payload)).digest()
+    ).hexdigest()[:8]
     full = payload + checksum
     return base58_encode(bytes.fromhex(full))
 
@@ -61,21 +67,66 @@ def generate_wallet():
     }
 
 
-def sign_transaction(private_key_hex: str, transaction_data: dict) -> str:
+# ─── Canonical Message (Immuabilité) ─────────────────────────
+
+def build_canonical_message(
+    sender: str,
+    receiver: str,
+    amount: float,
+    nonce: int,
+    timestamp: Optional[float] = None,
+) -> bytes:
+    """
+    Message canonique signé = SHA256(sender || receiver || amount || nonce || timestamp).
+    Toute modification d'un champ invalide la signature.
+    """
+    if timestamp is None:
+        timestamp = time.time()
+    payload = f"{sender}|{receiver}|{amount}|{nonce}|{timestamp}"
+    return hashlib.sha256(payload.encode('utf-8')).digest()
+
+
+# ─── Signing & Verification ──────────────────────────────────
+
+def sign_transaction(
+    private_key_hex: str,
+    sender: str,
+    receiver: str,
+    amount: float,
+    nonce: int,
+    timestamp: float,
+) -> str:
+    """Signe le message canonique avec la clé privée ECDSA."""
     sk = private_key_from_hex(private_key_hex)
-    message = json.dumps(transaction_data, sort_keys=True, default=str).encode()
+    message = build_canonical_message(sender, receiver, amount, nonce, timestamp)
     signature = sk.sign(message)
     return signature.hex()
 
 
-def verify_signature(public_key_hex: str, signature_hex: str, transaction_data: dict) -> bool:
+def verify_signature(
+    public_key_hex: str,
+    signature_hex: str,
+    sender: str,
+    receiver: str,
+    amount: float,
+    nonce: int,
+    timestamp: float,
+) -> bool:
+    """
+    Vérifie la signature ECDSA contre le message canonique.
+    Retourne False si la signature ne correspond pas (attaque modifiée).
+    """
     try:
-        vk = VerifyingKey.from_string(bytes.fromhex(public_key_hex), curve=SECP256k1)
-        message = json.dumps(transaction_data, sort_keys=True, default=str).encode()
+        vk = VerifyingKey.from_string(
+            bytes.fromhex(public_key_hex), curve=SECP256k1
+        )
+        message = build_canonical_message(sender, receiver, amount, nonce, timestamp)
         return vk.verify(bytes.fromhex(signature_hex), message)
     except (BadSignatureError, ValueError):
         return False
 
+
+# ─── Hashing ─────────────────────────────────────────────────
 
 def hash_block(block_data: dict) -> str:
     block_string = json.dumps(block_data, sort_keys=True, default=str).encode()
@@ -86,7 +137,9 @@ def merkle_root(transactions: list) -> str:
     if not transactions:
         return hashlib.sha256(b'').hexdigest()
     current_level = [
-        hashlib.sha256(json.dumps(tx, sort_keys=True, default=str).encode()).hexdigest()
+        hashlib.sha256(
+            json.dumps(tx, sort_keys=True, default=str).encode()
+        ).hexdigest()
         for tx in transactions
     ]
     while len(current_level) > 1:

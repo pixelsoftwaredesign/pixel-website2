@@ -82,7 +82,7 @@ def api_wallet_create(request):
         return JsonResponse({'error': 'Non authentifié'}, status=401)
     if CryptoWallet.objects.filter(user=request.user).exists():
         w = CryptoWallet.objects.get(user=request.user)
-        return JsonResponse({'address': w.address, 'public_key': w.public_key, 'created': False})
+        return JsonResponse({'address': w.address, 'public_key': w.public_key, 'nonce': w.nonce, 'created': False})
 
     wallet = generate_wallet()
     cw = CryptoWallet.objects.create(
@@ -95,6 +95,7 @@ def api_wallet_create(request):
         'address': wallet['address'],
         'public_key': wallet['public_key'],
         'private_key': wallet['private_key'],
+        'nonce': 0,
         'created': True,
     })
 
@@ -104,6 +105,16 @@ def api_balance(request, address):
     chain = get_blockchain()
     balance = chain.get_balance(address)
     return JsonResponse({'address': address, 'balance': balance})
+
+
+@csrf_exempt
+def api_wallet_nonce(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Non authentifié'}, status=401)
+    cw = CryptoWallet.objects.filter(user=request.user).first()
+    if not cw:
+        return JsonResponse({'error': 'Aucun wallet'}, status=404)
+    return JsonResponse({'address': cw.address, 'nonce': cw.nonce})
 
 
 @csrf_exempt
@@ -134,24 +145,42 @@ def api_send(request):
     if balance < total:
         return JsonResponse({'error': f'Solde insuffisant ({balance} PSX < {total} PSX)'}, status=400)
 
-    tx_data = {
+    new_nonce = cw.nonce + 1
+    timestamp = __import__('time').time()
+
+    signature = sign_transaction(
+        private_key_hex=cw.private_key_encrypted,
+        sender=cw.address,
+        receiver=to_addr,
+        amount=amount,
+        nonce=new_nonce,
+        timestamp=timestamp,
+    )
+
+    tx = {
         'from': cw.address,
         'to': to_addr,
         'amount': amount,
         'fee': fee,
+        'nonce': new_nonce,
+        'signature': signature,
+        'public_key': cw.public_key,
+        'timestamp': timestamp,
     }
-    signature = sign_transaction(cw.private_key_encrypted, tx_data)
-    tx = {**tx_data, 'signature': signature, 'public_key': cw.public_key, 'timestamp': __import__('time').time()}
 
     error = chain.add_transaction(tx)
     if error:
         return JsonResponse({'error': error}, status=400)
+
+    cw.nonce = new_nonce
+    cw.save(update_fields=['nonce'])
 
     CryptoTransaction.objects.create(
         from_address=cw.address,
         to_address=to_addr,
         amount=amount,
         fee=fee,
+        nonce=new_nonce,
         signature=signature,
         public_key=cw.public_key,
         status='pending',
@@ -166,6 +195,7 @@ def api_send(request):
         'to': to_addr,
         'amount': amount,
         'fee': fee,
+        'nonce': new_nonce,
     })
 
 

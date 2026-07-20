@@ -13,6 +13,7 @@ urlpatterns = [
     path('staking/', views.staking_page, name='staking_page'),
 
     path('api/blockchain/wallet/create/', views.api_wallet_create, name='api_wallet_create'),
+    path('api/blockchain/wallet/nonce/', views.api_wallet_nonce, name='api_wallet_nonce'),
     path('api/blockchain/balance/<str:address>/', views.api_balance, name='api_balance'),
     path('api/blockchain/send/', views.api_send, name='api_send'),
     path('api/blockchain/mine/', views.api_mine, name='api_mine'),

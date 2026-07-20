@@ -19,6 +19,7 @@ class CryptoWallet(models.Model):
     address = models.CharField(max_length=64, unique=True)
     public_key = models.CharField(max_length=130)
     private_key_encrypted = models.TextField()
+    nonce = models.BigIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -28,6 +29,11 @@ class CryptoWallet(models.Model):
     def __str__(self):
         return f"{self.user.username} → {self.address[:16]}..."
 
+    def increment_nonce(self):
+        self.nonce += 1
+        self.save(update_fields=['nonce'])
+        return self.nonce
+
 
 class CryptoTransaction(models.Model):
     tx_id = models.CharField(max_length=64, unique=True, default=uuid.uuid4)
@@ -35,6 +41,7 @@ class CryptoTransaction(models.Model):
     to_address = models.CharField(max_length=64)
     amount = models.DecimalField(max_digits=20, decimal_places=8)
     fee = models.DecimalField(max_digits=20, decimal_places=8, default=0)
+    nonce = models.BigIntegerField(default=0)
     signature = models.TextField(blank=True, default='')
     public_key = models.CharField(max_length=130, blank=True, default='')
     status = models.CharField(max_length=20, choices=[

@@ -93,15 +93,25 @@ class Blockchain:
             if not tx.get('from') or not tx.get('to') or not tx.get('amount'):
                 return 'Transaction incomplète'
 
-            if tx['from'] != 'COINBASE':
-                if tx.get('signature') and tx.get('public_key'):
-                    verify_data = {k: v for k, v in tx.items() if k not in ('signature',)}
-                    if not verify_signature(tx['public_key'], tx['signature'], verify_data):
-                        return 'Signature invalide'
+            if tx['from'] not in ('COINBASE', 'SYSTEM', 'BRIDGE_TND', 'REWARD_SYSTEM', 'SYSTEM_PREMIUM'):
+                if not tx.get('signature') or not tx.get('public_key'):
+                    return 'Signature requise'
+
+                if not verify_signature(
+                    public_key_hex=tx['public_key'],
+                    signature_hex=tx['signature'],
+                    sender=tx['from'],
+                    receiver=tx['to'],
+                    amount=tx['amount'],
+                    nonce=tx.get('nonce', 0),
+                    timestamp=tx.get('timestamp', 0),
+                ):
+                    return 'Signature invalide — message modifié'
 
                 sender_balance = self.get_balance(tx['from'])
-                if sender_balance < tx['amount']:
-                    return f'Solde insuffisant ({sender_balance} < {tx["amount"]})'
+                total_needed = tx['amount'] + tx.get('fee', 0)
+                if sender_balance < total_needed:
+                    return f'Solde insuffisant ({sender_balance} < {total_needed})'
 
             if len(self.pending_transactions) >= BLOCK_MAX_TX:
                 return 'Pool de transactions plein'
