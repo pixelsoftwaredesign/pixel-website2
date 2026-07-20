@@ -891,41 +891,145 @@ def api_web3_verify(request):
 
 def recover_address(message: str, signature_hex: str) -> str:
     """
-    Récupère l'adresse Ethereum à partir d'un message signé (ECDSA).
-    Utilise ecrecover-like logic avec ecdsa library.
+    Récupère l'adresse Ethereum à partir d'un message signé (personal_sign).
+    Pure Python — utilise ecdsa (secp256k1) + keccak256 implémenté en ligne.
     """
-    try:
-        from eth_account.messages import encode_structured_data
-        from web3 import Web3
-        return Web3().eth.account.recover_message(
-            encode_structured_data(message), signature=signature_hex
-        )
-    except ImportError:
-        pass
+    import hashlib
+    import struct
+    from ecdsa import SECP256k1, N
 
-    try:
-        import hashlib
-        from ecdsa import SECP256k1, VerifyingKey
-        from coincurve import PublicKey
+    # ── Keccak-256 (Ethereum's hash, NOT SHA3-256) ──
+    def keccak256(data: bytes) -> bytes:
+        def rot64(x, n):
+            return ((x << n) | (x >> (64 - n))) & 0xFFFFFFFFFFFFFFFF
 
-        prefix = f"\x19Ethereum Signed Message:\n{len(message)}"
-        full_message = prefix.encode() + message.encode()
-        msg_hash = hashlib.sha3_256(full_message).digest()
+        def enc64(x):
+            return struct.pack('<Q', x)
 
-        sig_bytes = bytes.fromhex(signature_hex[2:] if signature_hex.startswith('0x') else signature_hex)
-        v = sig_bytes[-1]
-        r = sig_bytes[:32]
-        s = sig_bytes[32:64]
+        def dec64(b):
+            return struct.unpack('<Q', b)[0]
 
-        pk = PublicKey.from_signature_and_message(
-            r + s + bytes([v - 27]),
-            full_message,
-            hasher=None,
-        )
-        addr = hashlib.sha3_256(pk.format(compressed=False)[1:]).digest()[-20:]
-        return '0x' + addr.hex()
-    except Exception:
-        pass
+        ROUNDS = 24
+        RC = [
+            0x0000000000000001, 0x0000000000008082, 0x800000000000808A,
+            0x8000000080008000, 0x000000000000808B, 0x0000000080000001,
+            0x8000000080008081, 0x8000000000008009, 0x000000000000008A,
+            0x0000000000000088, 0x0000000080008009, 0x000000008000000A,
+            0x000000008000808B, 0x800000000000008B, 0x8000000000008089,
+            0x8000000000008003, 0x8000000000008002, 0x8000000000000080,
+            0x000000000000800A, 0x800000008000000A, 0x8000000080008081,
+            0x8000000000008080, 0x0000000080000001, 0x8000000080000088,
+        ]
+        ROT = [
+            [0,1,3,6,10,15,21,28,36,45,55,2,14,27,41,56],
+            [1,3,6,10,15,21,28,36,45,55,2,14,27,41,56,8],
+            [3,6,10,15,21,28,36,45,55,2,14,27,41,56,8,13],
+            [6,10,15,21,28,36,45,55,2,14,27,41,56,8,13,16],
+            [10,15,21,28,36,45,55,2,14,27,41,56,8,13,16,18],
+            [15,21,28,36,45,55,2,14,27,41,56,8,13,16,18,23],
+            [21,28,36,45,55,2,14,27,41,56,8,13,16,18,23,25],
+            [28,36,45,55,2,14,27,41,56,8,13,16,18,23,25,39],
+            [36,45,55,2,14,27,41,56,8,13,16,18,23,25,39,43],
+            [45,55,2,14,27,41,56,8,13,16,18,23,25,39,43,54],
+            [55,2,14,27,41,56,8,13,16,18,23,25,39,43,54,56],
+            [2,14,27,41,56,8,13,16,18,23,25,39,43,54,56,9],
+            [14,27,41,56,8,13,16,18,23,25,39,43,54,56,9,12],
+        ]
+
+        rate = 1088 // 64  # 17
+        rate_bytes = 136
+        lane = [0] * 25
+
+        padded = bytearray(data)
+        padded.append(0x01)
+        while len(padded) % rate_bytes != 0:
+            padded.append(0x00)
+        padded[-1] |= 0x80
+
+        for block_start in range(0, len(padded), rate_bytes):
+            block = padded[block_start:block_start + rate_bytes]
+            for i in range(rate):
+                lane[i] ^= dec64(block[i*8:(i+1)*8])
+
+            for rnd in range(ROUNDS):
+                C = [0] * 5
+                for x in range(5):
+                    C[x] = lane[x] ^ lane[x+5] ^ lane[x+10] ^ lane[x+15] ^ lane[x+20]
+                for x in range(5):
+                    D = C[(x-1) % 5] ^ rot64(C[(x+1) % 5], 1)
+                    for y in range(5):
+                        lane[x + y*5] ^= D
+
+                B = [0] * 25
+                for x in range(5):
+                    for y in range(5):
+                        B[y + x*5] = rot64(lane[(0*x+1*y) % 5 + 5*((0*x+2*y) % 5)], ROT[x][y])
+
+                for y in range(5):
+                    for x in range(5):
+                        lane[x + y*5] = B[x + y*5] ^ ((~B[(x+1)%5 + y*5]) & B[(x+2)%5 + y*5])
+
+                lane[0] ^= RC[rnd]
+
+        out = b''
+        for i in range(rate):
+            out += enc64(lane[i])
+        return out[:32]
+
+    # ── Ethereum prefix ──
+    prefix = f"\x19Ethereum Signed Message:\n{len(message)}"
+    full_message = prefix.encode('utf-8') + message.encode('utf-8')
+    msg_hash = keccak256(full_message)
+
+    # ── Parse signature (r,s,v) ──
+    sig_str = signature_hex[2:] if signature_hex.startswith('0x') else signature_hex
+    sig_bytes = bytes.fromhex(sig_str)
+    if len(sig_bytes) != 65:
+        return ''
+
+    r = int.from_bytes(sig_bytes[:32], 'big')
+    s = int.from_bytes(sig_bytes[32:64], 'big')
+    v = sig_bytes[64]
+
+    if v >= 27:
+        v -= 27
+
+    if s > N // 2:
+        s = N - s
+
+    # ── Recover public key via ecdsa ──
+    from ecdsa import SECP256k1 as curve
+    from ecdsa import VerifyingKey, InvalidSignatureError
+
+    n = curve.order
+    G = curve.generator
+
+    z = int.from_bytes(msg_hash, 'big')
+    r_inv = pow(r, n - 2, n)
+
+    for j in range(2):
+        x = r + j * n
+        if x >= curve.curve.p():
+            continue
+        try:
+            y_sq = (pow(x, 3, curve.curve.p()) + curve.curve.a() * x + curve.curve.b()) % curve.curve.p()
+            y = pow(y_sq, (curve.curve.p() + 1) // 4, curve.curve.p())
+            if y % 2 != (v % 2):
+                y = curve.curve.p() - y
+            from ecdsa.ellipticcurve import Point
+            R = Point(curve.curve, x, y)
+            u1 = (-(z * r_inv)) % n
+            u2 = (s * r_inv) % n
+            pub_point = u1 * G + u2 * R
+            vk = VerifyingKey.from_public_key(pub_point, curve)
+            # Verify
+            if vk.verify_digest(sig_bytes[:64], msg_hash, sigdecode='binary'):
+                # Derive Ethereum address
+                pub_uncompressed = pub_point.to_bytes('uncompressed')[1:]
+                addr_hash = keccak256(pub_uncompressed)
+                return '0x' + addr_hash[-20:].hex()
+        except Exception:
+            continue
 
     return ''
 

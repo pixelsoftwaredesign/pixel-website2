@@ -10,5 +10,3 @@ pyotp>=2.9
 qrcode[pil]>=7.4
 whitenoise>=6.8
 ecdsa>=0.19
-web3>=7.0
-eth-account>=1.3
