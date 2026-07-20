@@ -1,0 +1,50 @@
+{% extends "studio/pixsoftpay_base.html" %}
+{% block content %}
+<style>
+.bc-block-card{background:rgba(18,18,42,.9);border:1px solid rgba(108,99,255,.1);border-radius:16px;padding:18px;margin-bottom:12px;transition:border-color .2s}
+.bc-block-card:hover{border-color:#6c63ff}
+.bc-hex{font-family:monospace;font-size:.7rem;color:#6c63ff;word-break:break-all}
+.bc-block-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.bc-block-idx{font-size:1.1rem;font-weight:700;color:#6c63ff}
+.bc-tx-item{background:rgba(10,10,26,.5);border-radius:10px;padding:10px;margin-top:8px;font-size:.82rem}
+</style>
+
+<div class="pp-flex" style="margin-bottom:20px">
+  <h1>🔍 Block Explorer</h1>
+  <span style="color:#888;font-size:.85rem">{{ chain_length }} blocs</span>
+</div>
+
+{% for block in blocks %}
+<div class="bc-block-card">
+  <div class="bc-block-header">
+    <div>
+      <span class="bc-block-idx">#{{ block.index }}</span>
+      <span style="margin-left:8px;color:#888;font-size:.8rem">{{ block.transactions|length }} transaction(s)</span>
+    </div>
+    <span style="font-size:.75rem;color:#888">Nonce: {{ block.nonce }}</span>
+  </div>
+  <div class="bc-hex">Hash: {{ block.hash|truncatechars:50 }}</div>
+  <div class="bc-hex" style="color:#888">Prev: {{ block.previous_hash|truncatechars:50 }}</div>
+  {% for tx in block.transactions %}
+  <div class="bc-tx-item">
+    <span style="color:#888">{{ tx.type|default:"transfer" }}</span>
+    <span class="bc-hex"> {{ tx.from|truncatechars:16 }}</span>
+    → <span class="bc-hex">{{ tx.to|truncatechars:16 }}</span>
+    <strong style="color:#00c853;margin-left:8px">{{ tx.amount }} PSX</strong>
+  </div>
+  {% endfor %}
+</div>
+{% endfor %}
+
+{% if not blocks %}
+<div class="pp-card pp-empty">Aucun bloc</div>
+{% endif %}
+
+<script>
+fetch('/api/blockchain/chain/',{credentials:'include'})
+.then(function(r){return r.json()})
+.then(function(d){
+  document.querySelector('h1').nextElementSibling.textContent=d.length+' blocs';
+});
+</script>
+{% endblock %}

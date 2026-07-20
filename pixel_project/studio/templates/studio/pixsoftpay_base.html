@@ -79,6 +79,7 @@ tr:hover{background:rgba(108,99,255,.04)}
   </a>
   <div class="pp-nav-links">
     <a href="/pixsoftpay/" class="{% if request.resolver_match.url_name == 'pixsoftpay_dashboard' %}active{% endif %}">Dashboard</a>
+    <a href="/blockchain/" class="{% if 'blockchain' in request.path %}active{% endif %}">⛓️ Chain</a>
     <a href="/pixsoftpay/create/" class="{% if request.resolver_match.url_name == 'pixsoftpay_create' %}active{% endif %}">Nouveau QR</a>
     <a href="/pixsoftpay/wallet/" class="{% if request.resolver_match.url_name == 'pixsoftpay_wallet' %}active{% endif %}">Wallet</a>
     <a href="/pixsoftpay/history/" class="{% if request.resolver_match.url_name == 'pixsoftpay_history' %}active{% endif %}">Historique</a>

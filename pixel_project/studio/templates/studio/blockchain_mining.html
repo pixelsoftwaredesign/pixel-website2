@@ -1,0 +1,76 @@
+{% extends "studio/pixsoftpay_base.html" %}
+{% block content %}
+<style>
+.bc-mine-visual{text-align:center;padding:40px;margin-bottom:24px}
+.bc-mine-icon{font-size:4rem;margin-bottom:16px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+.bc-mine-log{background:#0a0a1a;border:1px solid #1e1e3a;border-radius:12px;padding:16px;max-height:300px;overflow-y:auto;font-family:monospace;font-size:.8rem;color:#888;line-height:1.8}
+.bc-mine-log .ok{color:#00c853}
+.bc-mine-log .err{color:#ff1744}
+.bc-mine-log .info{color:#6c63ff}
+</style>
+
+<h1 style="margin-bottom:20px">⛏️ Mining PixSoftMoney</h1>
+
+<div class="pp-card bc-mine-visual">
+  <div class="bc-mine-icon">⛏️</div>
+  <h2 style="margin-bottom:8px">Proof of Work</h2>
+  <p style="color:#888;font-size:.9rem">Difficulté: {{ difficulty }} zéros | Récompense: {{ reward }} PSX</p>
+  <p style="color:#888;font-size:.8rem;margin-top:4px">Le minage résout un puzzle cryptographique SHA-256</p>
+</div>
+
+<div class="pp-card">
+  <div class="pp-flex" style="margin-bottom:16px">
+    <h2 style="margin:0">Lancer le minage</h2>
+    <button class="pp-btn pp-btn-primary" id="mineBtn" onclick="startMining()">⛏️ Miner</button>
+  </div>
+  <div class="bc-mine-log" id="mineLog">
+    <div class="info">En attente de minage...</div>
+  </div>
+</div>
+
+<div class="pp-card">
+  <h2>Stats</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
+    <div><span style="color:#888;font-size:.85rem">Difficulté:</span> <strong>{{ difficulty }}</strong></div>
+    <div><span style="color:#888;font-size:.85rem">Récompense:</span> <strong style="color:#6c63ff">{{ reward }} PSX</strong></div>
+    <div><span style="color:#888;font-size:.85rem">Blocs minés:</span> <strong>{{ stats.total_mined|default:"0" }}</strong></div>
+    <div><span style="color:#888;font-size:.85rem">Total blocs:</span> <strong>{{ stats.total_blocks|default:"1" }}</strong></div>
+  </div>
+</div>
+
+<script>
+function startMining(){
+  var btn=document.getElementById('mineBtn');
+  var log=document.getElementById('mineLog');
+  btn.disabled=true;btn.textContent='Mining...';
+  log.innerHTML='<div class="info">⏳ Démarrage du minage...</div>';
+
+  fetch('/api/blockchain/mine/',{
+    method:'POST',
+    credentials:'include',
+    headers:{'X-CSRFToken':getCookie('csrftoken'),'Content-Type':'application/json'},
+    body:JSON.stringify({})
+  })
+  .then(function(r){return r.json()})
+  .then(function(d){
+    if(d.status){
+      log.innerHTML='<div class="ok">✓ '+d.status+'</div>'+
+        '<div>Bloc #'+d.index+' miné avec nonce '+d.nonce+'</div>'+
+        '<div>Récompense: '+d.reward+' PSX</div>'+
+        '<div>Hash: '+d.hash+'</div>'+
+        '<div>Transactions: '+d.transactions+'</div>'+
+        '<div class="info" style="margin-top:8px">Félicitations! Vous avez résolu le puzzle PoW.</div>';
+    }else{
+      log.innerHTML='<div class="err">✗ '+d.error+'</div>';
+    }
+    btn.disabled=false;btn.textContent='⛏️ Miner';
+  })
+  .catch(function(){
+    log.innerHTML='<div class="err">Erreur réseau</div>';
+    btn.disabled=false;btn.textContent='⛏️ Miner';
+  });
+}
+function getCookie(n){var v=document.cookie.match('(^|;)?'+n+'=([^;]*)(;|$)');return v?decodeURIComponent(v[2]):null}
+</script>
+{% endblock %}

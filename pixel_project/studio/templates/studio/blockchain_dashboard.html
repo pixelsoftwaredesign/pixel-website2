@@ -1,0 +1,90 @@
+{% extends "studio/pixsoftpay_base.html" %}
+{% block content %}
+<style>
+.bc-stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px}
+.bc-stat{background:rgba(18,18,42,.9);border:1px solid rgba(108,99,255,.1);border-radius:20px;padding:20px;text-align:center}
+.bc-stat .val{font-size:1.8rem;font-weight:700;color:#6c63ff}
+.bc-stat .lbl{font-size:.8rem;color:#888;margin-top:4px}
+.bc-stat.green .val{color:#00c853}
+.bc-stat.orange .val{color:#ffab00}
+.bc-stat.red .val{color:#ff1744}
+.bc-stat.purple .val{color:#a855f7}
+.bc-hex{font-family:monospace;font-size:.7rem;color:#6c63ff;word-break:break-all;background:rgba(108,99,255,.05);padding:8px 12px;border-radius:10px;margin:8px 0}
+.bc-nav-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px}
+.bc-nav-item{flex:1;min-width:120px;background:rgba(18,18,42,.9);border:1px solid rgba(108,99,255,.1);border-radius:16px;padding:18px;text-align:center;text-decoration:none;transition:all .2s}
+.bc-nav-item:hover{border-color:#6c63ff;box-shadow:0 0 20px rgba(108,99,255,.15)}
+.bc-nav-item .icon{font-size:1.5rem;margin-bottom:6px}
+.bc-nav-item .name{font-size:.85rem;color:#e0e0e0}
+</style>
+
+<h1 style="margin-bottom:8px">⛓️ Blockchain Dashboard</h1>
+<p style="color:#888;font-size:.9rem;margin-bottom:24px">Réseau PixSoftMoney — Prototype from scratch</p>
+
+<div class="bc-stat-grid">
+  <div class="bc-stat"><div class="val">{{ chain.length }}</div><div class="lbl">Blocs</div></div>
+  <div class="bc-stat green"><div class="val">{{ chain.pending_tx_count|default:"0" }}</div><div class="lbl">En attente</div></div>
+  <div class="bc-stat purple"><div class="val">4</div><div class="lbl">Difficulté</div></div>
+  <div class="bc-stat orange"><div class="val">50 PSX</div><div class="lbl">Récompense</div></div>
+</div>
+
+<div class="bc-nav-row">
+  <a href="/blockchain/wallet/" class="bc-nav-item"><div class="icon">💰</div><div class="name">Mon Wallet</div></a>
+  <a href="/blockchain/mining/" class="bc-nav-item"><div class="icon">⛏️</div><div class="name">Miner</div></a>
+  <a href="/blockchain/explorer/" class="bc-nav-item"><div class="icon">🔍</div><div class="name">Explorer</div></a>
+</div>
+
+{% if my_wallet %}
+<div class="pp-card">
+  <h2>Mon adresse</h2>
+  <div class="bc-hex">{{ my_wallet.address }}</div>
+  <p style="margin-top:12px;font-size:.85rem;color:#888">Solde: <strong style="color:#6c63ff">{{ balance|floatformat:8 }} PSX</strong></p>
+</div>
+{% else %}
+<div class="pp-card" style="text-align:center">
+  <h2>Créer un wallet crypto</h2>
+  <p style="color:#888;font-size:.9rem;margin-bottom:16px">Générez votre adresse ECDSA sur la blockchain PixSoftMoney</p>
+  <button class="pp-btn pp-btn-primary" onclick="createWallet()">Générer mon wallet</button>
+  <p id="walletResult" style="margin-top:12px"></p>
+</div>
+{% endif %}
+
+<div class="pp-card">
+  <h2>Blocs récents</h2>
+  {% for block in chain.chain %}
+  <div style="border-bottom:1px solid rgba(108,99,255,.08);padding:12px 0">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <strong style="color:#6c63ff">#{{ block.index }}</strong>
+        <span style="color:#888;font-size:.8rem;margin-left:8px">{{ block.transactions|length }} tx</span>
+      </div>
+      <span style="font-size:.75rem;color:#888">{{ block.timestamp }}</span>
+    </div>
+    <div class="bc-hex" style="margin-top:4px">Hash: {{ block.hash|truncatechars:40 }}</div>
+  </div>
+  {% endfor %}
+</div>
+
+<script>
+function createWallet(){
+  fetch('/api/blockchain/wallet/create/',{
+    method:'POST',
+    credentials:'include',
+    headers:{'X-CSRFToken':getCookie('csrftoken'),'Content-Type':'application/json'},
+    body:JSON.stringify({})
+  })
+  .then(function(r){return r.json()})
+  .then(function(d){
+    if(d.address){
+      document.getElementById('walletResult').innerHTML=
+        '<div style="color:#00c853;margin-bottom:8px">✓ Wallet créé</div>'+
+        '<div class="bc-hex">Address: '+d.address+'</div>'+
+        '<div class="bc-hex">Private Key: '+d.private_key+'</div>'+
+        '<p style="color:#ff1744;font-size:.8rem;margin-top:8px">⚠ Sauvegardez votre private key!</p>';
+    }else{
+      document.getElementById('walletResult').innerHTML='<div style="color:#888">'+(d.address||d.error||'Existe déjà')+'</div>';
+    }
+  });
+}
+function getCookie(n){var v=document.cookie.match('(^|;)?'+n+'=([^;]*)(;|$)');return v?decodeURIComponent(v[2]):null}
+</script>
+{% endblock %}

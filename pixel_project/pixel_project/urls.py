@@ -25,4 +25,5 @@ urlpatterns = [
     path('favicon.ico', RedirectView.as_view(url=staticfiles_storage.url('favicon.svg'), permanent=True)),
     path('admin/', admin.site.urls),
     path('', include('studio.urls')),
+    path('', include('blockchain.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

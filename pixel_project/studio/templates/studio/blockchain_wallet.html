@@ -1,0 +1,93 @@
+{% extends "studio/pixsoftpay_base.html" %}
+{% block content %}
+<style>
+.bc-hex{font-family:monospace;font-size:.72rem;color:#6c63ff;word-break:break-all;background:rgba(108,99,255,.05);padding:10px 14px;border-radius:12px;margin:8px 0}
+.bc-bal{font-size:2.8rem;font-weight:700;background:linear-gradient(135deg,#6c63ff,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center;margin:16px 0}
+</style>
+
+<h1 style="margin-bottom:20px">💰 Wallet Crypto</h1>
+
+{% if my_wallet %}
+<div class="pp-card" style="text-align:center">
+  <p style="color:#888;font-size:.85rem">Votre adresse</p>
+  <div class="bc-hex">{{ my_wallet.address }}</div>
+  <div class="bc-bal">{{ balance|floatformat:8 }} PSX</div>
+  <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+    <button class="pp-btn pp-btn-primary" onclick="document.getElementById('sendSection').style.display='block'">Envoyer</button>
+    <button class="pp-btn pp-btn-outline" onclick="document.getElementById('bridgeSection').style.display='block'">Bridge TND → PSX</button>
+  </div>
+</div>
+
+<div class="pp-card" id="sendSection" style="display:none">
+  <h2>Envoyer PSX</h2>
+  <div class="pp-form-group"><label>Adresse destinataire</label><input id="sendTo" placeholder="PXS..."></div>
+  <div class="pp-form-group"><label>Montant (PSX)</label><input id="sendAmount" type="number" step="0.00000001" placeholder="0.00"></div>
+  <div class="pp-form-group"><label>Frais (optionnel)</label><input id="sendFee" type="number" step="0.00000001" value="0"></div>
+  <button class="pp-btn pp-btn-primary" onclick="sendPSX()">Envoyer</button>
+  <p id="sendResult" style="margin-top:10px;font-size:.85rem"></p>
+</div>
+
+<div class="pp-card" id="bridgeSection" style="display:none">
+  <h2>Bridge TND → PSX</h2>
+  <p style="color:#888;font-size:.85rem;margin-bottom:12px">Convertissez vos TND PixSoftMoney en PSX crypto</p>
+  <div class="pp-form-group"><label>Montant TND</label><input id="bridgeAmount" type="number" step="0.01" placeholder="0.00"></div>
+  <button class="pp-btn pp-btn-success" onclick="bridgeTND()">Convertir</button>
+  <p id="bridgeResult" style="margin-top:10px;font-size:.85rem"></p>
+</div>
+
+<div class="pp-card">
+  <h2>Historique</h2>
+  {% if history %}
+  {% for tx in history %}
+  <div style="border-bottom:1px solid rgba(108,99,255,.08);padding:10px 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+    <div>
+      <span style="font-size:.8rem;color:#888">{{ tx.type }}</span><br>
+      <span style="font-size:.75rem;color:#555;font-family:monospace">
+        {% if tx.from == my_wallet.address %}←{% else %}→{% endif %}
+        {% if tx.from == my_wallet.address %}{{ tx.to|truncatechars:20 }}{% else %}{{ tx.from|truncatechars:20 }}{% endif %}
+      </span>
+    </div>
+    <strong style="color:{% if tx.to == my_wallet.address %}#00c853{% else %}#ff1744{% endif %}">
+      {% if tx.to == my_wallet.address %}+{% else %}-{% endif %}{{ tx.amount|floatformat:8 }} PSX
+    </strong>
+  </div>
+  {% endfor %}
+  {% else %}
+  <div class="pp-empty">Aucune transaction</div>
+  {% endif %}
+</div>
+
+{% else %}
+<div class="pp-card" style="text-align:center">
+  <h2>Aucun wallet crypto</h2>
+  <p style="color:#888;margin-bottom:16px">Créez votre wallet pour commencer</p>
+  <a href="/blockchain/"><button class="pp-btn pp-btn-primary">Aller au dashboard</button></a>
+</div>
+{% endif %}
+
+<script>
+function sendPSX(){
+  var to=document.getElementById('sendTo').value;
+  var amt=parseFloat(document.getElementById('sendAmount').value);
+  var fee=parseFloat(document.getElementById('sendFee').value)||0;
+  if(!to||!amt){document.getElementById('sendResult').innerHTML='<span style="color:#ff1744">Remplissez tous les champs</span>';return}
+  fetch('/api/blockchain/send/',{method:'POST',credentials:'include',headers:{'X-CSRFToken':getCookie('csrftoken'),'Content-Type':'application/json'},body:JSON.stringify({to:to,amount:amt,fee:fee})})
+  .then(function(r){return r.json()})
+  .then(function(d){
+    document.getElementById('sendResult').innerHTML='<span style="color:'+(d.error?'#ff1744':'#00c853')+'">'+(d.error||d.status)+ '</span>';
+    if(!d.error)setTimeout(function(){location.reload()},1500);
+  });
+}
+function bridgeTND(){
+  var amt=parseFloat(document.getElementById('bridgeAmount').value);
+  if(!amt){document.getElementById('bridgeResult').innerHTML='<span style="color:#ff1744">Montant requis</span>';return}
+  fetch('/api/blockchain/bridge/',{method:'POST',credentials:'include',headers:{'X-CSRFToken':getCookie('csrftoken'),'Content-Type':'application/json'},body:JSON.stringify({amount:amt})})
+  .then(function(r){return r.json()})
+  .then(function(d){
+    document.getElementById('bridgeResult').innerHTML='<span style="color:'+(d.error?'#ff1744':'#00c853')+'">'+(d.error||d.status+' — '+d.psx_received+' PSX reçus')+'</span>';
+    if(!d.error)setTimeout(function(){location.reload()},1500);
+  });
+}
+function getCookie(n){var v=document.cookie.match('(^|;)?'+n+'=([^;]*)(;|$)');return v?decodeURIComponent(v[2]):null}
+</script>
+{% endblock %}
