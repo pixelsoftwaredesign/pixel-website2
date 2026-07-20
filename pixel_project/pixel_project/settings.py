@@ -146,3 +146,4 @@ MONGODB_DB = os.getenv('MONGODB_DB', 'pixel_social')
 
 # ─── Auth ──────────────────────────────────────────────
 LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/pixsoftpay/'

@@ -2574,17 +2574,17 @@ def pixsoftpay_2fa_disable(request):
 def pixsoftpay_2fa_verify_login(request):
     username = request.session.get('2fa_pending_user')
     if not username:
-        return redirect('pixsoftpay_login')
+        return redirect('login')
 
     if request.method == 'POST':
         code = request.POST.get('code', '').strip()
         user = User.objects.filter(username=username).first()
         if not user:
-            return redirect('pixsoftpay_login')
+            return redirect('login')
 
         tfa = TwoFactorAuth.objects.filter(user=user).first()
         if not tfa:
-            return redirect('pixsoftpay_login')
+            return redirect('login')
 
         if tfa.verify_code(code) or tfa.verify_backup(code):
             tfa.last_used = timezone.now()

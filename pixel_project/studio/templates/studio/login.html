@@ -42,7 +42,8 @@
 <script>
 function msg(t,c){var m=document.getElementById('authMsg');m.textContent=t;m.className='auth-msg '+c;m.style.display='block'}
 function executerConnexion(){var u=document.getElementById('loginUsername').value,p=document.getElementById('loginPassword').value;if(!u||!p){msg('Veuillez remplir tous les champs.','error');return}
-fetch('/api/connexion/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},body:JSON.stringify({username:u,password:p})}).then(function(r){return r.json()}).then(function(d){if(d.status==='success'){msg(d.message,'success');setTimeout(function(){window.location.href='/portail/'},800)}else{msg(d.message,'error')}}).catch(function(){msg('Erreur de connexion au serveur.','error')})}
+var next=new URLSearchParams(window.location.search).get('next')||'/portail/';
+fetch('/api/connexion/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},body:JSON.stringify({username:u,password:p})}).then(function(r){return r.json()}).then(function(d){if(d.status==='success'){msg(d.message,'success');setTimeout(function(){window.location.href=next},800)}else{msg(d.message,'error')}}).catch(function(){msg('Erreur de connexion au serveur.','error')})}
 </script>
 </body>
 </html>
