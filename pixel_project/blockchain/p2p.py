@@ -108,7 +108,6 @@ class PeerNode:
                         block.hash.startswith('0' * 4) and
                         block.hash == block.compute_hash()):
                     chain.chain.append(block)
-                    chain._apply_block(block)
                     self.broadcast(msg, exclude=sender_socket)
 
         elif msg_type == 'REQUEST_CHAIN':

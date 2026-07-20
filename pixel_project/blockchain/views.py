@@ -5,6 +5,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from datetime import timedelta
+from django.db import transaction
 from django.db.models import Sum, Count
 
 from .chain import get_blockchain, MINING_REWARD
@@ -75,6 +76,7 @@ def blockchain_mining(request):
 
 # ─── Blockchain API ─────────────────────────────────────────
 @csrf_exempt
+@transaction.atomic
 def api_wallet_create(request):
     if not request.user.is_authenticated:
         return JsonResponse({'error': 'Non authentifié'}, status=401)
@@ -105,6 +107,7 @@ def api_balance(request, address):
 
 
 @csrf_exempt
+@transaction.atomic
 def api_send(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'POST requis'}, status=405)
@@ -121,7 +124,7 @@ def api_send(request):
     if amount <= 0:
         return JsonResponse({'error': 'Montant invalide'}, status=400)
 
-    cw = CryptoWallet.objects.filter(user=request.user).first()
+    cw = CryptoWallet.objects.select_for_update().filter(user=request.user).first()
     if not cw:
         return JsonResponse({'error': 'Aucun wallet crypto. Créez-en un d\'abord.'}, status=400)
 
@@ -167,13 +170,14 @@ def api_send(request):
 
 
 @csrf_exempt
+@transaction.atomic
 def api_mine(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'POST requis'}, status=405)
     if not request.user.is_authenticated:
         return JsonResponse({'error': 'Non authentifié'}, status=401)
 
-    cw = CryptoWallet.objects.filter(user=request.user).first()
+    cw = CryptoWallet.objects.select_for_update().filter(user=request.user).first()
     if not cw:
         return JsonResponse({'error': 'Aucun wallet crypto'}, status=400)
 
@@ -256,6 +260,7 @@ def api_validate(request):
 
 
 @csrf_exempt
+@transaction.atomic
 def api_send_tnd_to_crypto(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'POST requis'}, status=405)
@@ -272,11 +277,11 @@ def api_send_tnd_to_crypto(request):
         return JsonResponse({'error': 'Montant invalide'}, status=400)
 
     from studio.models import Wallet
-    tnd_wallet, _ = Wallet.objects.get_or_create(user=request.user)
+    tnd_wallet = Wallet.objects.select_for_update().get(user=request.user)
     if tnd_wallet.solde < amount_tnd:
         return JsonResponse({'error': f'Solde TND insuffisant ({tnd_wallet.solde})'}, status=400)
 
-    cw = CryptoWallet.objects.filter(user=request.user).first()
+    cw = CryptoWallet.objects.select_for_update().filter(user=request.user).first()
     if not cw:
         return JsonResponse({'error': 'Aucun wallet crypto'}, status=400)
 
@@ -414,7 +419,7 @@ def api_governance_propose(request):
 
 
 @csrf_exempt
-@login_required
+@transaction.atomic
 def api_governance_vote(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'POST requis'}, status=405)
@@ -479,11 +484,11 @@ def staking_page(request):
 
 
 @csrf_exempt
-@login_required
+@transaction.atomic
 def api_stake(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'POST requis'}, status=405)
-    cw = CryptoWallet.objects.filter(user=request.user).first()
+    cw = CryptoWallet.objects.select_for_update().filter(user=request.user).first()
     if not cw:
         return JsonResponse({'error': 'Wallet crypto requis'}, status=400)
 
@@ -553,12 +558,12 @@ def api_stake_claim(request):
 # ─── Rewards ─────────────────────────────────────────────────
 
 @csrf_exempt
-@login_required
+@transaction.atomic
 def api_claim_daily(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'POST requis'}, status=405)
     today = timezone.now().date()
-    login_obj, created = DailyLogin.objects.get_or_create(user=request.user, date=today)
+    login_obj, created = DailyLogin.objects.select_for_update().get_or_create(user=request.user, date=today)
     if login_obj.bonus_claimed:
         return JsonResponse({'error': 'Déjà réclamé aujourd\'hui'}, status=400)
 
@@ -586,11 +591,11 @@ def api_claim_daily(request):
 # ─── Premium ─────────────────────────────────────────────────
 
 @csrf_exempt
-@login_required
+@transaction.atomic
 def api_buy_premium(request):
     if request.method != 'POST':
         return JsonResponse({'error': 'POST requis'}, status=405)
-    cw = CryptoWallet.objects.filter(user=request.user).first()
+    cw = CryptoWallet.objects.select_for_update().filter(user=request.user).first()
     if not cw:
         return JsonResponse({'error': 'Wallet crypto requis'}, status=400)
 
