@@ -20,6 +20,10 @@
 .auth-box .auth-msg{margin-top:.8rem;font-size:.75rem;text-align:center;padding:.4rem;border-radius:4px;display:none}
 .auth-box .auth-msg.error{display:block;background:rgba(239,68,68,.15);color:#ef4444}
 .auth-box .auth-msg.success{display:block;background:rgba(30,180,130,.15);color:var(--accent)}
+.auth-box .w3-divider{display:flex;align-items:center;gap:10px;margin:1.2rem 0;font-size:.7rem;color:var(--muted)}
+.auth-box .w3-divider::before,.auth-box .w3-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.auth-box .btn-w3{width:100%;justify-content:center;padding:.7rem;border:1px solid #f6851b;background:rgba(246,133,255,.08);color:#f6851b;font-weight:600;transition:all .2s}
+.auth-box .btn-w3:hover{background:rgba(246,133,255,.15)}
 </style>
 </head>
 <body>
@@ -36,6 +40,8 @@
 <div id="authMsg" class="auth-msg"></div>
 </form>
 <p class="auth-link">Pas encore de compte ? <a href="/register/">S'inscrire</a></p>
+<div class="w3-divider"><span>ou</span></div>
+<a href="/blockchain/web3-login/"><button type="button" class="btn-p btn-w3">🦊 Connecter avec MetaMask</button></a>
 </div>
 </div>
 <footer><div style="display:flex;align-items:center;gap:10px"><svg width="24" height="24"><use href="#pxl"/></svg><span class="fcopy">© 2026 Pixel Software Design</span></div><div class="flinks"><a href="/">Accueil</a><a href="/prix/">Prix</a></div></footer>

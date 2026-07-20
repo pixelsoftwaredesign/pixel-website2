@@ -1,0 +1,191 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PixSoftMoney — Connexion Web3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Space Grotesk',system-ui,sans-serif;background:#0a0a1a;color:#e0e0e0;min-height:100vh;display:flex;align-items:center;justify-content:center}
+.w3-container{max-width:440px;width:100%;padding:24px}
+.w3-card{background:rgba(18,18,42,.9);border:1px solid rgba(108,99,255,.15);border-radius:24px;padding:40px 32px;text-align:center;backdrop-filter:blur(20px)}
+.w3-logo{width:64px;height:64px;background:linear-gradient(135deg,#6c63ff,#a855f7);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;font-size:1.8rem}
+.w3-title{font-size:1.5rem;font-weight:700;margin-bottom:4px}
+.w3-sub{color:#888;font-size:.9rem;margin-bottom:28px}
+.w3-btn{width:100%;padding:14px;border:none;border-radius:14px;font-size:1rem;font-weight:600;cursor:pointer;font-family:inherit;transition:all .2s;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:10px}
+.w3-btn:active{transform:scale(.98)}
+.w3-btn-primary{background:linear-gradient(135deg,#6c63ff,#a855f7);color:#fff}
+.w3-btn-primary:hover{box-shadow:0 4px 24px rgba(108,99,255,.4)}
+.w3-btn-metamask{background:linear-gradient(135deg,#f6851b,#e2761b);color:#fff}
+.w3-btn-metamask:hover{box-shadow:0 4px 24px rgba(246,133,27,.4)}
+.w3-btn-outline{background:transparent;border:1px solid rgba(108,99,255,.2);color:#e0e0e0}
+.w3-btn-outline:hover{background:rgba(108,99,255,.1)}
+.w3-divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:#555;font-size:.8rem}
+.w3-divider::before,.w3-divider::after{content:'';flex:1;height:1px;background:#1e1e3a}
+.w3-step{display:none;text-align:left}
+.w3-step.active{display:block}
+.w3-step-num{display:inline-flex;width:28px;height:28px;background:linear-gradient(135deg,#6c63ff,#a855f7);border-radius:50%;align-items:center;justify-content:center;font-size:.8rem;font-weight:700;margin-bottom:12px}
+.w3-step h3{font-size:1rem;margin-bottom:8px}
+.w3-step p{color:#888;font-size:.85rem;margin-bottom:14px}
+.w3-msg{padding:12px;background:#0a0a1a;border:1px solid #1e1e3a;border-radius:12px;font-family:monospace;font-size:.72rem;color:#6c63ff;word-break:break-all;margin-bottom:14px;max-height:120px;overflow-y:auto;text-align:left}
+.w3-status{text-align:center;padding:16px;border-radius:14px;margin-top:12px;font-size:.9rem}
+.w3-success{background:rgba(0,200,83,.08);border:1px solid rgba(0,200,83,.2);color:#00c853}
+.w3-error{background:rgba(255,23,68,.08);border:1px solid rgba(255,23,68,.2);color:#ff1744}
+.w3-loading{display:inline-block;width:20px;height:20px;border:2px solid rgba(108,99,255,.2);border-top-color:#6c63ff;border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.w3-address{font-family:monospace;font-size:.85rem;color:#a855f7;background:rgba(108,99,255,.08);padding:8px 14px;border-radius:10px;display:inline-block;margin:8px 0}
+.w3-link{color:#6c63ff;text-decoration:none;font-size:.85rem}
+.w3-link:hover{text-decoration:underline}
+</style>
+</head>
+<body>
+
+<div class="w3-container">
+  <div class="w3-card">
+    <div class="w3-logo">₮</div>
+    <div class="w3-title">PixSoftMoney</div>
+    <div class="w3-sub">Connectez votre wallet pour accéder</div>
+
+    <div id="step1" class="w3-step active">
+      <div class="w3-step-num">1</div>
+      <h3>Connecter votre wallet</h3>
+      <p>Choisissez votre wallet pour commencer</p>
+
+      <button class="w3-btn w3-btn-metamask" onclick="connectMetaMask()">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M21.2 2L12.8 8.2l1.5-3.2L21.2 2zM2.8 2l8.2 6.2-1.4-3.2L2.8 2z"/><path d="M18.5 12.5l-2.3-1.4v2.7l-4.7 4.3-4.7-4.3v-2.7l-2.3 1.4L1.5 14v3.5l3.3-1 2.2 1.8 3.5 2.7h1l3.5-2.7 2.2-1.8 3.3 1V14l-2-1.5z"/></svg>
+        MetaMask
+      </button>
+
+      <button class="w3-btn w3-btn-outline" onclick="connectWalletConnect()">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="#6c63ff"><circle cx="10" cy="10" r="10"/><path d="M6.5 8.5h1.5v3H6.5zM12 8.5h1.5v3H12z" fill="white"/><circle cx="10" cy="10" r="1.5" fill="white"/></svg>
+        WalletConnect
+      </button>
+
+      <div class="w3-divider">ou</div>
+
+      <a href="/login/" class="w3-link">Connexion classique (email/mot de passe)</a>
+    </div>
+
+    <div id="step2" class="w3-step">
+      <div class="w3-step-num">2</div>
+      <h3>Vérifiez votre identité</h3>
+      <p>Signez le message ci-dessous dans votre wallet pour prouver que vous êtes le propriétaire de cette adresse.</p>
+      <div class="w3-address" id="connectedAddr"></div>
+      <div class="w3-msg" id="signMessage"></div>
+      <button class="w3-btn w3-btn-primary" id="signBtn" onclick="signMessage()">Signer avec mon wallet</button>
+      <div id="signStatus" style="margin-top:12px"></div>
+    </div>
+
+    <div id="step3" class="w3-step">
+      <div class="w3-step-num">3</div>
+      <h3>Connexion réussie</h3>
+      <div class="w3-address" id="finalAddr"></div>
+      <div class="w3-status w3-success" id="finalMsg">Bienvenue!</div>
+      <a href="/pixsoftpay/"><button class="w3-btn w3-btn-primary" style="margin-top:16px">Entrer dans PixSoftMoney</button></a>
+      <a href="/blockchain/" class="w3-link" style="display:block;margin-top:8px">Ou aller vers la Blockchain →</a>
+    </div>
+  </div>
+
+  <p style="text-align:center;margin-top:16px;font-size:.75rem;color:#555">
+    <a href="/" class="w3-link">← Retour au site</a>
+  </p>
+</div>
+
+<script>
+var currentAddress='';
+var currentNonce='';
+
+function showStep(n){
+  document.querySelectorAll('.w3-step').forEach(function(s){s.classList.remove('active')});
+  document.getElementById('step'+n).classList.add('active');
+}
+
+function showError(stepId, msg){
+  var el=document.getElementById(stepId);
+  el.innerHTML='<div class="w3-status w3-error">'+msg+'</div>';
+}
+
+async function connectMetaMask(){
+  if(typeof window.ethereum==='undefined'){
+    showError('step1','MetaMask non détecté. Installez-le sur <a href="https://metamask.io" class="w3-link" target="_blank">metamask.io</a>');
+    return;
+  }
+  try{
+    var accounts=await window.ethereum.request({method:'eth_requestAccounts'});
+    currentAddress=accounts[0];
+    document.getElementById('connectedAddr').textContent=currentAddress;
+    showStep(2);
+    await getNonce();
+  }catch(e){
+    showError('step1','Connexion refusée: '+e.message);
+  }
+}
+
+function connectWalletConnect(){
+  showError('step1','WalletConnect: à venir. Utilisez MetaMask pour le moment.');
+}
+
+async function getNonce(){
+  try{
+    var resp=await fetch('/api/web3/nonce/',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},
+      body:JSON.stringify({address:currentAddress})
+    });
+    var data=await resp.json();
+    if(data.message){
+      document.getElementById('signMessage').textContent=data.message;
+      currentNonce=data.nonce;
+    }else{
+      showError('signStatus',data.error||'Erreur');
+    }
+  }catch(e){
+    showError('signStatus','Erreur réseau');
+  }
+}
+
+async function signMessage(){
+  var btn=document.getElementById('signBtn');
+  btn.disabled=true;
+  btn.innerHTML='<div class="w3-loading"></div> En attente de signature...';
+  document.getElementById('signStatus').innerHTML='';
+
+  try{
+    var message=document.getElementById('signMessage').textContent;
+    var signature=await window.ethereum.request({
+      method:'personal_sign',
+      params:[message,currentAddress]
+    });
+
+    document.getElementById('signStatus').innerHTML='<div class="w3-loading"></div> Vérification en cours...';
+
+    var resp=await fetch('/api/web3/verify/',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-CSRFToken':getCookie('csrftoken')},
+      body:JSON.stringify({address:currentAddress,signature:signature,nonce:currentNonce})
+    });
+    var data=await resp.json();
+
+    if(data.status==='success'){
+      document.getElementById('finalAddr').textContent=data.address;
+      document.getElementById('finalMsg').textContent='Bienvenue '+data.username+'!';
+      showStep(3);
+    }else{
+      document.getElementById('signStatus').innerHTML='<div class="w3-status w3-error">'+data.error+'</div>';
+      btn.disabled=false;
+      btn.textContent='Réessayer';
+    }
+  }catch(e){
+    document.getElementById('signStatus').innerHTML='<div class="w3-status w3-error">Signature refusée: '+e.message+'</div>';
+    btn.disabled=false;
+    btn.textContent='Signer avec mon wallet';
+  }
+}
+
+function getCookie(n){var v=document.cookie.match('(^|;)?'+n+'=([^;]*)(;|$)');return v?decodeURIComponent(v[2]):null}
+</script>
+</body>
+</html>

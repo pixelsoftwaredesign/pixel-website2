@@ -3,6 +3,9 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import login
+from django.contrib.auth.models import User
+import secrets
 from django.utils import timezone
 from datetime import timedelta
 from django.db import transaction
@@ -803,3 +806,148 @@ def api_multisig_propose(request):
     if tx_hash:
         return JsonResponse({'status': 'Transaction proposée', 'hash': tx_hash})
     return JsonResponse({'error': 'Wallet introuvable'}, status=400)
+
+
+# ─── Web3 Login ─────────────────────────────────────────────
+
+def web3_login_page(request):
+    return render(request, 'studio/web3_login.html')
+
+
+@csrf_exempt
+def api_web3_nonce(request):
+    try:
+        data = json.loads(request.body)
+        address = data.get('address', '').strip().lower()
+    except (ValueError, TypeError):
+        return JsonResponse({'error': 'Adresse invalide'}, status=400)
+
+    if not address or len(address) != 42 or not address.startswith('0x'):
+        return JsonResponse({'error': 'Adresse Ethereum invalide'}, status=400)
+
+    from .web3auth import Web3Nonce
+    Web3Nonce.objects.filter(address=address, used=False).update(used=True)
+    nonce_obj = Web3Nonce.create_for_address(address)
+
+    return JsonResponse({
+        'message': nonce_obj.message,
+        'nonce': nonce_obj.nonce,
+    })
+
+
+@csrf_exempt
+def api_web3_verify(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST requis'}, status=405)
+    try:
+        data = json.loads(request.body)
+        address = data.get('address', '').strip().lower()
+        signature = data.get('signature', '')
+        nonce = data.get('nonce', '')
+    except (ValueError, TypeError):
+        return JsonResponse({'error': 'Données invalides'}, status=400)
+
+    if not address or not signature or not nonce:
+        return JsonResponse({'error': 'Champs requis manquants'}, status=400)
+
+    from .web3auth import Web3Nonce, get_sign_message, Web3Session
+
+    nonce_obj = Web3Nonce.objects.filter(
+        address=address, nonce=nonce, used=False,
+    ).first()
+    if not nonce_obj or not nonce_obj.is_valid:
+        return JsonResponse({'error': 'Nonce invalide ou expiré'}, status=400)
+
+    nonce_obj.used = True
+    nonce_obj.save(update_fields=['used'])
+
+    expected_message = nonce_obj.message
+    recovered = recover_address(expected_message, signature)
+
+    if recovered and recovered.lower() == address:
+        user = link_or_create_user(address)
+        login(request, user)
+
+        import secrets as _secrets
+        session_token = _secrets.token_hex(32)
+        Web3Session.objects.create(
+            user=user,
+            address=address,
+            session_token=session_token,
+            expires_at=timezone.now() + timezone.timedelta(days=7),
+        )
+
+        return JsonResponse({
+            'status': 'success',
+            'address': address,
+            'username': user.username,
+            'session': session_token,
+        })
+    else:
+        return JsonResponse({
+            'error': 'Signature invalide — le wallet ne correspond pas',
+        }, status=403)
+
+
+def recover_address(message: str, signature_hex: str) -> str:
+    """
+    Récupère l'adresse Ethereum à partir d'un message signé (ECDSA).
+    Utilise ecrecover-like logic avec ecdsa library.
+    """
+    try:
+        from eth_account.messages import encode_structured_data
+        from web3 import Web3
+        return Web3().eth.account.recover_message(
+            encode_structured_data(message), signature=signature_hex
+        )
+    except ImportError:
+        pass
+
+    try:
+        import hashlib
+        from ecdsa import SECP256k1, VerifyingKey
+        from coincurve import PublicKey
+
+        prefix = f"\x19Ethereum Signed Message:\n{len(message)}"
+        full_message = prefix.encode() + message.encode()
+        msg_hash = hashlib.sha3_256(full_message).digest()
+
+        sig_bytes = bytes.fromhex(signature_hex[2:] if signature_hex.startswith('0x') else signature_hex)
+        v = sig_bytes[-1]
+        r = sig_bytes[:32]
+        s = sig_bytes[32:64]
+
+        pk = PublicKey.from_signature_and_message(
+            r + s + bytes([v - 27]),
+            full_message,
+            hasher=None,
+        )
+        addr = hashlib.sha3_256(pk.format(compressed=False)[1:]).digest()[-20:]
+        return '0x' + addr.hex()
+    except Exception:
+        pass
+
+    return ''
+
+
+def link_or_create_user(address: str) -> User:
+    """Lie ou crée un user Django à partir d'une adresse Ethereum."""
+    username = f'web3_{address[-8:]}'
+    user = User.objects.filter(
+        web3_sessions__address=address.lower(),
+    ).first()
+    if user:
+        return user
+
+    base_username = username
+    counter = 1
+    while User.objects.filter(username=username).exists():
+        username = f'{base_username}_{counter}'
+        counter += 1
+
+    user = User.objects.create_user(
+        username=username,
+        email=f'{address[-8:]}@web3.local',
+        password=secrets.token_hex(16),
+    )
+    return user

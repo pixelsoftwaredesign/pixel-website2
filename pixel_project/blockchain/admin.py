@@ -3,6 +3,7 @@ from .models import (
     CryptoWallet, CryptoTransaction, MiningStats,
     Proposal, Vote, Stake, RewardLog, PremiumAccess, DailyLogin,
 )
+from .web3auth import Web3Nonce, Web3Session
 
 
 @admin.register(CryptoWallet)
@@ -44,3 +45,16 @@ class RewardLogAdmin(admin.ModelAdmin):
 @admin.register(PremiumAccess)
 class PremiumAccessAdmin(admin.ModelAdmin):
     list_display = ('user', 'plan', 'psx_paid', 'expires_at')
+
+
+@admin.register(Web3Nonce)
+class Web3NonceAdmin(admin.ModelAdmin):
+    list_display = ('address', 'nonce', 'used', 'created_at')
+    list_filter = ('used',)
+    search_fields = ('address',)
+
+
+@admin.register(Web3Session)
+class Web3SessionAdmin(admin.ModelAdmin):
+    list_display = ('user', 'address', 'created_at', 'expires_at')
+    search_fields = ('address', 'user__username')

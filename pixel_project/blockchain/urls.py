@@ -37,4 +37,8 @@ urlpatterns = [
     path('api/security/fraud/', views.api_fraud_alerts, name='api_fraud_alerts'),
     path('api/multisig/create/', views.api_multisig_create, name='api_multisig_create'),
     path('api/multisig/propose/', views.api_multisig_propose, name='api_multisig_propose'),
+
+    path('web3-login/', views.web3_login_page, name='web3_login'),
+    path('api/web3/nonce/', views.api_web3_nonce, name='api_web3_nonce'),
+    path('api/web3/verify/', views.api_web3_verify, name='api_web3_verify'),
 ]
