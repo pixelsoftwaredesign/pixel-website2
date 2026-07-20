@@ -2305,8 +2305,9 @@ def docker_health(request):
     })
 
 
-# ─── PixSoftPay — QR Code Payment ──────────────────────────────
+# ─── PixSoftMoney — QR Code Payment ──────────────────────────────
 
+@login_required
 def pixsoftpay_dashboard(request):
     total = Transaction.objects.count()
     paid = Transaction.objects.filter(statut='confirme').count()
@@ -2321,6 +2322,7 @@ def pixsoftpay_dashboard(request):
     })
 
 
+@login_required
 def pixsoftpay_create(request):
     if request.method == 'POST':
         amount = request.POST.get('amount', '').strip()
@@ -2383,23 +2385,75 @@ def pixsoftpay_confirm(request, reference):
     return redirect('pixsoftpay_pay', reference=reference)
 
 
+@login_required
 def pixsoftpay_history(request):
     status_filter = request.GET.get('status', '')
-    txs = Transaction.objects.all()
+    type_filter = request.GET.get('type', '')
+    search = request.GET.get('q', '').strip()
+    date_from = request.GET.get('from', '')
+    date_to = request.GET.get('to', '')
+    txs = Transaction.objects.filter(user=request.user).order_by('-date_creation')
+
     if status_filter:
         txs = txs.filter(statut=status_filter)
+    if type_filter:
+        txs = txs.filter(type_operation=type_filter)
+    if search:
+        txs = txs.filter(reference__icontains=search)
+    if date_from:
+        txs = txs.filter(date_creation__date__gte=date_from)
+    if date_to:
+        txs = txs.filter(date_creation__date__lte=date_to)
+
+    from django.db.models import Sum, Count
+    total_in = txs.filter(type_operation__in=['depot', 'remboursement'], statut='confirme').aggregate(t=Sum('montant'))['t'] or 0
+    total_out = txs.filter(type_operation__in=['retrait', 'paiement'], statut='confirme').aggregate(t=Sum('montant'))['t'] or 0
+    total_tx = txs.count()
+
     return render(request, 'studio/pixsoftpay_history.html', {
-        'transactions': txs, 'status_filter': status_filter,
+        'transactions': txs[:200], 'status_filter': status_filter, 'type_filter': type_filter,
+        'search': search, 'date_from': date_from, 'date_to': date_to,
+        'total_in': total_in, 'total_out': total_out, 'total_tx': total_tx,
     })
 
 
+@login_required
 def pixsoftpay_wallet(request):
     wallet, _ = Wallet.objects.get_or_create(user=request.user)
-    txs = wallet.transactions.all()[:20]
-    return render(request, 'studio/pixsoftpay_wallet.html', {'wallet': wallet, 'transactions': txs})
+    profile = getattr(request.user, 'profile', None)
+    txs = wallet.transactions.all()
+
+    from django.db.models import Sum, Count, Q
+    now = timezone.now()
+    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+    total_depots = txs.filter(type_operation='depot', statut='confirme').aggregate(t=Sum('montant'))['t'] or 0
+    total_retraits = txs.filter(type_operation='retrait', statut='confirme').aggregate(t=Sum('montant'))['t'] or 0
+    total_paiements = txs.filter(type_operation='paiement', statut='confirme').aggregate(t=Sum('montant'))['t'] or 0
+    total_remboursements = txs.filter(type_operation='remboursement', statut='confirme').aggregate(t=Sum('montant'))['t'] or 0
+
+    month_depots = txs.filter(type_operation='depot', statut='confirme', date_creation__gte=month_start).aggregate(t=Sum('montant'))['t'] or 0
+    month_paiements = txs.filter(type_operation='paiement', statut='confirme', date_creation__gte=month_start).aggregate(t=Sum('montant'))['t'] or 0
+    tx_count = txs.count()
+    month_count = txs.filter(date_creation__gte=month_start).count()
+
+    bilan = {
+        'total_depots': total_depots,
+        'total_retraits': total_retraits,
+        'total_paiements': total_paiements,
+        'total_remboursements': total_remboursements,
+        'month_depots': month_depots,
+        'month_paiements': month_paiements,
+        'tx_count': tx_count,
+        'month_count': month_count,
+    }
+
+    return render(request, 'studio/pixsoftpay_wallet.html', {
+        'wallet': wallet, 'transactions': txs[:50], 'profile': profile, 'bilan': bilan,
+    })
 
 
-# ─── PixSoftPay API (JSON) ─────────────────────────────────────
+# ─── PixSoftMoney API (JSON) ─────────────────────────────────────
 
 @csrf_exempt
 def api_pixsoftpay_create(request):
@@ -2477,12 +2531,10 @@ def api_pixsoftpay_stats(request):
     })
 
 
-# ─── PixSoftPay — 2FA ─────────────────────────────────────────
+# ─── PixSoftMoney — 2FA ─────────────────────────────────────────
 
+@login_required
 def pixsoftpay_2fa_setup(request):
-    if not request.user.is_authenticated:
-        return redirect('pixsoftpay_login')
-
     tfa, created = TwoFactorAuth.objects.get_or_create(user=request.user)
 
     if request.method == 'POST':
@@ -2498,16 +2550,14 @@ def pixsoftpay_2fa_setup(request):
     return render(request, 'studio/pixsoftpay_2fa_setup.html', {'tfa': tfa})
 
 
+@login_required
 def pixsoftpay_2fa_success(request):
-    if not request.user.is_authenticated:
-        return redirect('pixsoftpay_login')
     tfa = TwoFactorAuth.objects.filter(user=request.user).first()
     return render(request, 'studio/pixsoftpay_2fa_success.html', {'tfa': tfa})
 
 
+@login_required
 def pixsoftpay_2fa_disable(request):
-    if not request.user.is_authenticated:
-        return redirect('pixsoftpay_login')
     if request.method == 'POST':
         code = request.POST.get('code', '').strip()
         tfa = TwoFactorAuth.objects.filter(user=request.user).first()
@@ -2587,9 +2637,8 @@ def api_pixsoftpay_2fa_verify(request):
 
 
 # ─── Parrainage (Referral) ─────────────────────────────────────
+@login_required
 def pixsoftpay_referral(request):
-    if not request.user.is_authenticated:
-        return redirect('pixsoftpay_login')
     wallet, _ = Wallet.objects.get_or_create(user=request.user)
     referrals = Referral.objects.filter(referrer=request.user).select_related('referred')
     return render(request, 'studio/pixsoftpay_referral.html', {
@@ -2623,9 +2672,8 @@ def api_pixsoftpay_referral_info(request):
 
 
 # ─── Vérification d'identité (KYC) ─────────────────────────────
+@login_required
 def pixsoftpay_kyc(request):
-    if not request.user.is_authenticated:
-        return redirect('pixsoftpay_login')
     kyc = KYCVerification.objects.filter(user=request.user).first()
     return render(request, 'studio/pixsoftpay_kyc.html', {'kyc': kyc})
 
@@ -2672,3 +2720,19 @@ def api_pixsoftpay_kyc_status(request):
         'doc_type': kyc.get_doc_type_display(),
         'submitted_at': kyc.created_at.isoformat(),
     })
+
+
+# ─── Photo de profil ───────────────────────────────────────────
+@csrf_exempt
+def api_pixsoftpay_profile_photo(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Non authentifié'}, status=401)
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST requis'}, status=405)
+    photo = request.FILES.get('photo')
+    if not photo:
+        return JsonResponse({'error': 'Aucune photo'}, status=400)
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    profile.photo = photo
+    profile.save()
+    return JsonResponse({'status': 'success', 'url': profile.photo.url if profile.photo else ''})

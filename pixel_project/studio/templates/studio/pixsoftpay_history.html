@@ -1,30 +1,79 @@
 {% extends "studio/pixsoftpay_base.html" %}
 {% block content %}
-<div class="pp-flex" style="margin-bottom:20px">
-  <h1>Historique</h1>
-  <div style="display:flex;gap:8px;flex-wrap:wrap">
-    <a href="/pixsoftpay/history/" class="pp-btn {% if not status_filter %}pp-btn-primary{% else %}pp-btn-outline{% endif %}" style="font-size:.8rem;padding:6px 14px">Tous</a>
-    <a href="/pixsoftpay/history/?status=en_attente" class="pp-btn {% if status_filter == 'en_attente' %}pp-btn-primary{% else %}pp-btn-outline{% endif %}" style="font-size:.8rem;padding:6px 14px">En attente</a>
-    <a href="/pixsoftpay/history/?status=confirme" class="pp-btn {% if status_filter == 'confirme' %}pp-btn-primary{% else %}pp-btn-outline{% endif %}" style="font-size:.8rem;padding:6px 14px">Payées</a>
-    <a href="/pixsoftpay/history/?status=refuse" class="pp-btn {% if status_filter == 'refuse' %}pp-btn-primary{% else %}pp-btn-outline{% endif %}" style="font-size:.8rem;padding:6px 14px">Refusées</a>
+<style>
+.pp-search-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
+.pp-search-bar input,.pp-search-bar select{padding:8px 12px;border-radius:8px;border:1px solid #1e1e3a;background:#0a0a1a;color:#fff;font-size:.85rem}
+.pp-search-bar input:focus,.pp-search-bar select:focus{outline:none;border-color:#6c63ff}
+.pp-filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.pp-summary-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.pp-summary-card{flex:1;min-width:100px;background:#0a0a1a;border:1px solid #1e1e3a;border-radius:10px;padding:12px;text-align:center}
+.pp-summary-card .val{font-size:1.1rem;font-weight:700}
+.pp-summary-card .lbl{font-size:.75rem;color:#888;margin-top:4px}
+</style>
+
+<h1 style="margin-bottom:20px">Historique des transactions</h1>
+
+<div class="pp-summary-row">
+  <div class="pp-summary-card">
+    <div class="val" style="color:#6c63ff">{{ total_tx }}</div>
+    <div class="lbl">Transactions</div>
+  </div>
+  <div class="pp-summary-card">
+    <div class="val" style="color:#00c853">+{{ total_in }} TND</div>
+    <div class="lbl">Entrées</div>
+  </div>
+  <div class="pp-summary-card">
+    <div class="val" style="color:#ff1744">-{{ total_out }} TND</div>
+    <div class="lbl">Sorties</div>
   </div>
 </div>
+
+<form method="get" style="margin-bottom:16px">
+  <div class="pp-search-bar">
+    <input type="text" name="q" placeholder="🔍 Référence..." value="{{ search }}">
+    <select name="status">
+      <option value="">Tous statuts</option>
+      <option value="en_attente" {% if status_filter == 'en_attente' %}selected{% endif %}>En attente</option>
+      <option value="confirme" {% if status_filter == 'confirme' %}selected{% endif %}>Confirmé</option>
+      <option value="refuse" {% if status_filter == 'refuse' %}selected{% endif %}>Refusé</option>
+      <option value="annule" {% if status_filter == 'annule' %}selected{% endif %}>Annulé</option>
+    </select>
+    <select name="type">
+      <option value="">Tous types</option>
+      <option value="depot" {% if type_filter == 'depot' %}selected{% endif %}>Dépôt</option>
+      <option value="retrait" {% if type_filter == 'retrait' %}selected{% endif %}>Retrait</option>
+      <option value="paiement" {% if type_filter == 'paiement' %}selected{% endif %}>Paiement</option>
+      <option value="remboursement" {% if type_filter == 'remboursement' %}selected{% endif %}>Remboursement</option>
+    </select>
+    <input type="date" name="from" value="{{ date_from }}" title="Date début">
+    <input type="date" name="to" value="{{ date_to }}" title="Date fin">
+    <button type="submit" class="pp-btn pp-btn-primary" style="padding:8px 16px;font-size:.85rem">Filtrer</button>
+    <a href="/pixsoftpay/history/" style="padding:8px 12px;font-size:.85rem;color:#888">Réinitialiser</a>
+  </div>
+</form>
 
 {% if transactions %}
 <div class="pp-card">
   <div class="pp-table-wrap">
     <table>
-      <thead><tr><th>Référence</th><th>Type</th><th>Montant</th><th>Client</th><th>Méthode</th><th>Statut</th><th>Date</th></tr></thead>
+      <thead><tr><th>Référence</th><th>Type</th><th>Montant</th><th>Solde après</th><th>Client</th><th>Méthode</th><th>Statut</th><th>Date</th></tr></thead>
       <tbody>
       {% for tx in transactions %}
       <tr>
-        <td style="font-family:monospace">{{ tx.reference }}</td>
+        <td style="font-family:monospace;font-size:.8rem">{{ tx.reference }}</td>
         <td>{{ tx.get_type_operation_display }}</td>
-        <td><strong>{{ tx.montant }} TND</strong></td>
+        <td>
+          {% if tx.type_operation == 'depot' or tx.type_operation == 'remboursement' %}
+            <strong style="color:#00c853">+{{ tx.montant }}</strong>
+          {% else %}
+            <strong style="color:#ff1744">-{{ tx.montant }}</strong>
+          {% endif %}
+        </td>
+        <td>{{ tx.solde_apres }} TND</td>
         <td>{{ tx.customer_name|default:"—" }}</td>
         <td>{{ tx.get_methode_display }}</td>
         <td><span class="pp-badge pp-badge-{{ tx.statut }}">{{ tx.get_statut_display }}</span></td>
-        <td>{{ tx.date_creation|date:"d/m/Y H:i" }}</td>
+        <td style="font-size:.8rem">{{ tx.date_creation|date:"d/m/Y H:i" }}</td>
       </tr>
       {% endfor %}
       </tbody>

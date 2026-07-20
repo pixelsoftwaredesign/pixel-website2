@@ -5,6 +5,7 @@ class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     entreprise = models.CharField(max_length=100, blank=True, null=True, verbose_name="Entreprise")
     telephone = models.CharField(max_length=20, blank=True, null=True, verbose_name="Téléphone")
+    photo = models.ImageField(upload_to='profiles/', blank=True, null=True, verbose_name="Photo de profil")
 
     class Meta:
         verbose_name = "Profil utilisateur"

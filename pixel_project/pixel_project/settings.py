@@ -140,3 +140,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # ─── MongoDB ──────────────────────────────────────────
 MONGODB_URI = os.getenv('MONGODB_URI', 'mongodb://localhost:27017/pixel_social')
 MONGODB_DB = os.getenv('MONGODB_DB', 'pixel_social')
+
+# ─── Auth ──────────────────────────────────────────────
+LOGIN_URL = '/login/'

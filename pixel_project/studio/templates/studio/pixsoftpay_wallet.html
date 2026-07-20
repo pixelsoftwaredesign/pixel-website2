@@ -1,15 +1,93 @@
 {% extends "studio/pixsoftpay_base.html" %}
 {% block content %}
-<h1 style="margin-bottom:24px">Mon Wallet</h1>
+<style>
+.pp-profile{text-align:center;margin-bottom:24px}
+.pp-avatar{width:80px;height:80px;border-radius:50%;background:#1e1e3a;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:2rem;color:#6c63ff;border:3px solid #6c63ff;overflow:hidden}
+.pp-avatar img{width:100%;height:100%;object-fit:cover}
+.pp-avatar-edit{position:relative;display:inline-block}
+.pp-avatar-edit input[type=file]{position:absolute;bottom:0;right:0;width:28px;height:28px;opacity:0;cursor:pointer}
+.pp-avatar-edit label{position:absolute;bottom:0;right:0;width:28px;height:28px;background:#6c63ff;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.8rem}
+.pp-bilan-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:20px}
+.pp-bilan-item{background:#0a0a1a;border:1px solid #1e1e3a;border-radius:10px;padding:14px;text-align:center}
+.pp-bilan-item .val{font-size:1.2rem;font-weight:700}
+.pp-bilan-item .lbl{font-size:.75rem;color:#888;margin-top:4px}
+.pp-month-tag{display:inline-block;padding:3px 10px;border-radius:12px;font-size:.7rem;background:rgba(108,99,255,.15);color:#6c63ff;margin-bottom:16px}
+.pp-tx-type-depot{color:#00c853}
+.pp-tx-type-retrait{color:#ff1744}
+.pp-tx-type-paiement{color:#ffab00}
+.pp-tx-type-remboursement{color:#6c63ff}
+</style>
 
-<div class="pp-card" style="text-align:center;max-width:400px;margin:0 auto 24px">
+<div class="pp-profile">
+  <div class="pp-avatar-edit">
+    <div class="pp-avatar" id="avatarBox">
+      {% if profile and profile.photo %}
+        <img src="{{ profile.photo.url }}" alt="Photo">
+      {% else %}
+        {{ request.user.username|first|upper }}
+      {% endif %}
+    </div>
+    <label title="Changer la photo">📷<input type="file" accept="image/*" onchange="uploadPhoto(this)"></label>
+  </div>
+  <h2 style="font-size:1.1rem">{{ request.user.username }}</h2>
+  {% if profile and profile.entreprise %}<p style="color:#888;font-size:.85rem">{{ profile.entreprise }}</p>{% endif %}
+  <p id="photoStatus" style="font-size:.8rem;margin-top:4px"></p>
+</div>
+
+<div class="pp-card" style="text-align:center">
   <p style="color:#888;font-size:.9rem;margin-bottom:8px">Solde disponible</p>
   <div style="font-size:2.8rem;font-weight:700;color:#6c63ff">{{ wallet.solde }} TND</div>
   <p style="color:#888;font-size:.8rem;margin-top:8px">Mis à jour: {{ wallet.updated_at|date:"d/m/Y H:i" }}</p>
 </div>
 
 <div class="pp-card">
-  <h2>Dernières transactions</h2>
+  <h2 style="margin-bottom:14px;font-size:1rem">📊 Bilan</h2>
+  <span class="pp-month-tag">Ce mois</span>
+  <div class="pp-bilan-grid">
+    <div class="pp-bilan-item">
+      <div class="val pp-tx-type-depot">+{{ bilan.month_depots }} TND</div>
+      <div class="lbl">Dépôts</div>
+    </div>
+    <div class="pp-bilan-item">
+      <div class="val pp-tx-type-paiement">-{{ bilan.month_paiements }} TND</div>
+      <div class="lbl">Paiements</div>
+    </div>
+    <div class="pp-bilan-item">
+      <div class="val" style="color:#6c63ff">{{ bilan.month_count }}</div>
+      <div class="lbl">Transactions</div>
+    </div>
+  </div>
+
+  <span class="pp-month-tag">Total</span>
+  <div class="pp-bilan-grid">
+    <div class="pp-bilan-item">
+      <div class="val pp-tx-type-depot">+{{ bilan.total_depots }} TND</div>
+      <div class="lbl">Dépôts</div>
+    </div>
+    <div class="pp-bilan-item">
+      <div class="val pp-tx-type-retrait">-{{ bilan.total_retraits }} TND</div>
+      <div class="lbl">Retraits</div>
+    </div>
+    <div class="pp-bilan-item">
+      <div class="val pp-tx-type-paiement">-{{ bilan.total_paiements }} TND</div>
+      <div class="lbl">Paiements</div>
+    </div>
+    <div class="pp-bilan-item">
+      <div class="val pp-tx-type-remboursement">+{{ bilan.total_remboursements }} TND</div>
+      <div class="lbl">Remboursements</div>
+    </div>
+    <div class="pp-bilan-item">
+      <div class="val" style="color:#6c63ff">{{ bilan.tx_count }}</div>
+      <div class="lbl">Total Tx</div>
+    </div>
+  </div>
+</div>
+
+<div class="pp-card">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <h2 style="font-size:1rem;margin:0">Historique</h2>
+    <a href="/pixsoftpay/history/" style="font-size:.85rem">Tout voir →</a>
+  </div>
   {% if transactions %}
   <div class="pp-table-wrap">
     <table>
@@ -17,18 +95,18 @@
       <tbody>
       {% for tx in transactions %}
       <tr>
-        <td style="font-family:monospace">{{ tx.reference }}</td>
+        <td style="font-family:monospace;font-size:.8rem">{{ tx.reference }}</td>
         <td>{{ tx.get_type_operation_display }}</td>
         <td>
           {% if tx.type_operation == 'depot' or tx.type_operation == 'remboursement' %}
-            <strong style="color:#00c853">+{{ tx.montant }}</strong>
+            <strong class="pp-tx-type-depot">+{{ tx.montant }}</strong>
           {% else %}
-            <strong style="color:#ff1744">-{{ tx.montant }}</strong>
+            <strong class="pp-tx-type-retrait">-{{ tx.montant }}</strong>
           {% endif %}
         </td>
         <td>{{ tx.solde_apres }} TND</td>
         <td><span class="pp-badge pp-badge-{{ tx.statut }}">{{ tx.get_statut_display }}</span></td>
-        <td>{{ tx.date_creation|date:"d/m/Y H:i" }}</td>
+        <td style="font-size:.8rem">{{ tx.date_creation|date:"d/m/Y H:i" }}</td>
       </tr>
       {% endfor %}
       </tbody>
@@ -38,4 +116,30 @@
   <div class="pp-empty">Aucune transaction</div>
   {% endif %}
 </div>
+
+<script>
+function uploadPhoto(input){
+  if(!input.files[0])return;
+  var fd=new FormData();
+  fd.append('photo',input.files[0]);
+  document.getElementById('photoStatus').textContent='Envoi...';
+  document.getElementById('photoStatus').style.color='#888';
+  fetch('/api/pixsoftpay/profile/photo/',{method:'POST',body:fd,credentials:'include'})
+  .then(function(r){return r.json()})
+  .then(function(d){
+    if(d.status==='success'){
+      document.getElementById('photoStatus').textContent='Photo mise à jour ✓';
+      document.getElementById('photoStatus').style.color='#00c853';
+      setTimeout(function(){location.reload()},800);
+    }else{
+      document.getElementById('photoStatus').textContent=d.error||'Erreur';
+      document.getElementById('photoStatus').style.color='#ff1744';
+    }
+  })
+  .catch(function(){
+    document.getElementById('photoStatus').textContent='Erreur réseau';
+    document.getElementById('photoStatus').style.color='#ff1744';
+  });
+}
+</script>
 {% endblock %}
