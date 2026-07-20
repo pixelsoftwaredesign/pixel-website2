@@ -28,9 +28,11 @@ CSRF_TRUSTED_ORIGINS = [
     'https://pxelsoftware-64fcd.web.app',
     'https://pixelsoftwaredesign.web.app',
     'https://pixel-website2-production.up.railway.app',
+    'http://pixel-website2-production.up.railway.app',
 ]
 if RAILWAY_PUBLIC_DOMAIN:
     CSRF_TRUSTED_ORIGINS.append(f'https://{RAILWAY_PUBLIC_DOMAIN}')
+    CSRF_TRUSTED_ORIGINS.append(f'http://{RAILWAY_PUBLIC_DOMAIN}')
     ALLOWED_HOSTS.append(RAILWAY_PUBLIC_DOMAIN)
 
 if not DEBUG:
