@@ -1,6 +1,8 @@
 import uuid
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
+from datetime import timedelta
 
 
 class ChainState(models.Model):
@@ -64,3 +66,128 @@ class MiningStats(models.Model):
     class Meta:
         verbose_name = "Stats Mining"
         verbose_name_plural = "Stats Mining"
+
+
+class Proposal(models.Model):
+    CATEGORY_CHOICES = [
+        ('feature', 'Fonctionnalité'),
+        ('fee', 'Frais'),
+        ('upgrade', 'Mise à jour'),
+        ('community', 'Communauté'),
+    ]
+    STATUS_CHOICES = [
+        ('active', 'En cours'),
+        ('passed', 'Adopté'),
+        ('rejected', 'Rejeté'),
+        ('expired', 'Expiré'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4)
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='proposals')
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='feature')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+    votes_for = models.DecimalField(max_digits=20, decimal_places=8, default=0)
+    votes_against = models.DecimalField(max_digits=20, decimal_places=8, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    ends_at = models.DateTimeField()
+    executed = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.title} [{self.status}]"
+
+
+class Vote(models.Model):
+    VOTE_CHOICES = [('for', 'Pour'), ('against', 'Contre')]
+    proposal = models.ForeignKey(Proposal, on_delete=models.CASCADE, related_name='votes')
+    voter = models.ForeignKey(User, on_delete=models.CASCADE, related_name='votes')
+    choice = models.CharField(max_length=10, choices=VOTE_CHOICES)
+    weight = models.DecimalField(max_digits=20, decimal_places=8)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('proposal', 'voter')
+
+
+class Stake(models.Model):
+    LOCK_CHOICES = [
+        (30, '30 jours'),
+        (90, '90 jours'),
+        (180, '6 mois'),
+        (365, '12 mois'),
+    ]
+    STATUS_CHOICES = [
+        ('active', 'Actif'),
+        ('completed', 'Terminé'),
+        ('cancelled', 'Annulé'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='stakes')
+    amount = models.DecimalField(max_digits=20, decimal_places=8)
+    apy = models.DecimalField(max_digits=5, decimal_places=2)
+    lock_days = models.IntegerField(choices=LOCK_CHOICES)
+    earned = models.DecimalField(max_digits=20, decimal_places=8, default=0)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='active')
+    staked_at = models.DateTimeField(auto_now_add=True)
+    unlocks_at = models.DateTimeField()
+    last_claim = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-staked_at']
+
+    def __str__(self):
+        return f"{self.user.username} staked {self.amount} PSX ({self.apy}%)"
+
+
+class RewardLog(models.Model):
+    REASON_CHOICES = [
+        ('referral', 'Parrainage'),
+        ('daily_login', 'Connexion quotidienne'),
+        ('first_tx', 'Première transaction'),
+        ('monthly_active', 'Utilisateur actif'),
+        ('milestone', 'Palier atteint'),
+        ('staking', 'Récompense staking'),
+        ('mining', 'Récompense minage'),
+        ('bonus', 'Bonus'),
+    ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reward_logs')
+    amount = models.DecimalField(max_digits=20, decimal_places=8)
+    reason = models.CharField(max_length=20, choices=REASON_CHOICES)
+    description = models.CharField(max_length=200, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+
+class PremiumAccess(models.Model):
+    PLAN_CHOICES = [
+        ('monthly', 'Mensuel'),
+        ('yearly', 'Annuel'),
+        ('lifetime', 'À vie'),
+    ]
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='premium')
+    plan = models.CharField(max_length=20, choices=PLAN_CHOICES)
+    activated_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    psx_paid = models.DecimalField(max_digits=20, decimal_places=8)
+
+    @property
+    def is_active(self):
+        return timezone.now() < self.expires_at
+
+    def __str__(self):
+        return f"{self.user.username} — Premium {self.plan} ({'actif' if self.is_active else 'expiré'})"
+
+
+class DailyLogin(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='daily_logins')
+    date = models.DateField()
+    bonus_claimed = models.BooleanField(default=False)
+
+    class Meta:
+        unique_together = ('user', 'date')

@@ -1,5 +1,8 @@
 from django.contrib import admin
-from .models import ChainState, CryptoWallet, CryptoTransaction, MiningStats
+from .models import (
+    CryptoWallet, CryptoTransaction, MiningStats,
+    Proposal, Vote, Stake, RewardLog, PremiumAccess, DailyLogin,
+)
 
 
 @admin.register(CryptoWallet)
@@ -20,6 +23,24 @@ class MiningStatsAdmin(admin.ModelAdmin):
     list_display = ('total_blocks', 'total_mined', 'difficulty', 'hashrate', 'last_block_time')
 
 
-@admin.register(ChainState)
-class ChainStateAdmin(admin.ModelAdmin):
-    list_display = ('updated_at',)
+@admin.register(Proposal)
+class ProposalAdmin(admin.ModelAdmin):
+    list_display = ('title', 'author', 'category', 'status', 'votes_for', 'votes_against', 'ends_at')
+    list_filter = ('status', 'category')
+
+
+@admin.register(Stake)
+class StakeAdmin(admin.ModelAdmin):
+    list_display = ('user', 'amount', 'apy', 'lock_days', 'status', 'unlocks_at')
+    list_filter = ('status', 'lock_days')
+
+
+@admin.register(RewardLog)
+class RewardLogAdmin(admin.ModelAdmin):
+    list_display = ('user', 'amount', 'reason', 'created_at')
+    list_filter = ('reason',)
+
+
+@admin.register(PremiumAccess)
+class PremiumAccessAdmin(admin.ModelAdmin):
+    list_display = ('user', 'plan', 'psx_paid', 'expires_at')

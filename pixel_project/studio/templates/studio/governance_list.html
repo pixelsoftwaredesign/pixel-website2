@@ -1,0 +1,70 @@
+{% extends "studio/pixsoftpay_base.html" %}
+{% block content %}
+<style>
+.gov-status{display:inline-block;padding:4px 14px;border-radius:20px;font-size:.75rem;font-weight:600}
+.gov-active{background:rgba(0,200,83,.12);color:#00c853}
+.gov-passed{background:rgba(108,99,255,.12);color:#6c63ff}
+.gov-rejected{background:rgba(255,23,68,.12);color:#ff1744}
+.gov-expired{background:rgba(136,136,136,.12);color:#888}
+.gov-votes{display:flex;gap:12px;margin:8px 0}
+.gov-votes .bar{flex:1;height:6px;background:#1e1e3a;border-radius:3px;overflow:hidden}
+.gov-votes .bar-for{background:#00c853}
+.gov-votes .bar-against{background:#ff1744}
+</style>
+
+<div class="pp-flex" style="margin-bottom:20px">
+  <h1>🏛️ Gouvernance</h1>
+  <button class="pp-btn pp-btn-primary" onclick="document.getElementById('newProposal').style.display='block'">+ Nouvelle proposition</button>
+</div>
+
+<div class="pp-card" id="newProposal" style="display:none;margin-bottom:20px">
+  <h2>Créer une proposition</h2>
+  <p style="color:#888;font-size:.85rem;margin-bottom:12px">Minimum {{ governance.min_to_propose }} PSX pour proposer</p>
+  <div class="pp-form-group"><label>Titre</label><input id="propTitle" placeholder="Ex: Ajouter le paiement SEPA"></div>
+  <div class="pp-form-group"><label>Description</label><textarea id="propDesc" rows="4" placeholder="Décrivez votre proposition..."></textarea></div>
+  <div class="pp-form-group"><label>Catégorie</label>
+    <select id="propCategory">
+      <option value="feature">Fonctionnalité</option>
+      <option value="fee">Frais</option>
+      <option value="upgrade">Mise à jour</option>
+      <option value="community">Communauté</option>
+    </select>
+  </div>
+  <button class="pp-btn pp-btn-primary" onclick="submitProposal()">Soumettre</button>
+  <p id="propResult" style="margin-top:8px;font-size:.85rem"></p>
+</div>
+
+{% for p in proposals %}
+<a href="/governance/{{ p.id }}/" style="text-decoration:none;color:inherit">
+<div class="pp-card" style="cursor:pointer;transition:border-color .2s">
+  <div class="pp-flex">
+    <div>
+      <span class="gov-status gov-{{ p.status }}">{{ p.get_status_display }}</span>
+      <span style="margin-left:8px;color:#888;font-size:.75rem">{{ p.get_category_display }}</span>
+    </div>
+    <span style="font-size:.75rem;color:#888">par {{ p.author.username }}</span>
+  </div>
+  <h2 style="font-size:1rem;margin:10px 0 6px">{{ p.title }}</h2>
+  <p style="color:#888;font-size:.85rem">{{ p.description|truncatechars:150 }}</p>
+  <div class="gov-votes">
+    <div><span style="color:#00c853;font-size:.8rem">Pour: {{ p.votes_for }} PSX</span><div class="bar"><div class="bar-for" style="width:{% widthratio p.votes_for p.votes_for|add:p.votes_against 100 %}%"></div></div></div>
+    <div><span style="color:#ff1744;font-size:.8rem">Contre: {{ p.votes_against }} PSX</span><div class="bar"><div class="bar-against" style="width:{% widthratio p.votes_against p.votes_for|add:p.votes_against 100 %}%"></div></div></div>
+  </div>
+</div>
+</a>
+{% empty %}
+<div class="pp-card pp-empty">Aucune proposition. Soyez le premier!</div>
+{% endfor %}
+
+<script>
+function submitProposal(){
+  fetch('/api/governance/propose/',{method:'POST',credentials:'include',headers:{'X-CSRFToken':getCookie('csrftoken'),'Content-Type':'application/json'},
+    body:JSON.stringify({title:document.getElementById('propTitle').value,description:document.getElementById('propDesc').value,category:document.getElementById('propCategory').value})
+  }).then(function(r){return r.json()}).then(function(d){
+    document.getElementById('propResult').innerHTML='<span style="color:'+(d.error?'#ff1744':'#00c853')+'">'+(d.error||d.status)+'</span>';
+    if(!d.error)setTimeout(function(){location.reload()},1000);
+  });
+}
+function getCookie(n){var v=document.cookie.match('(^|;)?'+n+'=([^;]*)(;|$)');return v?decodeURIComponent(v[2]):null}
+</script>
+{% endblock %}

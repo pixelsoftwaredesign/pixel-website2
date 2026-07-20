@@ -1,0 +1,167 @@
+{% extends "studio/pixsoftpay_base.html" %}
+{% block content %}
+<style>
+.tk-hero{text-align:center;padding:32px 20px;margin-bottom:24px;background:linear-gradient(135deg,rgba(108,99,255,.08),rgba(168,85,247,.08));border:1px solid rgba(108,99,255,.15);border-radius:24px}
+.tk-hero h1{font-size:2rem;margin-bottom:4px}
+.tk-hero .token-name{font-size:1rem;color:#a855f7;margin-bottom:16px}
+.tk-hero .supply{font-size:3rem;font-weight:700;background:linear-gradient(135deg,#6c63ff,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.tk-hero .supply-label{color:#888;font-size:.85rem}
+.tk-section{margin-bottom:24px}
+.tk-section h2{font-size:1.1rem;margin-bottom:14px;color:#a855f7}
+.tk-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+.tk-pill{background:rgba(18,18,42,.9);border:1px solid rgba(108,99,255,.1);border-radius:16px;padding:18px;text-align:center}
+.tk-pill .val{font-size:1.3rem;font-weight:700;color:#6c63ff}
+.tk-pill .lbl{font-size:.78rem;color:#888;margin-top:4px}
+.tk-bar{height:8px;background:#1e1e3a;border-radius:4px;overflow:hidden;margin:8px 0}
+.tk-bar-fill{height:100%;background:linear-gradient(90deg,#6c63ff,#a855f7);border-radius:4px;transition:width .5s}
+.tk-distrib{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.tk-distrib-item{display:flex;align-items:center;gap:8px;font-size:.85rem}
+.tk-distrib-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.tk-card-row{display:flex;gap:12px;flex-wrap:wrap}
+.tk-card-row .pp-card{flex:1;min-width:250px}
+</style>
+
+<div class="tk-hero">
+  <h1>Tokenomics PSX</h1>
+  <div class="token-name">PixSoftMoney Token — From Scratch</div>
+  <div class="supply">{{ circulating|floatformat:0 }} / {{ max_supply|floatformat:0 }}</div>
+  <div class="supply-label">PSX en circulation / Supply max</div>
+  <div class="tk-bar" style="max-width:400px;margin:12px auto">
+    {% widthratio circulating max_supply 100 as pct %}
+    <div class="tk-bar-fill" style="width:{{ pct }}%"></div>
+  </div>
+  <div style="display:flex;gap:24px;justify-content:center;margin-top:12px;flex-wrap:wrap">
+    <div><strong style="color:#6c63ff">{{ next_reward }}</strong> <span style="color:#888;font-size:.8rem">PSX/bloc</span></div>
+    <div><strong style="color:#a855f7">{{ halving_in }}</strong> <span style="color:#888;font-size:.8rem">blocs avant halving</span></div>
+    <div><strong style="color:#00c853">{{ total_staked|floatformat:0 }}</strong> <span style="color:#888;font-size:.8rem">PSX stakés</span></div>
+    <div><strong style="color:#ffab00">{{ total_users }}</strong> <span style="color:#888;font-size:.8rem">utilisateurs</span></div>
+  </div>
+</div>
+
+<div class="tk-section">
+  <h2>📊 Distribution</h2>
+  <div class="tk-grid">
+    <div class="tk-pill">
+      <div class="val" style="color:#6c63ff">5M</div>
+      <div class="lbl">Écosystème</div>
+      <div class="tk-bar"><div class="tk-bar-fill" style="width:23.8%"></div></div>
+    </div>
+    <div class="tk-pill">
+      <div class="val" style="color:#00c853">3M</div>
+      <div class="lbl">Récompenses</div>
+      <div class="tk-bar"><div class="tk-bar-fill" style="width:14.3%"></div></div>
+    </div>
+    <div class="tk-pill">
+      <div class="val" style="color:#ffab00">2M</div>
+      <div class="lbl">Liquidité</div>
+      <div class="tk-bar"><div class="tk-bar-fill" style="width:9.5%"></div></div>
+    </div>
+    <div class="tk-pill">
+      <div class="val" style="color:#a855f7">1M</div>
+      <div class="lbl">Équipe (vesting)</div>
+      <div class="tk-bar"><div class="tk-bar-fill" style="width:4.8%"></div></div>
+    </div>
+    <div class="tk-pill">
+      <div class="val" style="color:#ff1744">10M</div>
+      <div class="lbl">Réserve</div>
+      <div class="tk-bar"><div class="tk-bar-fill" style="width:47.6%"></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="tk-card-row">
+  <div class="pp-card">
+    <h2 style="font-size:1rem">🏛️ Gouvernance</h2>
+    <p style="color:#888;font-size:.85rem;margin-bottom:12px">Chaque PSX = 1 vote</p>
+    <div style="font-size:.85rem;line-height:2">
+      <div>Min pour proposer: <strong>{{ governance.min_to_propose }} PSX</strong></div>
+      <div>Durée du vote: <strong>{{ governance.voting_period_days }} jours</strong></div>
+      <div>Quorum: <strong>{{ governance.quorum_percent }}%</strong></div>
+      <div>Seuil: <strong>{{ governance.pass_threshold }}%</strong></div>
+      <div>Propositions actives: <strong style="color:#6c63ff">{{ active_proposals }}</strong></div>
+    </div>
+    <a href="/governance/"><button class="pp-btn pp-btn-outline" style="width:100%;margin-top:12px">Voir les propositions</button></a>
+  </div>
+
+  <div class="pp-card">
+    <h2 style="font-size:1rem">⛏️ Mining</h2>
+    <p style="color:#888;font-size:.85rem;margin-bottom:12px">Proof of Work from scratch</p>
+    <div style="font-size:.85rem;line-height:2">
+      <div>Blocs minés: <strong>{{ chain_length }}</strong></div>
+      <div>Récompense: <strong style="color:#6c63ff">{{ next_reward }} PSX</strong></div>
+      <div>Prochain halving: <strong>{{ halving_in }} blocs</strong></div>
+      <div>Difficulté: <strong>4 zéros</strong></div>
+    </div>
+    <a href="/blockchain/mining/"><button class="pp-btn pp-btn-primary" style="width:100%;margin-top:12px">Miner</button></a>
+  </div>
+</div>
+
+<div class="tk-card-row">
+  <div class="pp-card">
+    <h2 style="font-size:1rem">🔒 Staking</h2>
+    <p style="color:#888;font-size:.85rem;margin-bottom:12px">Gagnez des intérêts en lockant vos PSX</p>
+    <div style="font-size:.85rem;line-height:2">
+      <div>Min: <strong>{{ rewards.min_stake }} PSX</strong></div>
+      <div>30j: <strong style="color:#00c853">5% APY</strong></div>
+      <div>90j: <strong style="color:#00c853">7% APY</strong></div>
+      <div>180j: <strong style="color:#00c853">8.5% APY</strong></div>
+      <div>365j: <strong style="color:#6c63ff">10% APY</strong></div>
+    </div>
+    <a href="/staking/"><button class="pp-btn pp-btn-outline" style="width:100%;margin-top:12px">Staker</button></a>
+  </div>
+
+  <div class="pp-card">
+    <h2 style="font-size:1rem">🎁 Récompenses</h2>
+    <p style="color:#888;font-size:.85rem;margin-bottom:12px">Gagnez des PSX en utilisant PixSoftMoney</p>
+    <div style="font-size:.85rem;line-height:2">
+      <div>Connexion/jour: <strong style="color:#00c853">+{{ rewards.daily_login }} PSX</strong></div>
+      <div>Parrainage: <strong style="color:#00c853">+{{ rewards.referral_bonus }} PSX</strong></div>
+      <div>1ère tx: <strong style="color:#00c853">+{{ rewards.first_tx_bonus }} PSX</strong></div>
+      <div>Actif/mois: <strong style="color:#00c853">+{{ rewards.monthly_active }} PSX</strong></div>
+    </div>
+    {% if my_wallet %}
+    <button class="pp-btn pp-btn-success" style="width:100%;margin-top:12px" onclick="claimDaily()">Réclamer daily (+{{ rewards.daily_login }} PSX)</button>
+    {% endif %}
+  </div>
+</div>
+
+<div class="pp-card">
+  <h2 style="font-size:1rem">💳 Utilité du token</h2>
+  <div class="tk-grid" style="margin-top:12px">
+    <div class="tk-pill"><div class="val">{{ utility.premium_monthly }}</div><div class="lbl">PSX/mois Premium</div></div>
+    <div class="tk-pill"><div class="val">{{ utility.premium_yearly }}</div><div class="lbl">PSX/an Premium</div></div>
+    <div class="tk-pill"><div class="val">{{ utility.module_erp_starter }}</div><div class="lbl">Module Starter</div></div>
+    <div class="tk-pill"><div class="val">{{ utility.module_erp_pro }}</div><div class="lbl">Module Pro</div></div>
+    <div class="tk-pill"><div class="val">{{ utility.module_erp_enterprise }}</div><div class="lbl">Module Enterprise</div></div>
+    <div class="tk-pill"><div class="val">{{ utility.transfer_fee_percent }}%</div><div class="lbl">Frais transfert</div></div>
+  </div>
+  {% if my_wallet %}
+  <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
+    <button class="pp-btn pp-btn-primary" onclick="buyPremium('monthly')">Activer Premium ({{ utility.premium_monthly }} PSX)</button>
+    <button class="pp-btn pp-btn-outline" onclick="buyPremium('yearly')">Premium Annuel ({{ utility.premium_yearly }} PSX)</button>
+  </div>
+  {% endif %}
+</div>
+
+{% if my_premium and my_premium.is_active %}
+<div class="pp-card" style="border-color:rgba(108,99,255,.3)">
+  <h2 style="font-size:1rem;color:#6c63ff">⭐ Premium Actif</h2>
+  <p style="font-size:.85rem">Plan: {{ my_premium.plan }} | Expire: {{ my_premium.expires_at|date:"d/m/Y" }}</p>
+</div>
+{% endif %}
+
+<script>
+function claimDaily(){
+  fetch('/api/rewards/daily/',{method:'POST',credentials:'include',headers:{'X-CSRFToken':getCookie('csrftoken'),'Content-Type':'application/json'},body:JSON.stringify({})})
+  .then(function(r){return r.json()})
+  .then(function(d){alert(d.error||d.status);if(!d.error)setTimeout(function(){location.reload()},800);});
+}
+function buyPremium(plan){
+  if(!confirm('Acheter Premium '+plan+'?'))return;
+  fetch('/api/premium/buy/',{method:'POST',credentials:'include',headers:{'X-CSRFToken':getCookie('csrftoken'),'Content-Type':'application/json'},body:JSON.stringify({plan:plan})})
+  .then(function(r){return r.json()})
+  .then(function(d){alert(d.error||d.status);if(!d.error)setTimeout(function(){location.reload()},800);});
+}
+function getCookie(n){var v=document.cookie.match('(^|;)?'+n+'=([^;]*)(;|$)');return v?decodeURIComponent(v[2]):null}
+</script>
+{% endblock %}

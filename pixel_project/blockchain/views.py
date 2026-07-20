@@ -1,13 +1,23 @@
 import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
+from django.utils import timezone
+from datetime import timedelta
+from django.db.models import Sum, Count
 
 from .chain import get_blockchain, MINING_REWARD
 from .crypto import generate_wallet, sign_transaction, verify_signature
 from .p2p import get_node
-from .models import CryptoWallet, CryptoTransaction, MiningStats
+from .models import (
+    CryptoWallet, CryptoTransaction, MiningStats, ChainState,
+    Proposal, Vote, Stake, RewardLog, PremiumAccess, DailyLogin,
+)
+from .tokenomics import (
+    GOVERNANCE, UTILITY, REWARDS, MAX_SUPPLY, get_block_reward,
+    get_total_circulating, HALVING_INTERVAL,
+)
 
 
 def _save_chain():
@@ -303,3 +313,324 @@ def api_send_tnd_to_crypto(request):
         'psx_received': psx_amount,
         'psx_balance': chain.get_balance(cw.address),
     })
+
+
+# ─── TOKENOMICS ──────────────────────────────────────────────
+
+@login_required
+def tokenomics_dashboard(request):
+    chain = get_blockchain()
+    cw = CryptoWallet.objects.filter(user=request.user).first()
+    balance = chain.get_balance(cw.address) if cw else 0
+    circulating = get_total_circulating(chain.length)
+    total_staked = Stake.objects.filter(status='active').aggregate(t=Sum('amount'))['t'] or 0
+    active_proposals = Proposal.objects.filter(status='active').count()
+    total_users = CryptoWallet.objects.count()
+
+    user_stakes = Stake.objects.filter(user=request.user, status='active') if cw else []
+    user_proposals = Proposal.objects.filter(author=request.user)[:5] if cw else []
+    my_premium = PremiumAccess.objects.filter(user=request.user).first()
+
+    return render(request, 'studio/tokenomics_dashboard.html', {
+        'balance': balance,
+        'max_supply': MAX_SUPPLY,
+        'circulating': circulating,
+        'total_staked': total_staked,
+        'active_proposals': active_proposals,
+        'total_users': total_users,
+        'chain_length': chain.length,
+        'halving_in': HALVING_INTERVAL - (chain.length % HALVING_INTERVAL),
+        'next_reward': get_block_reward(chain.length),
+        'governance': GOVERNANCE,
+        'utility': UTILITY,
+        'rewards': REWARDS,
+        'user_stakes': user_stakes,
+        'user_proposals': user_proposals,
+        'my_premium': my_premium,
+        'my_wallet': cw,
+    })
+
+
+# ─── Governance ──────────────────────────────────────────────
+
+@login_required
+def governance_list(request):
+    proposals = Proposal.objects.all()[:50]
+    return render(request, 'studio/governance_list.html', {
+        'proposals': proposals, 'governance': GOVERNANCE,
+    })
+
+
+@login_required
+def governance_proposal(request, proposal_id):
+    proposal = Proposal.objects.get(id=proposal_id)
+    user_vote = Vote.objects.filter(proposal=proposal, voter=request.user).first()
+    cw = CryptoWallet.objects.filter(user=request.user).first()
+    return render(request, 'studio/governance_proposal.html', {
+        'proposal': proposal, 'user_vote': user_vote,
+        'balance': get_blockchain().get_balance(cw.address) if cw else 0,
+    })
+
+
+@csrf_exempt
+@login_required
+def api_governance_propose(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST requis'}, status=405)
+    cw = CryptoWallet.objects.filter(user=request.user).first()
+    if not cw:
+        return JsonResponse({'error': 'Wallet crypto requis'}, status=400)
+
+    balance = get_blockchain().get_balance(cw.address)
+    if balance < GOVERNANCE['min_to_propose']:
+        return JsonResponse({
+            'error': f'Il vous faut {GOVERNANCE["min_to_propose"]} PSX pour proposer (vous avez {balance})'
+        }, status=400)
+
+    try:
+        data = json.loads(request.body)
+    except (ValueError, TypeError):
+        return JsonResponse({'error': 'Données invalides'}, status=400)
+
+    title = data.get('title', '').strip()
+    description = data.get('description', '').strip()
+    category = data.get('category', 'feature')
+
+    if not title or not description:
+        return JsonResponse({'error': 'Titre et description requis'}, status=400)
+
+    proposal = Proposal.objects.create(
+        author=request.user,
+        title=title,
+        description=description,
+        category=category,
+        ends_at=timezone.now() + timedelta(days=GOVERNANCE['voting_period_days']),
+    )
+    return JsonResponse({
+        'status': 'Proposition créée',
+        'id': str(proposal.id),
+        'title': proposal.title,
+    })
+
+
+@csrf_exempt
+@login_required
+def api_governance_vote(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST requis'}, status=405)
+    cw = CryptoWallet.objects.filter(user=request.user).first()
+    if not cw:
+        return JsonResponse({'error': 'Wallet crypto requis'}, status=400)
+
+    balance = get_blockchain().get_balance(cw.address)
+    if balance <= 0:
+        return JsonResponse({'error': 'Solde insuffisant pour voter'}, status=400)
+
+    try:
+        data = json.loads(request.body)
+        proposal_id = data.get('proposal_id')
+        choice = data.get('choice')
+    except (ValueError, TypeError):
+        return JsonResponse({'error': 'Données invalides'}, status=400)
+
+    if choice not in ('for', 'against'):
+        return JsonResponse({'error': 'Vote invalide'}, status=400)
+
+    proposal = Proposal.objects.get(id=proposal_id)
+    if proposal.status != 'active':
+        return JsonResponse({'error': 'Proposition non active'}, status=400)
+    if proposal.ends_at < timezone.now():
+        proposal.status = 'expired'
+        proposal.save()
+        return JsonResponse({'error': 'Proposition expirée'}, status=400)
+
+    existing = Vote.objects.filter(proposal=proposal, voter=request.user).first()
+    if existing:
+        return JsonResponse({'error': 'Vous avez déjà voté'}, status=400)
+
+    Vote.objects.create(
+        proposal=proposal, voter=request.user, choice=choice, weight=balance,
+    )
+    if choice == 'for':
+        proposal.votes_for += balance
+    else:
+        proposal.votes_against += balance
+    proposal.save()
+
+    return JsonResponse({'status': 'Vote enregistré', 'choice': choice, 'weight': balance})
+
+
+# ─── Staking ─────────────────────────────────────────────────
+
+@login_required
+def staking_page(request):
+    cw = CryptoWallet.objects.filter(user=request.user).first()
+    balance = get_blockchain().get_balance(cw.address) if cw else 0
+    user_stakes = Stake.objects.filter(user=request.user, status='active')
+    total_staked_user = user_stakes.aggregate(t=Sum('amount'))['t'] or 0
+    total_staked_network = Stake.objects.filter(status='active').aggregate(t=Sum('amount'))['t'] or 0
+
+    return render(request, 'studio/staking_page.html', {
+        'balance': balance, 'user_stakes': user_stakes,
+        'total_staked_user': total_staked_user,
+        'total_staked_network': total_staked_network,
+        'rewards': REWARDS,
+    })
+
+
+@csrf_exempt
+@login_required
+def api_stake(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST requis'}, status=405)
+    cw = CryptoWallet.objects.filter(user=request.user).first()
+    if not cw:
+        return JsonResponse({'error': 'Wallet crypto requis'}, status=400)
+
+    chain = get_blockchain()
+    balance = chain.get_balance(cw.address)
+
+    try:
+        data = json.loads(request.body)
+        amount = float(data.get('amount', 0))
+        lock_days = int(data.get('lock_days', 30))
+    except (ValueError, TypeError):
+        return JsonResponse({'error': 'Données invalides'}, status=400)
+
+    if amount < REWARDS['min_stake']:
+        return JsonResponse({'error': f'Minimum {REWARDS["min_stake"]} PSX'}, status=400)
+    if balance < amount:
+        return JsonResponse({'error': 'Solde insuffisant'}, status=400)
+    if lock_days not in REWARDS['lock_periods']:
+        return JsonResponse({'error': 'Durée invalide'}, status=400)
+
+    apy = REWARDS['lock_periods'][lock_days]
+    unlocks_at = timezone.now() + timedelta(days=lock_days)
+
+    Stake.objects.create(
+        user=request.user, amount=amount, apy=apy,
+        lock_days=lock_days, unlocks_at=unlocks_at,
+    )
+
+    return JsonResponse({
+        'status': f'{amount} PSX stakés pour {lock_days} jours',
+        'apy': apy, 'unlocks_at': unlocks_at.isoformat(),
+    })
+
+
+@csrf_exempt
+@login_required
+def api_stake_claim(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST requis'}, status=405)
+    try:
+        data = json.loads(request.body)
+        stake_id = data.get('stake_id')
+    except (ValueError, TypeError):
+        return JsonResponse({'error': 'Données invalides'}, status=400)
+
+    stake = Stake.objects.get(id=stake_id, user=request.user)
+    if stake.status != 'active':
+        return JsonResponse({'error': 'Stake non actif'}, status=400)
+    if stake.unlocks_at > timezone.now():
+        remaining = (stake.unlocks_at - timezone.now()).days
+        return JsonResponse({'error': f'Verrouillé encore {remaining} jours'}, status=400)
+
+    chain = get_blockchain()
+    cw = CryptoWallet.objects.get(user=request.user)
+    total = float(stake.amount) + float(stake.earned)
+
+    stake.status = 'completed'
+    stake.save()
+
+    return JsonResponse({
+        'status': f'{total} PSX récupérés',
+        'principal': float(stake.amount),
+        'earned': float(stake.earned),
+    })
+
+
+# ─── Rewards ─────────────────────────────────────────────────
+
+@csrf_exempt
+@login_required
+def api_claim_daily(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST requis'}, status=405)
+    today = timezone.now().date()
+    login_obj, created = DailyLogin.objects.get_or_create(user=request.user, date=today)
+    if login_obj.bonus_claimed:
+        return JsonResponse({'error': 'Déjà réclamé aujourd\'hui'}, status=400)
+
+    login_obj.bonus_claimed = True
+    login_obj.save()
+
+    cw = CryptoWallet.objects.filter(user=request.user).first()
+    if cw:
+        chain = get_blockchain()
+        tx = {
+            'from': 'REWARD_SYSTEM', 'to': cw.address,
+            'amount': REWARDS['daily_login'],
+            'type': 'reward_daily_login', 'timestamp': __import__('time').time(),
+        }
+        chain.add_transaction(tx)
+        chain.mine_pending('SYSTEM')
+
+    RewardLog.objects.create(
+        user=request.user, amount=REWARDS['daily_login'],
+        reason='daily_login', description='Bonus connexion quotidienne',
+    )
+    return JsonResponse({'status': f'+{REWARDS["daily_login"]} PSX', 'bonus': REWARDS['daily_login']})
+
+
+# ─── Premium ─────────────────────────────────────────────────
+
+@csrf_exempt
+@login_required
+def api_buy_premium(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST requis'}, status=405)
+    cw = CryptoWallet.objects.filter(user=request.user).first()
+    if not cw:
+        return JsonResponse({'error': 'Wallet crypto requis'}, status=400)
+
+    try:
+        data = json.loads(request.body)
+        plan = data.get('plan', 'monthly')
+    except (ValueError, TypeError):
+        return JsonResponse({'error': 'Données invalides'}, status=400)
+
+    cost = UTILITY.get(f'premium_{plan}')
+    if not cost:
+        return JsonResponse({'error': 'Plan invalide'}, status=400)
+
+    chain = get_blockchain()
+    balance = chain.get_balance(cw.address)
+    if balance < cost:
+        return JsonResponse({'error': f'Il vous faut {cost} PSX (solde: {balance})'}, status=400)
+
+    if plan == 'monthly':
+        expires = timezone.now() + timedelta(days=30)
+    else:
+        expires = timezone.now() + timedelta(days=365)
+
+    existing = PremiumAccess.objects.filter(user=request.user).first()
+    if existing and existing.is_active:
+        existing.expires_at = existing.expires_at + (expires - timezone.now())
+        existing.psx_paid += cost
+        existing.save()
+    else:
+        PremiumAccess.objects.create(
+            user=request.user, plan=plan, expires_at=expires, psx_paid=cost,
+        )
+
+    tx = {
+        'from': cw.address, 'to': 'SYSTEM_PREMIUM',
+        'amount': cost, 'type': 'premium_payment',
+        'timestamp': __import__('time').time(),
+    }
+    chain.add_transaction(tx)
+    chain.mine_pending('SYSTEM')
+    _save_chain()
+
+    return JsonResponse({'status': f'Premium {plan} activé', 'cost': cost, 'expires': expires.isoformat()})

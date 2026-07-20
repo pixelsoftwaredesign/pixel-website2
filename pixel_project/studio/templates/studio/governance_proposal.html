@@ -1,0 +1,58 @@
+{% extends "studio/pixsoftpay_base.html" %}
+{% block content %}
+<div style="margin-bottom:16px"><a href="/governance/" style="font-size:.85rem">← Retour aux propositions</a></div>
+
+<div class="pp-card">
+  <div class="pp-flex" style="margin-bottom:16px">
+    <span class="gov-status gov-{{ proposal.status }}">{{ proposal.get_status_display }}</span>
+    <span style="color:#888;font-size:.8rem">{{ proposal.get_category_display }} • par {{ proposal.author.username }}</span>
+  </div>
+  <h1 style="font-size:1.3rem;margin-bottom:12px">{{ proposal.title }}</h1>
+  <p style="color:#aaa;font-size:.95rem;line-height:1.7">{{ proposal.description }}</p>
+</div>
+
+<div class="pp-card">
+  <h2 style="margin-bottom:14px">Résultats</h2>
+  {% with total=proposal.votes_for|add:proposal.votes_against %}
+  <div style="margin-bottom:16px">
+    <div style="display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:4px">
+      <span style="color:#00c853">Pour: {{ proposal.votes_for }} PSX</span>
+      <span style="color:#ff1744">Contre: {{ proposal.votes_against }} PSX</span>
+    </div>
+    <div style="height:12px;background:#1e1e3a;border-radius:6px;overflow:hidden;display:flex">
+      {% if total > 0 %}
+      <div style="width:{% widthratio proposal.votes_for total 100 %}%;background:#00c853"></div>
+      <div style="width:{% widthratio proposal.votes_against total 100 %}%;background:#ff1744"></div>
+      {% endif %}
+    </div>
+    <p style="color:#888;font-size:.75rem;margin-top:4px">{{ total }} PSX total votés</p>
+  </div>
+  {% endwith %}
+
+  {% if proposal.status == 'active' %}
+  {% if user_vote %}
+  <div class="pp-card" style="background:rgba(108,99,255,.05)">
+    <p style="font-size:.9rem">Vous avez voté: <strong style="color:{% if user_vote.choice == 'for' %}#00c853{% else %}#ff1744{% endif %}">{{ user_vote.get_choice_display }}</strong> (poids: {{ user_vote.weight }} PSX)</p>
+  </div>
+  {% else %}
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button class="pp-btn pp-btn-success" onclick="vote('for')">👍 Pour ({{ balance }} PSX)</button>
+    <button class="pp-btn pp-btn-danger" onclick="vote('against')">👎 Contre ({{ balance }} PSX)</button>
+  </div>
+  <p id="voteResult" style="margin-top:8px;font-size:.85rem"></p>
+  {% endif %}
+  {% endif %}
+</div>
+
+<script>
+function vote(choice){
+  fetch('/api/governance/vote/',{method:'POST',credentials:'include',headers:{'X-CSRFToken':getCookie('csrftoken'),'Content-Type':'application/json'},
+    body:JSON.stringify({proposal_id:'{{ proposal.id }}',choice:choice})
+  }).then(function(r){return r.json()}).then(function(d){
+    document.getElementById('voteResult').innerHTML='<span style="color:'+(d.error?'#ff1744':'#00c853')+'">'+(d.error||d.status)+'</span>';
+    if(!d.error)setTimeout(function(){location.reload()},1000);
+  });
+}
+function getCookie(n){var v=document.cookie.match('(^|;)?'+n+'=([^;]*)(;|$)');return v?decodeURIComponent(v[2]):null}
+</script>
+{% endblock %}
