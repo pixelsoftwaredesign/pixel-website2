@@ -11,6 +11,9 @@ from typing import List, Optional
 from collections import defaultdict
 
 from .crypto import hash_block, merkle_root, verify_signature
+from .security import (
+    time_guard, circuit_breaker, fraud_detector, sybil_guard,
+)
 
 
 DIFFICULTY = 4
@@ -93,7 +96,12 @@ class Blockchain:
             if not tx.get('from') or not tx.get('to') or not tx.get('amount'):
                 return 'Transaction incomplète'
 
-            if tx['from'] not in ('COINBASE', 'SYSTEM', 'BRIDGE_TND', 'REWARD_SYSTEM', 'SYSTEM_PREMIUM'):
+            sender = tx['from']
+
+            if circuit_breaker.is_tripped(sender):
+                return 'Circuit breaker actif — trop d\'échecs récents'
+
+            if sender not in ('COINBASE', 'SYSTEM', 'BRIDGE_TND', 'REWARD_SYSTEM', 'SYSTEM_PREMIUM'):
                 if not tx.get('signature') or not tx.get('public_key'):
                     return 'Signature requise'
 
@@ -106,9 +114,17 @@ class Blockchain:
                     nonce=tx.get('nonce', 0),
                     timestamp=tx.get('timestamp', 0),
                 ):
+                    circuit_breaker.record_failure(sender)
                     return 'Signature invalide — message modifié'
 
-                sender_balance = self.get_balance(tx['from'])
+                ok, fraud_msg = fraud_detector.scan_transaction({
+                    **tx, '_balance': self.get_balance(sender),
+                })
+                if not ok:
+                    circuit_breaker.record_failure(sender)
+                    return f'Fraude détectée: {fraud_msg}'
+
+                sender_balance = self.get_balance(sender)
                 total_needed = tx['amount'] + tx.get('fee', 0)
                 if sender_balance < total_needed:
                     return f'Solde insuffisant ({sender_balance} < {total_needed})'
@@ -124,12 +140,17 @@ class Blockchain:
             if not self.pending_transactions:
                 return None
 
+            if not sybil_guard.is_valid_validator(miner_address):
+                sender_stake = self.get_balance(miner_address)
+                if sender_stake < 1000:
+                    return None
+
             coinbase = {
                 'type': 'coinbase',
                 'from': 'COINBASE',
                 'to': miner_address,
                 'amount': MINING_REWARD,
-                'timestamp': time.time(),
+                'timestamp': time_guard.get_consensus_time(),
             }
 
             txs = [coinbase] + self.pending_transactions[:BLOCK_MAX_TX]
@@ -190,6 +211,10 @@ class Blockchain:
                 return False, f'previous_hash cassé au bloc {i}'
             if not current.hash.startswith('0' * DIFFICULTY):
                 return False, f'Preuve de travail invalide au bloc {i}'
+
+            ok, ts_err = time_guard.validate_block_timestamp(current.timestamp)
+            if not ok:
+                return False, f'Timejacking détecté bloc {i}: {ts_err}'
 
         balances = self.get_all_balances()
         for addr, bal in balances.items():

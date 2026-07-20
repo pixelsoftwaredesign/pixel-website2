@@ -30,4 +30,11 @@ urlpatterns = [
     path('api/staking/claim/', views.api_stake_claim, name='api_stake_claim'),
     path('api/rewards/daily/', views.api_claim_daily, name='api_claim_daily'),
     path('api/premium/buy/', views.api_buy_premium, name='api_buy_premium'),
+
+    path('security/', views.security_dashboard, name='security_dashboard'),
+    path('api/security/status/', views.api_security_status, name='api_security_status'),
+    path('api/security/validate/', views.api_become_validator, name='api_become_validator'),
+    path('api/security/fraud/', views.api_fraud_alerts, name='api_fraud_alerts'),
+    path('api/multisig/create/', views.api_multisig_create, name='api_multisig_create'),
+    path('api/multisig/propose/', views.api_multisig_propose, name='api_multisig_propose'),
 ]

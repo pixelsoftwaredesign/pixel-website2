@@ -83,6 +83,7 @@ tr:hover{background:rgba(108,99,255,.04)}
     <a href="/tokenomics/" class="{% if 'tokenomics' in request.path %}active{% endif %}">📊 Token</a>
     <a href="/governance/" class="{% if 'governance' in request.path %}active{% endif %}">🏛️ Vote</a>
     <a href="/staking/" class="{% if 'staking' in request.path %}active{% endif %}">🔒 Stake</a>
+    <a href="/security/" class="{% if 'security' in request.path %}active{% endif %}">🛡️</a>
     <a href="/pixsoftpay/create/" class="{% if request.resolver_match.url_name == 'pixsoftpay_create' %}active{% endif %}">Nouveau QR</a>
     <a href="/pixsoftpay/wallet/" class="{% if request.resolver_match.url_name == 'pixsoftpay_wallet' %}active{% endif %}">Wallet</a>
     <a href="/pixsoftpay/history/" class="{% if request.resolver_match.url_name == 'pixsoftpay_history' %}active{% endif %}">Historique</a>

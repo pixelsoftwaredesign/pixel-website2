@@ -1,0 +1,122 @@
+{% extends "studio/pixsoftpay_base.html" %}
+{% block content %}
+<style>
+.sec-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:20px}
+.sec-card{background:rgba(18,18,42,.9);border:1px solid rgba(108,99,255,.1);border-radius:16px;padding:18px}
+.sec-card h3{font-size:.9rem;margin-bottom:10px;color:#a855f7}
+.sec-item{display:flex;justify-content:space-between;font-size:.82rem;padding:6px 0;border-bottom:1px solid rgba(108,99,255,.05)}
+.sec-ok{color:#00c853}.sec-warn{color:#ffab00}.sec-err{color:#ff1744}
+.sec-bar{height:6px;background:#1e1e3a;border-radius:3px;overflow:hidden;margin-top:6px}
+.sec-bar-fill{height:100%;border-radius:3px}
+.alert-item{background:rgba(255,23,68,.05);border:1px solid rgba(255,23,68,.1);border-radius:10px;padding:10px;margin-bottom:8px;font-size:.82rem}
+.alert-type{color:#ff1744;font-weight:600}
+</style>
+
+<h1 style="margin-bottom:20px">🛡️ Sécurité du Protocole</h1>
+
+<div class="sec-grid">
+  <div class="sec-card">
+    <h3>🔒 Anti-Sybil</h3>
+    <div class="sec-item"><span>Min stake validateur</span><strong>{{ min_stake_validator }} PSX</strong></div>
+    <div class="sec-item"><span>Validateurs actifs</span><strong class="sec-ok">{{ validators|length }}</strong></div>
+    {% for addr, stake in validators.items %}
+    <div class="sec-item"><span style="font-family:monospace;font-size:.7rem">{{ addr|truncatechars:20 }}</span><strong>{{ stake|floatformat:0 }} PSX</strong></div>
+    {% endfor %}
+    <button class="pp-btn pp-btn-primary" style="width:100%;margin-top:12px" onclick="becomeValidator()">Devenir validateur</button>
+    <p id="valResult" style="margin-top:6px;font-size:.8rem"></p>
+  </div>
+
+  <div class="sec-card">
+    <h3>🌐 Anti-Eclipse</h3>
+    <div class="sec-item"><span>Peers actifs</span><strong class="sec-ok">{{ peer_stats.active }}</strong></div>
+    <div class="sec-item"><span>Peers bannis</span><strong class="sec-err">{{ peer_stats.banned }}</strong></div>
+    <div class="sec-item"><span>Score moyen</span><strong>{{ peer_stats.avg_score|floatformat:1 }}</strong></div>
+    <div class="sec-bar"><div class="sec-bar-fill" style="width:{{ peer_stats.active }}%;background:#00c853"></div></div>
+  </div>
+
+  <div class="sec-card">
+    <h3>⏰ Anti-Timejacking</h3>
+    <div class="sec-item"><span>Temps local</span><strong>{{ node_status.consensus_time|floatformat:0 }}</strong></div>
+    <div class="sec-item"><span>Consensus réseau</span><strong class="sec-ok">{{ node_status.consensus_time|floatformat:0 }}</strong></div>
+    <div class="sec-item"><span>Drift max</span><strong>7200s</strong></div>
+  </div>
+
+  <div class="sec-card">
+    <h3>⚡ Circuit Breaker</h3>
+    <div class="sec-item"><span>Seuil d'échecs</span><strong>100/min</strong></div>
+    <div class="sec-item"><span>Cool-down</span><strong>5 min</strong></div>
+    <div class="sec-item"><span>Adresses bloquées</span><strong class="sec-warn" id="cbCount">0</strong></div>
+  </div>
+</div>
+
+<div class="sec-grid">
+  <div class="sec-card">
+    <h3>🔍 Fraud Detection</h3>
+    <div class="sec-item"><span>Limite tx/min</span><strong>10</strong></div>
+    <div class="sec-item"><span>Seuil large tx</span><strong>50,000 PSX</strong></div>
+    <div class="sec-item"><span>Alertes totales</span><strong class="sec-warn">{{ fraud_alerts|length }}</strong></div>
+  </div>
+
+  <div class="sec-card">
+    <h3>🔐 Multi-Signature</h3>
+    <p style="color:#888;font-size:.82rem;margin-bottom:12px">Transactions critiques nécessitant M signatures parmi N</p>
+    <button class="pp-btn pp-btn-outline" onclick="document.getElementById('msigSection').style.display='block'">Créer wallet MultiSig</button>
+    <div id="msigSection" style="display:none;margin-top:12px">
+      <div class="pp-form-group"><label>Owners (adresses, virgule)</label><input id="msigOwners" placeholder="addr1,addr2"></div>
+      <div class="pp-form-group"><label>Signatures requises</label><input id="msigRequired" type="number" value="2" min="1"></div>
+      <button class="pp-btn pp-btn-primary" onclick="createMultisig()">Créer</button>
+      <p id="msigResult" style="margin-top:6px;font-size:.8rem"></p>
+    </div>
+  </div>
+</div>
+
+{% if fraud_alerts %}
+<div class="pp-card">
+  <h2 style="margin-bottom:14px">🚨 Alertes récentes</h2>
+  {% for alert in fraud_alerts %}
+  <div class="alert-item">
+    <span class="alert-type">{{ alert.type }}</span>
+    <span style="margin-left:8px;color:#888">{{ alert.address|truncatechars:20 }}</span>
+    <span style="margin-left:8px">{{ alert.detail }}</span>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="pp-card">
+  <h2 style="margin-bottom:14px">Architecture de sécurité</h2>
+  <div style="font-size:.85rem;color:#aaa;line-height:2">
+    <div>✓ <strong>Atomicité</strong> — transaction.atomic sur tous les endpoints</div>
+    <div>✓ <strong>Immuabilité</strong> — SHA256(sender|receiver|amount|nonce|timestamp)</div>
+    <div>✓ <strong>Nonce anti-replay</strong> — compteur incrémental par wallet</div>
+    <div>✓ <strong>Sybil Guard</strong> — 1000 PSX min pour valider</div>
+    <div>✓ <strong>Eclipse Guard</strong> — peer scoring + bannissement</div>
+    <div>✓ <strong>Timejacking Guard</strong> — médiane des pairs fiables</div>
+    <div>✓ <strong>Circuit Breaker</strong> — pause après 100 échecs</div>
+    <div>✓ <strong>Fraud Detection</strong> — scan temps réel + alertes</div>
+    <div>✓ <strong>Multi-Signature</strong> — M-of N pour tx critiques</div>
+    <div>✓ <strong>Checks-Effects-Interactions</strong> — anti re-entrancy</div>
+  </div>
+</div>
+
+<script>
+function becomeValidator(){
+  fetch('/api/security/validate/',{method:'POST',credentials:'include',headers:{'X-CSRFToken':getCookie('csrftoken'),'Content-Type':'application/json'},body:JSON.stringify({})})
+  .then(function(r){return r.json()})
+  .then(function(d){
+    document.getElementById('valResult').innerHTML='<span style="color:'+(d.error?'#ff1744':'#00c853')+'">'+(d.error||d.status)+'</span>';
+    if(!d.error)setTimeout(function(){location.reload()},1000);
+  });
+}
+function createMultisig(){
+  var owners=document.getElementById('msigOwners').value.split(',').map(function(s){return s.trim()});
+  var req=parseInt(document.getElementById('msigRequired').value);
+  fetch('/api/multisig/create/',{method:'POST',credentials:'include',headers:{'X-CSRFToken':getCookie('csrftoken'),'Content-Type':'application/json'},body:JSON.stringify({owners:owners,required:req})})
+  .then(function(r){return r.json()})
+  .then(function(d){
+    document.getElementById('msigResult').innerHTML='<span style="color:'+(d.error?'#ff1744':'#00c853')+'">'+(d.error||d.status+' — '+d.address)+'</span>';
+  });
+}
+function getCookie(n){var v=document.cookie.match('(^|;)?'+n+'=([^;]*)(;|$)');return v?decodeURIComponent(v[2]):null}
+</script>
+{% endblock %}

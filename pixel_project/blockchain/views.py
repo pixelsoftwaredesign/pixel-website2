@@ -15,6 +15,10 @@ from .models import (
     CryptoWallet, CryptoTransaction, MiningStats, ChainState,
     Proposal, Vote, Stake, RewardLog, PremiumAccess, DailyLogin,
 )
+from .security import (
+    sybil_guard, eclipse_guard, time_guard, circuit_breaker,
+    fraud_detector, multisig_manager, MIN_STAKE_TO_VALIDATE,
+)
 from .tokenomics import (
     GOVERNANCE, UTILITY, REWARDS, MAX_SUPPLY, get_block_reward,
     get_total_circulating, HALVING_INTERVAL,
@@ -669,3 +673,133 @@ def api_buy_premium(request):
     _save_chain()
 
     return JsonResponse({'status': f'Premium {plan} activé', 'cost': cost, 'expires': expires.isoformat()})
+
+
+# ─── SECURITY ────────────────────────────────────────────────
+
+@login_required
+def security_dashboard(request):
+    chain = get_blockchain()
+    cw = CryptoWallet.objects.filter(user=request.user).first()
+    validators = sybil_guard.get_validators()
+    peer_stats = eclipse_guard.get_peer_stats()
+    node_status = get_node().get_status()
+    fraud_alerts = fraud_detector.get_alerts(20)
+
+    return render(request, 'studio/security_dashboard.html', {
+        'chain': chain,
+        'my_wallet': cw,
+        'validators': validators,
+        'peer_stats': peer_stats,
+        'node_status': node_status,
+        'fraud_alerts': fraud_alerts,
+        'min_stake_validator': MIN_STAKE_TO_VALIDATE,
+    })
+
+
+@csrf_exempt
+def api_security_status(request):
+    chain = get_blockchain()
+    return JsonResponse({
+        'chain': {
+            'length': chain.length,
+            'pending': len(chain.pending_transactions),
+            'valid': chain.validate_chain()[0],
+        },
+        'sybil': {
+            'validators': sybil_guard.get_validators(),
+        },
+        'eclipse': eclipse_guard.get_peer_stats(),
+        'time': {
+            'consensus': time_guard.get_consensus_time(),
+            'local': __import__('time').time(),
+        },
+        'circuit_breaker': {
+            'tripped_addresses': len(circuit_breaker.tripped),
+        },
+        'fraud': {
+            'alerts_count': len(fraud_detector.alerts),
+            'recent': fraud_detector.get_alerts(10),
+        },
+    })
+
+
+@csrf_exempt
+@login_required
+def api_become_validator(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST requis'}, status=405)
+    cw = CryptoWallet.objects.select_for_update().filter(user=request.user).first()
+    if not cw:
+        return JsonResponse({'error': 'Wallet crypto requis'}, status=400)
+
+    chain = get_blockchain()
+    balance = chain.get_balance(cw.address)
+    if balance < MIN_STAKE_TO_VALIDATE:
+        return JsonResponse({
+            'error': f'Il faut {MIN_STAKE_TO_VALIDATE} PSX (vous avez {balance})',
+        }, status=400)
+
+    ok = sybil_guard.register_validator(cw.address, balance)
+    if ok:
+        return JsonResponse({
+            'status': 'Validateur activé',
+            'address': cw.address,
+            'stake': balance,
+        })
+    return JsonResponse({'error': 'Échec'}, status=500)
+
+
+@csrf_exempt
+def api_fraud_alerts(request):
+    alerts = fraud_detector.get_alerts(50)
+    return JsonResponse({'alerts': alerts, 'count': len(alerts)})
+
+
+@csrf_exempt
+@login_required
+def api_multisig_create(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST requis'}, status=405)
+    try:
+        data = json.loads(request.body)
+        owners = data.get('owners', [])
+        required = int(data.get('required', 2))
+    except (ValueError, TypeError):
+        return JsonResponse({'error': 'Données invalides'}, status=400)
+
+    cw = CryptoWallet.objects.filter(user=request.user).first()
+    if not cw:
+        return JsonResponse({'error': 'Wallet requis'}, status=400)
+
+    if cw.address not in owners:
+        owners.append(cw.address)
+
+    addr = f'MSIG-{cw.address[:16]}'
+    ok = multisig_manager.create_multisig(addr, owners, required)
+    if ok:
+        return JsonResponse({
+            'status': 'MultiSig créé',
+            'address': addr,
+            'owners': owners,
+            'required': required,
+        })
+    return JsonResponse({'error': 'Paramètres invalides'}, status=400)
+
+
+@csrf_exempt
+@login_required
+def api_multisig_propose(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST requis'}, status=405)
+    try:
+        data = json.loads(request.body)
+        multisig_addr = data.get('wallet')
+        tx_data = data.get('tx', {})
+    except (ValueError, TypeError):
+        return JsonResponse({'error': 'Données invalides'}, status=400)
+
+    tx_hash = multisig_manager.propose_tx(multisig_addr, tx_data)
+    if tx_hash:
+        return JsonResponse({'status': 'Transaction proposée', 'hash': tx_hash})
+    return JsonResponse({'error': 'Wallet introuvable'}, status=400)
