@@ -896,7 +896,8 @@ def recover_address(message: str, signature_hex: str) -> str:
     """
     import hashlib
     import struct
-    from ecdsa import SECP256k1, N
+    from ecdsa import SECP256k1
+    N = SECP256k1.order
 
     # ── Keccak-256 (Ethereum's hash, NOT SHA3-256) ──
     def keccak256(data: bytes) -> bytes:
