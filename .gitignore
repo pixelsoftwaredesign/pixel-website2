@@ -5,5 +5,9 @@ __pycache__/
 *.log
 --help
 .env
+.env.*
+cloudflare/.env
 venv/
 .venv/
+node_modules/
+.wrangler/
