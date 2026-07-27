@@ -1,0 +1,13 @@
+name = "pixelsoftwaredesign"
+compatibility_date = "2024-09-25"
+
+[vars]
+RAILWAY_BACKEND = "https://pixel-website2-production.up.railway.app"
+
+[[routes]]
+pattern = "pixelsoftwaredesign.xyz/*"
+zone_name = "pixelsoftwaredesign.xyz"
+
+[[routes]]
+pattern = "www.pixelsoftwaredesign.xyz/*"
+zone_name = "pixelsoftwaredesign.xyz"
