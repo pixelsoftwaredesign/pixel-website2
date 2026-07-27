@@ -2393,7 +2393,7 @@ def pixsoftpay_history(request):
     search = request.GET.get('q', '').strip()
     date_from = request.GET.get('from', '')
     date_to = request.GET.get('to', '')
-    txs = Transaction.objects.filter(user=request.user).order_by('-date_creation')
+    txs = Transaction.objects.filter(wallet__user=request.user).order_by('-date_creation')
 
     if status_filter:
         txs = txs.filter(statut=status_filter)
