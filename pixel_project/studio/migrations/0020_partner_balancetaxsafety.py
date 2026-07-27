@@ -3,6 +3,7 @@ from django.contrib.auth.hashers import make_password
 
 
 def create_partner(apps, schema_editor):
+    import secrets
     User = apps.get_model('auth', 'User')
     Wallet = apps.get_model('studio', 'Wallet')
 
@@ -19,7 +20,15 @@ def create_partner(apps, schema_editor):
         user.password = make_password('BalanceTax2023@')
         user.save()
 
-    wallet, _ = Wallet.objects.get_or_create(user=user)
+    try:
+        wallet, _ = Wallet.objects.get_or_create(user=user)
+    except Exception:
+        for _ in range(10):
+            code = secrets.token_hex(4).upper()
+            if not Wallet.objects.filter(referral_code=code).exists():
+                wallet = Wallet(user=user, referral_code=code)
+                wallet.save()
+                break
     wallet.solde = 100000.00
     wallet.save()
 
