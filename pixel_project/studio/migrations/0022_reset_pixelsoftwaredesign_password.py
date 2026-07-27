@@ -2,8 +2,10 @@ from django.db import migrations
 from django.contrib.auth.hashers import make_password
 
 
-def reset_password(apps, schema_editor):
+def reset_passwords(apps, schema_editor):
     User = apps.get_model('auth', 'User')
+
+    # Reset pixelsoftwaredesign
     try:
         user = User.objects.get(username='pixelsoftwaredesign')
         user.password = make_password('PixelSoft2024!')
@@ -20,6 +22,14 @@ def reset_password(apps, schema_editor):
             password=make_password('PixelSoft2024!'),
         )
 
+    # Reset balancetaxsafety
+    try:
+        user = User.objects.get(username='balancetaxsafety')
+        user.password = make_password('pixelsoftwaredesign')
+        user.save()
+    except User.DoesNotExist:
+        pass
+
 
 class Migration(migrations.Migration):
 
@@ -28,5 +38,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RunPython(reset_password, migrations.RunPython.noop),
+        migrations.RunPython(reset_passwords, migrations.RunPython.noop),
     ]
