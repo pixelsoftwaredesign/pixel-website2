@@ -10,10 +10,20 @@
   <div class="pp-stat"><div class="val">{{ revenue|floatformat:2 }}</div><div class="lbl">Revenu (TND)</div></div>
 </div>
 
+<div class="pp-card" style="margin-bottom:18px">
+  <h2 style="margin:0 0 16px">Scanner un QR Code</h2>
+  <p style="color:#888;font-size:.85rem;margin-bottom:16px">Ouvrez votre caméra pour scanner un QR code PixSoftPay et payer directement.</p>
+  <button class="pp-btn pp-btn-primary" onclick="startQRScanner()">📷 Ouvrir la caméra</button>
+  <div id="qr-reader" style="display:none;margin-top:16px;border-radius:12px;overflow:hidden;border:1px solid rgba(108,99,255,.3)"></div>
+  <div id="qr-result" style="display:none;margin-top:12px;padding:12px;border-radius:8px;font-size:.9rem"></div>
+</div>
+
 <div class="pp-card">
   <div class="pp-flex" style="margin-bottom:18px">
     <h2 style="margin:0">Transactions récentes</h2>
-    <a href="/pixsoftpay/create/"><button class="pp-btn pp-btn-primary">+ Nouveau QR</button></a>
+    <div style="display:flex;gap:8px">
+      <a href="/pixsoftpay/create/"><button class="pp-btn pp-btn-primary">+ Nouveau QR</button></a>
+    </div>
   </div>
   {% if recent %}
   <div class="pp-table-wrap">
@@ -37,4 +47,61 @@
   <div class="pp-empty">Aucune transaction pour le moment</div>
   {% endif %}
 </div>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+let qrScanner = null;
+function startQRScanner() {
+  const reader = document.getElementById('qr-reader');
+  const result = document.getElementById('qr-result');
+  if (reader.style.display === 'block') {
+    if (qrScanner) { qrScanner.stop().then(() => qrScanner.clear()); }
+    reader.style.display = 'none';
+    result.style.display = 'none';
+    return;
+  }
+  reader.style.display = 'block';
+  result.style.display = 'none';
+  qrScanner = new Html5Qrcode('qr-reader');
+  qrScanner.start(
+    { facingMode: 'environment' },
+    { fps: 10, qrbox: { width: 250, height: 250 } },
+    function(decodedText) {
+      if (qrScanner) { qrScanner.stop().then(() => qrScanner.clear()); }
+      reader.style.display = 'none';
+      if (decodedText.includes('/pixsoftpay/pay/')) {
+        result.style.display = 'block';
+        result.style.background = 'rgba(0,200,83,.12)';
+        result.style.border = '1px solid rgba(0,200,83,.3)';
+        result.style.color = '#00c853';
+        result.innerHTML = '✅ QR Code reconnu — Redirection...';
+        setTimeout(function() { window.location.href = decodedText; }, 800);
+      } else if (decodedText.includes('PIXSOFTPAY|')) {
+        var parts = decodedText.split('|');
+        var payUrl = parts[3] || '';
+        result.style.display = 'block';
+        result.style.background = 'rgba(0,200,83,.12)';
+        result.style.border = '1px solid rgba(0,200,83,.3)';
+        result.style.color = '#00c853';
+        result.innerHTML = '✅ QR Code reconnu — Redirection...';
+        setTimeout(function() { window.location.href = payUrl; }, 800);
+      } else {
+        result.style.display = 'block';
+        result.style.background = 'rgba(255,23,68,.12)';
+        result.style.border = '1px solid rgba(255,23,68,.3)';
+        result.style.color = '#ff1744';
+        result.innerHTML = '❌ QR Code non reconnu: ' + decodedText.substring(0, 80);
+      }
+    },
+    function() {}
+  ).catch(function() {
+    result.style.display = 'block';
+    result.style.background = 'rgba(255,23,68,.12)';
+    result.style.border = '1px solid rgba(255,23,68,.3)';
+    result.style.color = '#ff1744';
+    result.innerHTML = '❌ Impossible d\'accéder à la caméra. Autorisez l\'accès et réessayez.';
+    reader.style.display = 'none';
+  });
+}
+</script>
 {% endblock %}
