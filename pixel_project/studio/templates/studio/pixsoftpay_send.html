@@ -52,9 +52,17 @@ function sendMoney(){
 
   fetch('/api/pixsoftpay/send/',{
     method:'POST',
+    credentials:'same-origin',
     headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},
     body:JSON.stringify({to:to,amount:amount,description:desc})
-  }).then(function(r){return r.json()}).then(function(d){
+  }).then(function(r){
+    if(r.redirected || r.status===302 || r.url.indexOf('/login')!==-1){
+      result.className='send-result send-error';result.style.color='#ff1744';
+      result.innerHTML='❌ Session expirée. <a href="/login/" style="color:#ff1744;text-decoration:underline">Reconnectez-vous</a>';
+      throw new Error('redirect');
+    }
+    return r.json();
+  }).then(function(d){
     if(d.status==='success'){
       result.className='send-result send-success';result.style.color='#00c853';
       result.innerHTML='✅ Transfert réussi !<br><span style="font-size:.8rem">Référence: '+d.reference+'</span>';
@@ -65,7 +73,8 @@ function sendMoney(){
       result.className='send-result send-error';result.style.color='#ff1744';
       result.innerHTML='❌ '+(d.error||'Erreur lors du transfert');
     }
-  }).catch(function(){
+  }).catch(function(e){
+    if(e.message==='redirect')return;
     result.className='send-result send-error';result.style.color='#ff1744';
     result.innerHTML='❌ Erreur réseau';
   });
