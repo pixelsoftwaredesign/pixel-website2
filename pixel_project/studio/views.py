@@ -2476,7 +2476,7 @@ def api_pixsoftpay_send(request):
     try:
         data = json.loads(request.body)
         to_username = data.get('to', '').strip()
-        amount = float(data.get('amount', 0))
+        amount = Decimal(str(data.get('amount', 0)))
         description = data.get('description', '')
     except (ValueError, TypeError):
         return JsonResponse({'error': 'Données invalides'}, status=400)
