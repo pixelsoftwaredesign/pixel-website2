@@ -2,6 +2,7 @@ import json, uuid, random, string, base64
 from decimal import Decimal
 from datetime import datetime, date
 from django.db import models
+from django.db import transaction as db_transaction
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -2500,7 +2501,7 @@ def api_pixsoftpay_send(request):
     recipient_wallet, _ = Wallet.objects.get_or_create(user=recipient)
     ref = f"PSP-{uuid.uuid4().hex[:8].upper()}"
 
-    with transaction.atomic():
+    with db_transaction.atomic():
         sender_wallet = Wallet.objects.select_for_update().get(pk=sender_wallet.pk)
         if sender_wallet.solde < amount:
             return JsonResponse({'error': 'Solde insuffisant'}, status=400)
