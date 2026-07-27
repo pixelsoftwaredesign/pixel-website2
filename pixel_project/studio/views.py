@@ -1,4 +1,4 @@
-import json, uuid, random, string
+import json, uuid, random, string, base64
 from decimal import Decimal
 from datetime import datetime, date
 from django.db import models
@@ -2450,6 +2450,122 @@ def pixsoftpay_wallet(request):
 
     return render(request, 'studio/pixsoftpay_wallet.html', {
         'wallet': wallet, 'transactions': txs[:50], 'profile': profile, 'bilan': bilan,
+    })
+
+
+# ─── PixSoftMoney — Send / Receive ────────────────────────────
+
+@login_required
+def pixsoftpay_send(request):
+    wallet, _ = Wallet.objects.get_or_create(user=request.user)
+    return render(request, 'studio/pixsoftpay_send.html', {'wallet': wallet})
+
+
+@login_required
+def pixsoftpay_receive(request):
+    wallet, _ = Wallet.objects.get_or_create(user=request.user)
+    return render(request, 'studio/pixsoftpay_receive.html', {'wallet': wallet})
+
+
+@csrf_exempt
+@login_required
+def api_pixsoftpay_send(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST requis'}, status=405)
+    try:
+        data = json.loads(request.body)
+        to_username = data.get('to', '').strip()
+        amount = float(data.get('amount', 0))
+        description = data.get('description', '')
+    except (ValueError, TypeError):
+        return JsonResponse({'error': 'Données invalides'}, status=400)
+
+    if not to_username:
+        return JsonResponse({'error': 'Destinataire requis'}, status=400)
+    if amount <= 0:
+        return JsonResponse({'error': 'Montant invalide'}, status=400)
+
+    try:
+        recipient = User.objects.get(username=to_username)
+    except User.DoesNotExist:
+        return JsonResponse({'error': f'Utilisateur "{to_username}" introuvable'}, status=404)
+
+    if recipient == request.user:
+        return JsonResponse({'error': 'Vous ne pouvez pas vous envoyer de l\'argent'}, status=400)
+
+    sender_wallet, _ = Wallet.objects.get_or_create(user=request.user)
+    if sender_wallet.solde < amount:
+        return JsonResponse({'error': f'Solde insuffisant ({sender_wallet.solde} TND)'}, status=400)
+
+    recipient_wallet, _ = Wallet.objects.get_or_create(user=recipient)
+    ref = f"PSP-{uuid.uuid4().hex[:8].upper()}"
+
+    with transaction.atomic():
+        sender_wallet = Wallet.objects.select_for_update().get(pk=sender_wallet.pk)
+        if sender_wallet.solde < amount:
+            return JsonResponse({'error': 'Solde insuffisant'}, status=400)
+
+        sender_wallet.solde -= amount
+        sender_wallet.save()
+
+        recipient_wallet = Wallet.objects.select_for_update().get(pk=recipient_wallet.pk)
+        recipient_wallet.solde += amount
+        recipient_wallet.save()
+
+        Transaction.objects.create(
+            wallet=sender_wallet, reference=ref, type_operation='retrait',
+            montant=amount, solde_avant=sender_wallet.solde + amount,
+            solde_apres=sender_wallet.solde, methode='wallet',
+            statut='confirme', description=f'Envoi vers {to_username}: {description}',
+            customer_name=to_username, paid_at=timezone.now(),
+        )
+        Transaction.objects.create(
+            wallet=recipient_wallet, reference=f"{ref}-R", type_operation='depot',
+            montant=amount, solde_avant=recipient_wallet.solde - amount,
+            solde_apres=recipient_wallet.solde, methode='wallet',
+            statut='confirme', description=f'Reçu de {request.user.username}: {description}',
+            customer_name=request.user.username, paid_at=timezone.now(),
+        )
+
+    return JsonResponse({
+        'status': 'success', 'reference': ref,
+        'message': f'{amount} TND envoyés à {to_username}',
+    })
+
+
+@csrf_exempt
+@login_required
+def api_pixsoftpay_receive(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST requis'}, status=405)
+    try:
+        data = json.loads(request.body)
+        amount = float(data.get('amount', 0))
+        description = data.get('description', '')
+    except (ValueError, TypeError):
+        return JsonResponse({'error': 'Données invalides'}, status=400)
+
+    if amount <= 0:
+        return JsonResponse({'error': 'Montant invalide'}, status=400)
+
+    wallet, _ = Wallet.objects.get_or_create(user=request.user)
+    ref = f"PSP-{uuid.uuid4().hex[:8].upper()}"
+    payment_url = f"/pixsoftpay/pay/{ref}/"
+
+    qr_payload = f"PIXSOFTPAY|{ref}|{amount}|{payment_url}"
+    qr_data = base64.b64encode(qr_payload.encode()).decode()
+
+    tx = Transaction.objects.create(
+        wallet=wallet, reference=ref, type_operation='paiement',
+        montant=amount, solde_avant=wallet.solde, solde_apres=wallet.solde,
+        methode='wallet', statut='en_attente', description=description,
+        qr_data=qr_data, payment_url=payment_url,
+        customer_name=request.user.username,
+        expires_at=timezone.now() + timezone.timedelta(hours=24),
+    )
+    return JsonResponse({
+        'status': 'success', 'reference': ref, 'amount': amount,
+        'payment_url': payment_url,
     })
 
 

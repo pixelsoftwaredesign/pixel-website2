@@ -1,0 +1,74 @@
+{% extends "studio/pixsoftpay_base.html" %}
+{% block content %}
+<style>
+.send-icon{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#6c63ff,#a855f7);display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin:0 auto 16px}
+.send-result{text-align:center;padding:20px;margin-top:16px;border-radius:12px}
+.send-success{background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.3)}
+.send-error{background:rgba(255,23,68,.1);border:1px solid rgba(255,23,68,.3)}
+</style>
+
+<div class="pp-card" style="text-align:center">
+  <div class="send-icon">💸</div>
+  <h2 style="margin-bottom:4px">Envoyer de l'argent</h2>
+  <p style="color:#888;font-size:.85rem;margin-bottom:20px">Transférez depuis votre wallet vers un autre utilisateur</p>
+
+  <div style="background:rgba(108,99,255,.08);border:1px solid rgba(108,99,255,.2);border-radius:10px;padding:12px;margin-bottom:20px;text-align:left">
+    <p style="color:#888;font-size:.8rem;margin:0">Votre solde</p>
+    <p style="font-size:1.4rem;font-weight:700;color:#6c63ff;margin:4px 0 0">{{ wallet.solde }} TND</p>
+  </div>
+
+  <form id="sendForm" style="text-align:left">
+    <div class="pp-form-group">
+      <label>Nom d'utilisateur du destinataire</label>
+      <input type="text" id="sendTo" placeholder="ex: balancetaxsafety" required style="width:100%;padding:10px 14px;background:#0a0a1a;border:1px solid #1e1e3a;border-radius:8px;color:#fff;font-size:.9rem">
+    </div>
+    <div class="pp-form-group" style="margin-top:14px">
+      <label>Montant (TND)</label>
+      <input type="number" id="sendAmount" placeholder="0.00" min="0.01" step="0.01" required style="width:100%;padding:10px 14px;background:#0a0a1a;border:1px solid #1e1e3a;border-radius:8px;color:#fff;font-size:.9rem">
+    </div>
+    <div class="pp-form-group" style="margin-top:14px">
+      <label>Description (optionnel)</label>
+      <input type="text" id="sendDesc" placeholder="Motif du transfert" style="width:100%;padding:10px 14px;background:#0a0a1a;border:1px solid #1e1e3a;border-radius:8px;color:#fff;font-size:.9rem">
+    </div>
+    <button type="button" class="pp-btn pp-btn-success" style="width:100%;margin-top:20px;font-size:1rem;padding:14px" onclick="sendMoney()">Envoyer →</button>
+  </form>
+  <div id="sendResult" class="send-result" style="display:none"></div>
+</div>
+
+<script>
+function sendMoney(){
+  var to = document.getElementById('sendTo').value.trim();
+  var amount = parseFloat(document.getElementById('sendAmount').value);
+  var desc = document.getElementById('sendDesc').value.trim();
+  var result = document.getElementById('sendResult');
+  if(!to || !amount || amount<=0){
+    result.style.display='block';result.className='send-result send-error';
+    result.innerHTML='Veuillez remplir tous les champs correctement.';
+    return;
+  }
+  result.style.display='block';result.className='send-result';
+  result.style.background='rgba(108,99,255,.1)';result.style.border='1px solid rgba(108,99,255,.3)';result.style.color='#6c63ff';
+  result.innerHTML='⏳ Transfert en cours...';
+
+  fetch('/api/pixsoftpay/send/',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},
+    body:JSON.stringify({to:to,amount:amount,description:desc})
+  }).then(function(r){return r.json()}).then(function(d){
+    if(d.status==='success'){
+      result.className='send-result send-success';result.style.color='#00c853';
+      result.innerHTML='✅ Transfert réussi !<br><span style="font-size:.8rem">Référence: '+d.reference+'</span>';
+      document.getElementById('sendTo').value='';
+      document.getElementById('sendAmount').value='';
+      document.getElementById('sendDesc').value='';
+    }else{
+      result.className='send-result send-error';result.style.color='#ff1744';
+      result.innerHTML='❌ '+(d.error||'Erreur lors du transfert');
+    }
+  }).catch(function(){
+    result.className='send-result send-error';result.style.color='#ff1744';
+    result.innerHTML='❌ Erreur réseau';
+  });
+}
+</script>
+{% endblock %}
