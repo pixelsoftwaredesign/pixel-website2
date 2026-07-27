@@ -2487,7 +2487,7 @@ def api_pixsoftpay_send(request):
         return JsonResponse({'error': 'Montant invalide'}, status=400)
 
     try:
-        recipient = User.objects.get(username=to_username)
+        recipient = User.objects.get(username__iexact=to_username)
     except User.DoesNotExist:
         return JsonResponse({'error': f'Utilisateur "{to_username}" introuvable'}, status=404)
 
