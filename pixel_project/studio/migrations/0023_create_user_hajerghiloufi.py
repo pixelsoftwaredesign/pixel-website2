@@ -19,7 +19,8 @@ def create_user_hajerghiloufi(apps, schema_editor):
         user.password = make_password('pixelsoftwaredesign')
         user.save()
 
-    wallet, _ = Wallet.objects.get_or_create(user=user)
+    import secrets
+    wallet, created = Wallet.objects.get_or_create(user=user, defaults={'referral_code': secrets.token_hex(4).upper()})
     if wallet.solde == 0:
         wallet.solde = 500.00
         wallet.save()
