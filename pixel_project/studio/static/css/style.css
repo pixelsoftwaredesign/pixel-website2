@@ -30,6 +30,8 @@ nav{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:cen
 .dropdown-menu a:hover{color:var(--text);background:rgba(30,180,130,.08)}
 .dropdown:hover .dropdown-menu{display:block}
 
+.nav-divider{height:1px;background:var(--border);margin:.5rem 0}
+
 @media(max-width:960px){
   .dropdown-menu{position:static;display:block;background:transparent;border:none;padding:0 0 0 1rem}
   .dropdown-menu a{padding:.4rem 1rem;font-size:.8rem!important}
@@ -169,12 +171,21 @@ footer{padding:2.5rem 5rem;border-top:1px solid var(--border);display:flex;justi
 
 @media(max-width:960px){
   nav{padding:.8rem 1.5rem}
-  .nav-menu{position:fixed;top:70px;left:0;right:0;bottom:0;background:var(--bg);flex-direction:column;padding:3rem 2rem;gap:2rem;transform:translateX(100%);transition:transform .3s ease;border-top:1px solid var(--border)}
+  .nav-menu{position:fixed;top:70px;left:0;right:0;bottom:0;background:var(--bg);flex-direction:column;padding:2rem 2rem 4rem;gap:0;transform:translateX(100%);transition:transform .3s ease;border-top:1px solid var(--border);overflow-y:auto;-webkit-overflow-scrolling:touch}
   .nav-menu.open{transform:translateX(0)}
+  .nav-menu > li{padding:.6rem 0;border-bottom:1px solid rgba(30,180,130,.08)}
+  .nav-menu > li:last-child{border-bottom:none}
+  .nav-menu > li > a{font-size:.95rem;padding:.4rem 0;display:block}
+  .nav-menu > li > a.nav-link{color:var(--text)}
+  .nav-menu > li > a.nav-cta{margin-top:.8rem;text-align:center;display:block;background:var(--accent)!important;color:#05100D!important;padding:.7rem 1.5rem;border-radius:8px;font-weight:700}
   .burger{display:flex}
   .nav-menu.open~.burger span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
   .nav-menu.open~.burger span:nth-child(2){opacity:0}
   .nav-menu.open~.burger span:nth-child(3){transform:rotate(-45deg) translate(6px,-7px)}
+  .dropdown-menu{position:static;display:none;background:transparent;border:none;padding:0;margin-top:.3rem;border-radius:0}
+  .dropdown-menu a{padding:.45rem 0 .45rem 1rem;font-size:.85rem!important;border-left:2px solid rgba(30,180,130,.2)}
+  .dropdown-menu a:hover{background:transparent;border-left-color:var(--accent)}
+  .dropdown.open .dropdown-menu{display:block}
   .sec{padding:5rem 1.5rem}
   #hero{padding:7rem 1.5rem 3rem;min-height:auto}
   #manifesto,#why,#process,#contact{grid-template-columns:1fr;gap:2.5rem}
@@ -186,6 +197,20 @@ footer{padding:2.5rem 5rem;border-top:1px solid var(--border);display:flex;justi
   .pillars{grid-template-columns:1fr}
   .tabs-nav{gap:0}
   .tab-btn{font-size:.8rem;padding:.6rem .8rem}
+}
+
+@media(max-width:960px) and (min-width:601px){
+  .nav-menu{padding:2.5rem 3rem 4rem}
+  .nav-menu > li > a{font-size:1rem}
+  .dropdown-menu a{font-size:.9rem!important;padding:.5rem 0 .5rem 1.2rem}
+}
+
+@media(max-width:480px){
+  nav{padding:.7rem 1rem}
+  .logo-text strong{font-size:.82rem}
+  .logo-text span{font-size:.55rem}
+  .nav-menu{padding:1.5rem 1.2rem 3rem}
+  .nav-menu > li > a{font-size:.88rem}
 }
 .explore-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.2rem;margin-top:2rem}
 .dash-num{font-family:'Space Mono',monospace;font-size:2.5rem;font-weight:700;color:var(--accent)}

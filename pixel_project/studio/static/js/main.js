@@ -6,6 +6,22 @@ if (burgerBtn) {
   document.querySelectorAll('.nav-menu a').forEach(l => l.addEventListener('click', () => navMenu.classList.remove('open')));
 }
 
+// ── MOBILE DROPDOWN TOGGLE ──
+document.querySelectorAll('.dropdown').forEach(dd => {
+  const link = dd.querySelector(':scope > a');
+  if (link) {
+    link.addEventListener('click', function(e) {
+      if (window.innerWidth <= 960) {
+        e.preventDefault();
+        dd.classList.toggle('open');
+        document.querySelectorAll('.dropdown').forEach(other => {
+          if (other !== dd) other.classList.remove('open');
+        });
+      }
+    });
+  }
+});
+
 // ── TABS ──
 function switchTab(event, tabId) {
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
