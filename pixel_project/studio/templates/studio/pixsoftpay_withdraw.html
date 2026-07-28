@@ -25,7 +25,7 @@
 
   <form id="withdrawForm" style="text-align:left">
     <div class="pp-form-group">
-      <label>Méthode de retrait</label>
+      <p style="margin:0 0 8px;font-weight:600;color:#ccc">Méthode de retrait</p>
       <div class="method-grid">
         <div class="method-card active" onclick="selectMethod(this,'d17')">
           <div class="icon">📱</div>
@@ -46,15 +46,15 @@
       </div>
     </div>
     <div class="pp-form-group" style="margin-top:14px">
-      <label>Montant (TND)</label>
+      <label for="withdrawAmount">Montant (TND)</label>
       <input type="number" id="withdrawAmount" placeholder="0.00" min="1" step="0.01" required style="width:100%;padding:10px 14px;background:#0a0a1a;border:1px solid #1e1e3a;border-radius:8px;color:#fff;font-size:.9rem">
     </div>
     <div class="pp-form-group" style="margin-top:14px">
-      <label>Numéro de compte / Identifiant</label>
+      <label for="withdrawAccount">Numéro de compte / Identifiant</label>
       <input type="text" id="withdrawAccount" placeholder="ex: +216 XX XXX XXX" required style="width:100%;padding:10px 14px;background:#0a0a1a;border:1px solid #1e1e3a;border-radius:8px;color:#fff;font-size:.9rem">
     </div>
     <div class="pp-form-group" style="margin-top:14px">
-      <label>Description (optionnel)</label>
+      <label for="withdrawDesc">Description (optionnel)</label>
       <input type="text" id="withdrawDesc" placeholder="Motif du retrait" style="width:100%;padding:10px 14px;background:#0a0a1a;border:1px solid #1e1e3a;border-radius:8px;color:#fff;font-size:.9rem">
     </div>
     <button type="button" class="pp-btn pp-btn-danger" style="width:100%;margin-top:20px;font-size:1rem;padding:14px" onclick="withdrawMoney()">Retirer →</button>

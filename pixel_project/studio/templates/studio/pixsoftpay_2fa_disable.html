@@ -13,8 +13,8 @@
   <form method="POST">
     {% csrf_token %}
     <div class="pp-form-group">
-      <label>Code de vérification (6 chiffres)</label>
-      <input type="text" name="code" maxlength="6" pattern="[0-9]{6}" placeholder="000000" required autofocus style="text-align:center;font-size:1.4rem;letter-spacing:8px">
+      <label for="codeDisable">Code de vérification (6 chiffres)</label>
+      <input type="text" id="codeDisable" name="code" maxlength="6" pattern="[0-9]{6}" placeholder="000000" required autofocus style="text-align:center;font-size:1.4rem;letter-spacing:8px">
     </div>
     <button type="submit" class="pp-btn pp-btn-danger" style="width:100%">Désactiver la 2FA</button>
   </form>

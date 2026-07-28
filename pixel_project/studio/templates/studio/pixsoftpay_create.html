@@ -6,24 +6,24 @@
   <form method="POST" action="/pixsoftpay/create/">
     {% csrf_token %}
     <div class="pp-form-group">
-      <label>Montant (TND)</label>
-      <input type="number" name="amount" step="0.01" min="0.01" placeholder="0.00" required>
+      <label for="amount">Montant (TND)</label>
+      <input type="number" id="amount" name="amount" step="0.01" min="0.01" placeholder="0.00" required>
     </div>
     <div class="pp-form-group">
-      <label>Description</label>
-      <input type="text" name="description" placeholder="Ex: Paiement commande #123">
+      <label for="description">Description</label>
+      <input type="text" id="description" name="description" placeholder="Ex: Paiement commande #123">
     </div>
     <div class="pp-form-group">
-      <label>Nom du client</label>
-      <input type="text" name="customer_name" placeholder="Nom complet">
+      <label for="customerName">Nom du client</label>
+      <input type="text" id="customerName" name="customer_name" placeholder="Nom complet">
     </div>
     <div class="pp-form-group">
-      <label>Email du client</label>
-      <input type="email" name="customer_email" placeholder="email@exemple.com">
+      <label for="customerEmail">Email du client</label>
+      <input type="email" id="customerEmail" name="customer_email" placeholder="email@exemple.com">
     </div>
     <div class="pp-form-group">
-      <label>Méthode de paiement</label>
-      <select name="methode">
+      <label for="methode">Méthode de paiement</label>
+      <select id="methode" name="methode">
         <option value="wallet">Wallet mobile</option>
         <option value="d17">D17</option>
         <option value="flouci">Flouci</option>

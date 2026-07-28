@@ -19,15 +19,15 @@
 
   <form id="sendForm" style="text-align:left">
     <div class="pp-form-group">
-      <label>Nom d'utilisateur du destinataire</label>
+      <label for="sendTo">Nom d'utilisateur du destinataire</label>
       <input type="text" id="sendTo" placeholder="ex: balancetaxsafety" required style="width:100%;padding:10px 14px;background:#0a0a1a;border:1px solid #1e1e3a;border-radius:8px;color:#fff;font-size:.9rem">
     </div>
     <div class="pp-form-group" style="margin-top:14px">
-      <label>Montant (TND)</label>
+      <label for="sendAmount">Montant (TND)</label>
       <input type="number" id="sendAmount" placeholder="0.00" min="0.01" step="0.01" required style="width:100%;padding:10px 14px;background:#0a0a1a;border:1px solid #1e1e3a;border-radius:8px;color:#fff;font-size:.9rem">
     </div>
     <div class="pp-form-group" style="margin-top:14px">
-      <label>Description (optionnel)</label>
+      <label for="sendDesc">Description (optionnel)</label>
       <input type="text" id="sendDesc" placeholder="Motif du transfert" style="width:100%;padding:10px 14px;background:#0a0a1a;border:1px solid #1e1e3a;border-radius:8px;color:#fff;font-size:.9rem">
     </div>
     <button type="button" class="pp-btn pp-btn-success" style="width:100%;margin-top:20px;font-size:1rem;padding:14px" onclick="sendMoney()">Envoyer →</button>
