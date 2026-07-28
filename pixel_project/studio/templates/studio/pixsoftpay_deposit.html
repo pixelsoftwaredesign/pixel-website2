@@ -1,0 +1,109 @@
+{% extends "studio/pixsoftpay_base.html" %}
+{% block content %}
+<style>
+.deposit-icon{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#00c853,#69f0ae);display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin:0 auto 16px}
+.method-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin:16px 0}
+.method-card{background:rgba(10,10,26,.6);border:2px solid rgba(108,99,255,.15);border-radius:14px;padding:18px 12px;text-align:center;cursor:pointer;transition:all .2s}
+.method-card:hover,.method-card.active{border-color:#00c853;background:rgba(0,200,83,.08)}
+.method-card .icon{font-size:1.6rem;margin-bottom:6px}
+.method-card .name{font-size:.85rem;color:#888}
+.method-card.active .name{color:#00c853;font-weight:600}
+.send-result{text-align:center;padding:20px;margin-top:16px;border-radius:12px}
+.send-success{background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.3)}
+.send-error{background:rgba(255,23,68,.1);border:1px solid rgba(255,23,68,.3)}
+</style>
+
+<div class="pp-card" style="text-align:center">
+  <div class="deposit-icon">💰</div>
+  <h2 style="margin-bottom:4px">Déposer sur votre wallet</h2>
+  <p style="color:#888;font-size:.85rem;margin-bottom:20px">Rechargez votre compte en TND depuis la monnaie fiat</p>
+
+  <div style="background:rgba(0,200,83,.08);border:1px solid rgba(0,200,83,.2);border-radius:10px;padding:12px;margin-bottom:20px;text-align:left">
+    <p style="color:#888;font-size:.8rem;margin:0">Solde actuel</p>
+    <p style="font-size:1.4rem;font-weight:700;color:#00c853;margin:4px 0 0">{{ wallet.solde }} TND</p>
+  </div>
+
+  <form id="depositForm" style="text-align:left">
+    <div class="pp-form-group">
+      <label>Méthode de dépôt</label>
+      <div class="method-grid">
+        <div class="method-card active" onclick="selectMethod(this,'d17')">
+          <div class="icon">📱</div>
+          <div class="name">D17</div>
+        </div>
+        <div class="method-card" onclick="selectMethod(this,'flouci')">
+          <div class="icon">💳</div>
+          <div class="name">Flouci</div>
+        </div>
+        <div class="method-card" onclick="selectMethod(this,'virement')">
+          <div class="icon">🏦</div>
+          <div class="name">Virement</div>
+        </div>
+        <div class="method-card" onclick="selectMethod(this,'cash')">
+          <div class="icon">💵</div>
+          <div class="name">Espèces</div>
+        </div>
+      </div>
+    </div>
+    <div class="pp-form-group" style="margin-top:14px">
+      <label>Montant (TND)</label>
+      <input type="number" id="depositAmount" placeholder="0.00" min="1" step="0.01" required style="width:100%;padding:10px 14px;background:#0a0a1a;border:1px solid #1e1e3a;border-radius:8px;color:#fff;font-size:.9rem">
+    </div>
+    <div class="pp-form-group" style="margin-top:14px">
+      <label>Description (optionnel)</label>
+      <input type="text" id="depositDesc" placeholder="Motif du dépôt" style="width:100%;padding:10px 14px;background:#0a0a1a;border:1px solid #1e1e3a;border-radius:8px;color:#fff;font-size:.9rem">
+    </div>
+    <button type="button" class="pp-btn pp-btn-success" style="width:100%;margin-top:20px;font-size:1rem;padding:14px" onclick="depositMoney()">Déposer →</button>
+  </form>
+  <div id="depositResult" class="send-result" style="display:none"></div>
+</div>
+
+<script>
+var selectedMethod='d17';
+function selectMethod(el,method){
+  document.querySelectorAll('.method-card').forEach(function(c){c.classList.remove('active')});
+  el.classList.add('active');
+  selectedMethod=method;
+}
+function depositMoney(){
+  var amount=parseFloat(document.getElementById('depositAmount').value);
+  var desc=document.getElementById('depositDesc').value.trim();
+  var result=document.getElementById('depositResult');
+  if(!amount||amount<=0){
+    result.style.display='block';result.className='send-result send-error';
+    result.innerHTML='Veuillez entrer un montant valide.';
+    return;
+  }
+  result.style.display='block';result.className='send-result';
+  result.style.background='rgba(0,200,83,.1)';result.style.border='1px solid rgba(0,200,83,.3)';result.style.color='#00c853';
+  result.innerHTML='⏳ Dépôt en cours...';
+  fetch('/api/pixsoftpay/deposit/',{
+    method:'POST',
+    credentials:'same-origin',
+    headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},
+    body:JSON.stringify({amount:amount,method:selectedMethod,description:desc})
+  }).then(function(r){
+    if(r.redirected||r.url.indexOf('/login')!==-1){
+      result.className='send-result send-error';result.style.color='#ff1744';
+      result.innerHTML='Session expirée. <a href="/login/" style="color:#ff1744;text-decoration:underline">Reconnectez-vous</a>';
+      throw new Error('redirect');
+    }
+    return r.json();
+  }).then(function(d){
+    if(d.status==='success'){
+      result.className='send-result send-success';result.style.color='#00c853';
+      result.innerHTML='✅ Dépôt réussi !<br><span style="font-size:.8rem">Référence: '+d.reference+'</span><br><span style="font-size:.8rem">'+d.message+'</span>';
+      document.getElementById('depositAmount').value='';
+      document.getElementById('depositDesc').value='';
+    }else{
+      result.className='send-result send-error';result.style.color='#ff1744';
+      result.innerHTML='❌ '+(d.error||'Erreur lors du dépôt');
+    }
+  }).catch(function(e){
+    if(e.message==='redirect')return;
+    result.className='send-result send-error';result.style.color='#ff1744';
+    result.innerHTML='❌ Erreur réseau';
+  });
+}
+</script>
+{% endblock %}

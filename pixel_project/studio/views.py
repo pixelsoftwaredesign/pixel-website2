@@ -2570,6 +2570,114 @@ def api_pixsoftpay_receive(request):
     })
 
 
+# ─── Wallet ↔ Fiat (Retrait / Dépôt) ─────────────────────────────
+
+@login_required
+def pixsoftpay_withdraw(request):
+    wallet, _ = Wallet.objects.get_or_create(user=request.user)
+    return render(request, 'studio/pixsoftpay_withdraw.html', {'wallet': wallet})
+
+
+@login_required
+def pixsoftpay_deposit(request):
+    wallet, _ = Wallet.objects.get_or_create(user=request.user)
+    return render(request, 'studio/pixsoftpay_deposit.html', {'wallet': wallet})
+
+
+METHODS = [
+    ('d17', 'D17'),
+    ('flouci', 'Flouci'),
+    ('virement', 'Virement bancaire'),
+    ('cash', 'Espèces'),
+]
+
+
+@csrf_exempt
+@login_required
+def api_pixsoftpay_withdraw(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST requis'}, status=405)
+    try:
+        data = json.loads(request.body)
+        amount = Decimal(str(data.get('amount', 0)))
+        method = data.get('method', '').strip()
+        description = data.get('description', '')
+        account_info = data.get('account_info', '').strip()
+    except (ValueError, TypeError):
+        return JsonResponse({'error': 'Données invalides'}, status=400)
+
+    valid_methods = [m[0] for m in METHODS]
+    if method not in valid_methods:
+        return JsonResponse({'error': 'Méthode invalide'}, status=400)
+    if amount <= 0:
+        return JsonResponse({'error': 'Montant invalide'}, status=400)
+
+    wallet, _ = Wallet.objects.get_or_create(user=request.user)
+    if wallet.solde < amount:
+        return JsonResponse({'error': f'Solde insuffisant ({wallet.solde} TND)'}, status=400)
+
+    ref = f"PSP-W{uuid.uuid4().hex[:8].upper()}"
+
+    with db_transaction.atomic():
+        wallet = Wallet.objects.select_for_update().get(pk=wallet.pk)
+        if wallet.solde < amount:
+            return JsonResponse({'error': 'Solde insuffisant'}, status=400)
+        wallet.solde -= amount
+        wallet.save()
+        Transaction.objects.create(
+            wallet=wallet, reference=ref, type_operation='retrait',
+            montant=amount, solde_avant=wallet.solde + amount,
+            solde_apres=wallet.solde, methode=method,
+            statut='confirme', description=f'Retrait {method}: {description}',
+            customer_name=request.user.username, paid_at=timezone.now(),
+        )
+
+    return JsonResponse({
+        'status': 'success', 'reference': ref, 'amount': float(amount),
+        'message': f'{amount} TND retirés via {dict(METHODS).get(method, method)}',
+    })
+
+
+@csrf_exempt
+@login_required
+def api_pixsoftpay_deposit(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST requis'}, status=405)
+    try:
+        data = json.loads(request.body)
+        amount = Decimal(str(data.get('amount', 0)))
+        method = data.get('method', '').strip()
+        description = data.get('description', '')
+    except (ValueError, TypeError):
+        return JsonResponse({'error': 'Données invalides'}, status=400)
+
+    valid_methods = [m[0] for m in METHODS]
+    if method not in valid_methods:
+        return JsonResponse({'error': 'Méthode invalide'}, status=400)
+    if amount <= 0:
+        return JsonResponse({'error': 'Montant invalide'}, status=400)
+
+    wallet, _ = Wallet.objects.get_or_create(user=request.user)
+    ref = f"PSP-D{uuid.uuid4().hex[:8].upper()}"
+
+    with db_transaction.atomic():
+        wallet = Wallet.objects.select_for_update().get(pk=wallet.pk)
+        wallet.solde += amount
+        wallet.save()
+        Transaction.objects.create(
+            wallet=wallet, reference=ref, type_operation='depot',
+            montant=amount, solde_avant=wallet.solde - amount,
+            solde_apres=wallet.solde, methode=method,
+            statut='confirme', description=f'Dépôt {method}: {description}',
+            customer_name=request.user.username, paid_at=timezone.now(),
+        )
+
+    return JsonResponse({
+        'status': 'success', 'reference': ref, 'amount': float(amount),
+        'message': f'{amount} TND déposés via {dict(METHODS).get(method, method)}',
+    })
+
+
 # ─── PixSoftMoney API (JSON) ─────────────────────────────────────
 
 @csrf_exempt
