@@ -2678,6 +2678,102 @@ def api_pixsoftpay_deposit(request):
     })
 
 
+# ─── Acheter PSX (TND wallet → Blockchain) ────────────────────────
+
+@login_required
+def pixsoftpay_buy_psx(request):
+    wallet, _ = Wallet.objects.get_or_create(user=request.user)
+    try:
+        from blockchain.models import CryptoWallet
+        from blockchain.chain import get_blockchain
+        cw = CryptoWallet.objects.filter(user=request.user).first()
+        if cw:
+            chain = get_blockchain()
+            psx_balance = chain.get_balance(cw.address)
+            psx_address = cw.address
+        else:
+            psx_balance = 0
+            psx_address = ''
+    except Exception:
+        psx_balance = 0
+        psx_address = ''
+    return render(request, 'studio/pixsoftpay_buy_psx.html', {
+        'wallet': wallet, 'psx_balance': psx_balance, 'psx_address': psx_address,
+    })
+
+
+@csrf_exempt
+@login_required
+def api_pixsoftpay_buy_psx(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST requis'}, status=405)
+    try:
+        data = json.loads(request.body)
+        amount_tnd = Decimal(str(data.get('amount', 0)))
+    except (ValueError, TypeError):
+        return JsonResponse({'error': 'Données invalides'}, status=400)
+
+    if amount_tnd <= 0:
+        return JsonResponse({'error': 'Montant invalide'}, status=400)
+
+    try:
+        from blockchain.models import CryptoWallet, CryptoTransaction
+        from blockchain.chain import get_blockchain
+        from blockchain.views import _save_chain
+    except ImportError:
+        return JsonResponse({'error': 'Module blockchain indisponible'}, status=500)
+
+    wallet, _ = Wallet.objects.get_or_create(user=request.user)
+    if wallet.solde < amount_tnd:
+        return JsonResponse({'error': f'Solde TND insuffisant ({wallet.solde} TND)'}, status=400)
+
+    cw = CryptoWallet.objects.filter(user=request.user).first()
+    if not cw:
+        cw = CryptoWallet.objects.create(user=request.user, address=f'PSX-{uuid.uuid4().hex[:16].upper()}', private_key='auto')
+
+    ref = f"PSX-B{uuid.uuid4().hex[:8].upper()}"
+    psx_amount = float(amount_tnd)
+
+    with db_transaction.atomic():
+        wallet = Wallet.objects.select_for_update().get(pk=wallet.pk)
+        if wallet.solde < amount_tnd:
+            return JsonResponse({'error': 'Solde insuffisant'}, status=400)
+        wallet.solde -= amount_tnd
+        wallet.save()
+
+        try:
+            chain = get_blockchain()
+            tx = {
+                'from': 'BRIDGE_TND',
+                'to': cw.address,
+                'amount': psx_amount,
+                'fee': 0,
+                'type': 'bridge_tnd_to_psx',
+                'timestamp': __import__('time').time(),
+            }
+            chain.add_transaction(tx)
+            block = chain.mine_pending('SYSTEM')
+            _save_chain()
+            final_balance = chain.get_balance(cw.address)
+        except Exception:
+            final_balance = psx_amount
+
+        Transaction.objects.create(
+            wallet=wallet, reference=ref, type_operation='retrait',
+            montant=amount_tnd, solde_avant=wallet.solde + amount_tnd,
+            solde_apres=wallet.solde, methode='blockchain',
+            statut='confirme', description=f'Achat {psx_amount} PSX',
+            customer_name='BRIDGE', paid_at=timezone.now(),
+        )
+
+    return JsonResponse({
+        'status': 'success', 'reference': ref,
+        'tnd_spent': float(amount_tnd), 'psx_received': psx_amount,
+        'psx_balance': final_balance, 'wallet_balance': float(wallet.solde),
+        'message': f'{amount_tnd} TND convertis en {psx_amount} PSX',
+    })
+
+
 # ─── PixSoftMoney API (JSON) ─────────────────────────────────────
 
 @csrf_exempt

@@ -1,0 +1,120 @@
+{% extends "studio/pixsoftpay_base.html" %}
+{% block content %}
+<style>
+.buy-icon{width:64px;height:64px;border-radius:50%;background:linear-gradient(135deg,#6c63ff,#a855f7);display:flex;align-items:center;justify-content:center;font-size:1.8rem;margin:0 auto 16px}
+.rate-box{display:flex;align-items:center;justify-content:center;gap:12px;margin:20px 0;padding:20px;background:rgba(108,99,255,.06);border:1px solid rgba(108,99,255,.15);border-radius:16px}
+.rate-box .tnd{font-size:1.8rem;font-weight:700;color:#ff6d00}
+.rate-box .arrow{font-size:1.4rem;color:#888}
+.rate-box .psx{font-size:1.8rem;font-weight:700;color:#6c63ff}
+.quick-amounts{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+.quick-btn{background:rgba(108,99,255,.08);border:1px solid rgba(108,99,255,.15);border-radius:12px;padding:14px 8px;text-align:center;cursor:pointer;transition:all .2s;color:#e0e0e0;font-size:.9rem;font-weight:600}
+.quick-btn:hover{border-color:#6c63ff;background:rgba(108,99,255,.15)}
+.preview{display:flex;align-items:center;justify-content:center;gap:16px;margin:16px 0;padding:16px;border-radius:14px}
+.send-result{text-align:center;padding:20px;margin-top:16px;border-radius:12px}
+.send-success{background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.3)}
+.send-error{background:rgba(255,23,68,.1);border:1px solid rgba(255,23,68,.3)}
+</style>
+
+<div class="pp-card" style="text-align:center">
+  <div class="buy-icon">⛓️</div>
+  <h2 style="margin-bottom:4px">Acheter des PSX</h2>
+  <p style="color:#888;font-size:.85rem;margin-bottom:8px">Convertissez votre TND en tokens blockchain PSX</p>
+
+  <div style="display:flex;gap:14px;margin:16px 0;flex-wrap:wrap">
+    <div style="flex:1;min-width:120px;background:rgba(255,109,0,.08);border:1px solid rgba(255,109,0,.2);border-radius:12px;padding:14px;text-align:left">
+      <p style="color:#888;font-size:.75rem;margin:0">Solde TND</p>
+      <p style="font-size:1.2rem;font-weight:700;color:#ff6d00;margin:4px 0 0">{{ wallet.solde }} TND</p>
+    </div>
+    <div style="flex:1;min-width:120px;background:rgba(108,99,255,.08);border:1px solid rgba(108,99,255,.2);border-radius:12px;padding:14px;text-align:left">
+      <p style="color:#888;font-size:.75rem;margin:0">Solde PSX</p>
+      <p style="font-size:1.2rem;font-weight:700;color:#6c63ff;margin:4px 0 0">{{ psx_balance }} PSX</p>
+    </div>
+  </div>
+
+  <div class="rate-box">
+    <span class="tnd">1 TND</span>
+    <span class="arrow">→</span>
+    <span class="psx">1 PSX</span>
+  </div>
+
+  <form id="buyForm" style="text-align:left">
+    <div class="pp-form-group">
+      <label>Montant à convertir (TND)</label>
+      <input type="number" id="buyAmount" placeholder="0.00" min="1" step="0.01" required style="width:100%;padding:12px 16px;background:#0a0a1a;border:1px solid #1e1e3a;border-radius:8px;color:#fff;font-size:1.1rem;font-weight:600" oninput="updatePreview()">
+    </div>
+
+    <div class="quick-amounts">
+      <div class="quick-btn" onclick="setAmount(10)">10 TND</div>
+      <div class="quick-btn" onclick="setAmount(50)">50 TND</div>
+      <div class="quick-btn" onclick="setAmount(100)">100 TND</div>
+      <div class="quick-btn" onclick="setAmount(500)">500 TND</div>
+    </div>
+
+    <div id="previewBox" style="display:none;background:rgba(108,99,255,.06);border:1px solid rgba(108,99,255,.12);border-radius:14px;padding:16px;margin:16px 0;text-align:center">
+      <p style="color:#888;font-size:.8rem;margin:0 0 6px">Vous recevrez</p>
+      <p id="previewAmount" style="font-size:2rem;font-weight:700;background:linear-gradient(135deg,#6c63ff,#a855f7);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin:0">0 PSX</p>
+      <p style="color:#888;font-size:.75rem;margin:6px 0 0">Frais: <strong style="color:#00c853">Gratuits</strong></p>
+    </div>
+
+    <button type="button" class="pp-btn pp-btn-primary" style="width:100%;margin-top:16px;font-size:1.05rem;padding:16px" onclick="buyPSX()">Acheter PSX →</button>
+  </form>
+  <div id="buyResult" class="send-result" style="display:none"></div>
+</div>
+
+<script>
+function setAmount(v){
+  document.getElementById('buyAmount').value=v;
+  updatePreview();
+}
+function updatePreview(){
+  var amount=parseFloat(document.getElementById('buyAmount').value);
+  var box=document.getElementById('previewBox');
+  var amt=document.getElementById('previewAmount');
+  if(amount>0){
+    box.style.display='block';
+    amt.textContent=amount.toLocaleString('fr-FR',{minimumFractionDigits:2})+' PSX';
+  }else{
+    box.style.display='none';
+  }
+}
+function buyPSX(){
+  var amount=parseFloat(document.getElementById('buyAmount').value);
+  var result=document.getElementById('buyResult');
+  if(!amount||amount<=0){
+    result.style.display='block';result.className='send-result send-error';
+    result.innerHTML='Veuillez entrer un montant valide.';
+    return;
+  }
+  result.style.display='block';result.className='send-result';
+  result.style.background='rgba(108,99,255,.1)';result.style.border='1px solid rgba(108,99,255,.3)';result.style.color='#6c63ff';
+  result.innerHTML='⏳ Conversion en cours...';
+  fetch('/api/pixsoftpay/buy-psx/',{
+    method:'POST',
+    credentials:'same-origin',
+    headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},
+    body:JSON.stringify({amount:amount})
+  }).then(function(r){
+    if(r.redirected||r.url.indexOf('/login')!==-1){
+      result.className='send-result send-error';result.style.color='#ff1744';
+      result.innerHTML='Session expirée. <a href="/login/" style="color:#ff1744;text-decoration:underline">Reconnectez-vous</a>';
+      throw new Error('redirect');
+    }
+    return r.json();
+  }).then(function(d){
+    if(d.status==='success'){
+      result.className='send-result send-success';result.style.color='#00c853';
+      result.innerHTML='✅ Achat réussi !<br><span style="font-size:.85rem">'+d.message+'</span><br><span style="font-size:.8rem">Réf: '+d.reference+'</span><br><span style="font-size:.8rem">Solde PSX: '+d.psx_balance+' PSX</span><br><span style="font-size:.8rem">Solde TND: '+d.wallet_balance+' TND</span>';
+      document.getElementById('buyAmount').value='';
+      document.getElementById('previewBox').style.display='none';
+    }else{
+      result.className='send-result send-error';result.style.color='#ff1744';
+      result.innerHTML='❌ '+(d.error||'Erreur lors de l\'achat');
+    }
+  }).catch(function(e){
+    if(e.message==='redirect')return;
+    result.className='send-result send-error';result.style.color='#ff1744';
+    result.innerHTML='❌ Erreur réseau';
+  });
+}
+</script>
+{% endblock %}
