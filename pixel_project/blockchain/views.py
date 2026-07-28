@@ -31,9 +31,11 @@ from .tokenomics import (
 def _save_chain():
     chain = get_blockchain()
     from .models import ChainState
+    from . import chain as chain_mod
     state, _ = ChainState.objects.get_or_create(pk=1)
     state.data = chain.to_dict()
     state.save()
+    chain_mod._instance_loaded_at = __import__('time').time()
 
 
 # ─── Blockchain Pages ───────────────────────────────────────

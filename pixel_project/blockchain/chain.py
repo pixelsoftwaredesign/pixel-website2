@@ -266,22 +266,27 @@ class Blockchain:
 
 
 _instance = None
+_instance_loaded_at = 0.0
+_STALENESS_TTL = 10  # seconds before reloading from DB
 
 
 def get_blockchain() -> Blockchain:
-    global _instance
-    if _instance is None:
-        _instance = Blockchain()
+    global _instance, _instance_loaded_at
+    now = time.time()
+    if _instance is None or (now - _instance_loaded_at > _STALENESS_TTL):
         try:
             from .models import ChainState
             state = ChainState.objects.filter(pk=1).first()
             if state and state.data and state.data.get('chain'):
+                if _instance is None:
+                    _instance = Blockchain()
                 _instance.load_from_dict(state.data)
-            else:
-                _instance.create_genesis_block()
-                state, _ = ChainState.objects.get_or_create(pk=1)
-                state.data = _instance.to_dict()
-                state.save()
+                _instance_loaded_at = now
+                return _instance
         except Exception:
+            pass
+        if _instance is None:
+            _instance = Blockchain()
             _instance.create_genesis_block()
+            _instance_loaded_at = now
     return _instance
