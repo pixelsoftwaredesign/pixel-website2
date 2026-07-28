@@ -19,6 +19,7 @@ from .security import (
 DIFFICULTY = 4
 MINING_REWARD = 50.0
 BLOCK_MAX_TX = 100
+_SYSTEM_ADDRESSES = ('SYSTEM', 'COINBASE', 'BRIDGE_TND', 'REWARD_SYSTEM', 'SYSTEM_PREMIUM')
 
 _lock = threading.Lock()
 
@@ -140,10 +141,11 @@ class Blockchain:
             if not self.pending_transactions:
                 return None
 
-            if not sybil_guard.is_valid_validator(miner_address):
-                sender_stake = self.get_balance(miner_address)
-                if sender_stake < 1000:
-                    return None
+            if miner_address not in _SYSTEM_ADDRESSES:
+                if not sybil_guard.is_valid_validator(miner_address):
+                    sender_stake = self.get_balance(miner_address)
+                    if sender_stake < 1000:
+                        return None
 
             coinbase = {
                 'type': 'coinbase',
