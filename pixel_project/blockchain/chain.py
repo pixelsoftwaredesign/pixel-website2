@@ -272,5 +272,16 @@ def get_blockchain() -> Blockchain:
     global _instance
     if _instance is None:
         _instance = Blockchain()
-        _instance.create_genesis_block()
+        try:
+            from .models import ChainState
+            state = ChainState.objects.filter(pk=1).first()
+            if state and state.data and state.data.get('chain'):
+                _instance.load_from_dict(state.data)
+            else:
+                _instance.create_genesis_block()
+                state, _ = ChainState.objects.get_or_create(pk=1)
+                state.data = _instance.to_dict()
+                state.save()
+        except Exception:
+            _instance.create_genesis_block()
     return _instance
