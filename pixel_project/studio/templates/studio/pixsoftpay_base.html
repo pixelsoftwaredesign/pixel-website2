@@ -19,6 +19,18 @@ a{color:#6c63ff;text-decoration:none}
 .pp-nav a{color:#888;font-size:.85rem;transition:color .2s}
 .pp-nav a:hover,.pp-nav a.active{color:#6c63ff}
 .pp-nav-links{display:flex;gap:16px;align-items:center}
+.pp-burger{display:none;flex-direction:column;gap:5px;background:none;border:none;cursor:pointer;z-index:200;padding:4px}
+.pp-burger span{width:22px;height:2px;background:#6c63ff;border-radius:2px;transition:.3s}
+.pp-nav.open .pp-burger span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
+.pp-nav.open .pp-burger span:nth-child(2){opacity:0}
+.pp-nav.open .pp-burger span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}
+@media(max-width:768px){
+.pp-burger{display:flex}
+.pp-nav-links{display:none;position:fixed;top:58px;left:0;right:0;bottom:0;background:rgba(10,10,26,.97);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);flex-direction:column;padding:20px 24px 40px;gap:0;overflow-y:auto;border-top:1px solid rgba(108,99,255,.1)}
+.pp-nav.open .pp-nav-links{display:flex}
+.pp-nav-links a{padding:12px 0;border-bottom:1px solid rgba(108,99,255,.05);width:100%}
+.pp-nav-links a:last-child{border-bottom:none}
+}
 
 .pp-wrap{max-width:860px;margin:0 auto;padding:24px 20px}
 
@@ -72,11 +84,14 @@ tr:hover{background:rgba(108,99,255,.04)}
 </head>
 <body>
 
-<nav class="pp-nav">
+<nav class="pp-nav" id="ppNav">
   <a href="/pixsoftpay/" class="pp-nav-brand">
     <span class="logo-icon">₮</span>
     PixSoftMoney
   </a>
+  <button class="pp-burger" id="ppBurger" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
   <div class="pp-nav-links">
     <a href="/pixsoftpay/" class="{% if request.resolver_match.url_name == 'pixsoftpay_dashboard' %}active{% endif %}">Dashboard</a>
     <a href="/blockchain/" class="{% if 'blockchain' in request.path %}active{% endif %}">⛓️ Chain</a>
@@ -102,5 +117,14 @@ tr:hover{background:rgba(108,99,255,.04)}
 {% block content %}{% endblock %}
 </div>
 
+<script>
+(function(){
+  var nav=document.getElementById('ppNav'),btn=document.getElementById('ppBurger');
+  if(btn&&nav){
+    btn.addEventListener('click',function(){nav.classList.toggle('open')});
+    nav.querySelectorAll('.pp-nav-links a').forEach(function(l){l.addEventListener('click',function(){nav.classList.remove('open')})});
+  }
+})();
+</script>
 </body>
 </html>
