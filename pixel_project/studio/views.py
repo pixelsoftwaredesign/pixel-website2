@@ -2729,7 +2729,12 @@ def api_pixsoftpay_buy_psx(request):
 
     cw = CryptoWallet.objects.filter(user=request.user).first()
     if not cw:
-        cw = CryptoWallet.objects.create(user=request.user, address=f'PSX-{uuid.uuid4().hex[:16].upper()}', private_key='auto')
+        from blockchain.crypto import generate_wallet
+        keys = generate_wallet()
+        cw = CryptoWallet.objects.create(
+            user=request.user, address=keys['address'],
+            public_key=keys['public_key'], private_key_encrypted=keys.get('private_key', ''),
+        )
 
     ref = f"PSX-B{uuid.uuid4().hex[:8].upper()}"
     psx_amount = float(amount_tnd)
