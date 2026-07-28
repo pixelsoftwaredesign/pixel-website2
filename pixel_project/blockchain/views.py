@@ -314,15 +314,16 @@ def api_send_tnd_to_crypto(request):
         return JsonResponse({'error': 'Montant invalide'}, status=400)
 
     from studio.models import Wallet
+    from decimal import Decimal
     tnd_wallet = Wallet.objects.select_for_update().get(user=request.user)
-    if tnd_wallet.solde < amount_tnd:
+    if tnd_wallet.solde < Decimal(str(amount_tnd)):
         return JsonResponse({'error': f'Solde TND insuffisant ({tnd_wallet.solde})'}, status=400)
 
     cw = CryptoWallet.objects.select_for_update().filter(user=request.user).first()
     if not cw:
         return JsonResponse({'error': 'Aucun wallet crypto'}, status=400)
 
-    tnd_wallet.solde -= amount_tnd
+    tnd_wallet.solde -= Decimal(str(amount_tnd))
     tnd_wallet.save()
 
     psx_amount = amount_tnd * 1.0
