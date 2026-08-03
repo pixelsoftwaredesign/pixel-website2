@@ -161,4 +161,5 @@ urlpatterns = [
     path('api/pixsoftpay/profile/photo/', views.api_pixsoftpay_profile_photo, name='api_pixsoftpay_profile_photo'),
     # ─── Langue ─────────────────────────────────────────────
     path('set-language/', views.set_language, name='set_language'),
+    path('i18n.js', views.i18n_js, name='i18n_js'),
 ]

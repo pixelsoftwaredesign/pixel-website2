@@ -17,7 +17,7 @@ from .services import notifier_activation_cle, notifier_confirmation_commande, n
 def set_language(request):
     """Change la langue active (session + cookie) puis redirige."""
     from django.conf import settings
-    from .i18n import SUPPORTED, DEFAULT_LANG
+    from .i18n import SUPPORTED, DEFAULT_LANG, _T, LANGUAGES, LANGUAGE_ORDER
     lang = request.GET.get('lang', '').lower()
     if lang not in SUPPORTED:
         lang = DEFAULT_LANG
@@ -29,6 +29,30 @@ def set_language(request):
         samesite='Lax', secure=not settings.DEBUG,
     )
     return response
+
+def i18n_js(request):
+    from django.http import HttpResponse
+    from .i18n import LANGUAGES, LANGUAGE_ORDER, _T
+    return HttpResponse(_i18n_js(), content_type='application/javascript; charset=utf-8')
+
+_i18n_js_cache = None
+
+def _i18n_js():
+    global _i18n_js_cache
+    if _i18n_js_cache is None:
+        from .i18n import LANGUAGES, LANGUAGE_ORDER, _T
+        langs = json.dumps(LANGUAGES, ensure_ascii=False)
+        order = json.dumps(LANGUAGE_ORDER, ensure_ascii=False)
+        rtl = json.dumps(['ar', 'fa', 'ur'], ensure_ascii=False)
+        data = json.dumps(_T, ensure_ascii=False)
+        _i18n_js_cache = (
+            "window.PIXEL_I18N = window.PIXEL_I18N || {};\n"
+            "window.PIXEL_I18N.LANGS = " + langs + ";\n"
+            "window.PIXEL_I18N.ORDER = " + order + ";\n"
+            "window.PIXEL_I18N.RTL = " + rtl + ";\n"
+            "window.PIXEL_I18N.T = " + data + ";\n"
+        )
+    return _i18n_js_cache
 
 def index(request):
     projects_delivered = PortfolioProject.objects.count() + CodeRepository.objects.count() + GraphismeResource.objects.count() + StudioProject3D.objects.count() + PatisserieRecipe.objects.count()

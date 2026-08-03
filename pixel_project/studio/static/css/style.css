@@ -229,10 +229,13 @@ footer{padding:2.5rem 5rem;border-top:1px solid var(--border);display:flex;justi
   .lang-dropdown{right:auto;left:0;width:100%}
 }
 
-/* ─── Support RTL (arabe) ─────────────────────────────── */
-html[dir="rtl"] body{direction:rtl}
+/* ─── Support RTL (arabe, persan, ourdou) ────────────── */
+html[dir="rtl"] body{direction:rtl;text-align:right}
 html[dir="rtl"] .nav-menu{text-align:right}
 html[dir="rtl"] .dropdown-menu{left:auto;right:0}
 html[dir="rtl"] .lang-dropdown{right:auto;left:0}
+html[dir="rtl"] .lang-selector{margin:0 14px 0 0}
+html[dir="rtl"] input,html[dir="rtl"] textarea,html[dir="rtl"] select{text-align:right}
+html[dir="rtl"] .pixel-nav{padding-right:1.2rem;padding-left:0}
 .explore-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.2rem;margin-top:2rem}
 .dash-num{font-family:'Space Mono',monospace;font-size:2.5rem;font-weight:700;color:var(--accent)}

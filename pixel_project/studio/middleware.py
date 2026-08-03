@@ -19,58 +19,21 @@ class LanguageMiddleware:
 
 
 class LanguageInjectMiddleware:
-    """Injecte le sélecteur de langue + RTL dans toutes les réponses HTML.
-    Fonctionne sur les 100+ templates sans avoir à les modifier un par un."""
+    """Injecte le sélecteur de langue + RTL + traduction du DOM entier dans
+    toutes les réponses HTML. Fonctionne sur les 100+ templates sans les
+    modifier un par un. Le dictionnaire est chargé depuis /i18n.js."""
 
     SNIPPET = r"""
+<script src="/i18n.js"></script>
 <script>
 (function(){
-  var LANGS={fr:['\u{1F1EB}\u{1F1F7}','Français'],en:['\u{1F1EC}\u{1F1E7}','English'],ar:['\u{1F1F9}\u{1F1F3}','العربية'],it:['\u{1F1EE}\u{1F1F9}','Italiano'],es:['\u{1F1EA}\u{1F1F8}','Español']};
-  var ORDER=['fr','en','ar','it','es'];
-  var NAV_T={
-    'Accueil':{en:'Home',ar:'الرئيسية',it:'Home',es:'Inicio'},
-    'Logiciels':{en:'Software',ar:'البرمجيات',it:'Software',es:'Software'},
-    'Pourquoi nous':{en:'Why us',ar:'لماذا نحن',it:'Perché noi',es:'Por qué'},
-    'Projets':{en:'Projects',ar:'المشاريع',it:'Progetti',es:'Proyectos'},
-    'Processus':{en:'Process',ar:'المنهجية',it:'Processo',es:'Proceso'},
-    'Pages':{en:'Pages',ar:'الصفحات',it:'Pagine',es:'Páginas'},
-    'À propos':{en:'About',ar:'من نحن',it:'Chi siamo',es:'Acerca de'},
-    'Témoignages':{en:'Testimonials',ar:'الشهادات',it:'Testimonianze',es:'Testimonios'},
-    'Prix':{en:'Pricing',ar:'الأسعار',it:'Prezzi',es:'Precios'},
-    'Contact':{en:'Contact',ar:'اتصل بنا',it:'Contatti',es:'Contacto'},
-    'Dashboard':{en:'Dashboard',ar:'لوحة التحكم',it:'Pannello',es:'Panel'},
-    'Wallet':{en:'Wallet',ar:'المحفظة',it:'Portafoglio',es:'Monedero'},
-    'Historique':{en:'History',ar:'السجل',it:'Cronologia',es:'Historial'},
-    'Mon Wallet':{en:'My Wallet',ar:'محفظتي',it:'Il mio portafoglio',es:'Mi monedero'},
-    'Créer un QR':{en:'Create QR',ar:'إنشاء رمز QR',it:'Crea QR',es:'Crear QR'},
-    'Envoyer':{en:'Send',ar:'إرسال',it:'Invia',es:'Enviar'},
-    'Recevoir':{en:'Receive',ar:'استلام',it:'Ricevi',es:'Recibir'},
-    'Retirer':{en:'Withdraw',ar:'سحب',it:'Preleva',es:'Retirar'},
-    'Déposer':{en:'Deposit',ar:'إيداع',it:'Deposita',es:'Depositar'},
-    'Acheter PSX':{en:'Buy PSX',ar:'شراء PSX',it:'Compra PSX',es:'Comprar PSX'},
-    'Nouveau QR':{en:'New QR',ar:'QR جديد',it:'Nuovo QR',es:'Nuevo QR'},
-    'Parrainage':{en:'Referral',ar:'الإحالة',it:'Referral',es:'Referido'},
-    'Vérification':{en:'Verification',ar:'التحقق',it:'Verifica',es:'Verificación'},
-    'Chain':{en:'Chain',ar:'السلسلة',it:'Catena',es:'Cadena'},
-    'Token':{en:'Token',ar:'العملة',it:'Token',es:'Token'},
-    'Vote':{en:'Vote',ar:'التصويت',it:'Voto',es:'Votar'},
-    'Stake':{en:'Stake',ar:'التحصيص',it:'Stake',es:'Stake'},
-    'Site':{en:'Site',ar:'الموقع',it:'Sito',es:'Sitio'},
-    'Connexion':{en:'Login',ar:'تسجيل الدخول',it:'Accedi',es:'Iniciar sesión'},
-    'GestiActiv ERP':{en:'GestiActiv ERP',ar:'جستي أكتيف',it:'GestiActiv ERP',es:'GestiActiv ERP'},
-    'Tableau de bord':{en:'Dashboard',ar:'لوحة التحكم',it:'Pannello',es:'Panel'},
-    'Restaurant & Café':{en:'Restaurant & Café',ar:'مطعم ومقهى',it:'Ristorante & Caffè',es:'Restaurante y Café'},
-    'Pâtisserie Gestio & Caisse':{en:'Pastry & POS',ar:'معجنات ونقطة بيع',it:'Pasticceria & POS',es:'Repostería y POS'},
-    'Inner Studio 3D':{en:'Inner Studio 3D',ar:'إينر ستوديو 3D',it:'Inner Studio 3D',es:'Inner Studio 3D'},
-    'Atelier Créatif & Dev':{en:'Creative Workshop & Dev',ar:'ورشة إبداعية وتطوير',it:'Laboratorio Creativo & Dev',es:'Taller Creativo y Dev'},
-    'Pixel Graphisme':{en:'Pixel Graphic Design',ar:'بيكسل للتصميم',it:'Pixel Grafica',es:'Pixel Diseño'},
-    'Projets internes':{en:'Internal projects',ar:'مشاريع داخلية',it:'Progetti interni',es:'Proyectos internos'},
-    'PixMaps — Web App':{en:'PixMaps — Web App',ar:'بيكسمابس — تطبيق ويب',it:'PixMaps — Web App',es:'PixMaps — Web App'}
-  };
+  var LANGS={fr:['\u{1F1EB}\u{1F1F7}','Français'],en:['\u{1F1EC}\u{1F1E7}','English'],ar:['\u{1F1F9}\u{1F1F3}','العربية'],it:['\u{1F1EE}\u{1F1F9}','Italiano'],es:['\u{1F1EA}\u{1F1F8}','Español'],zh:['\u{1F1E8}\u{1F1F3}','中文'],ja:['\u{1F1EF}\u{1F1F5}','日本語'],ru:['\u{1F1F7}\u{1F1FA}','Русский'],fa:['\u{1F1EE}\u{1F1F7}','فارسی'],ur:['\u{1F1F5}\u{1F1F0}','اردو'],hi:['\u{1F1EE}\u{1F1F3}','हिन्दी']};
+  var ORDER=['fr','en','ar','it','es','zh','ja','ru','fa','ur','hi'];
+  var RTL={ar:1,fa:1,ur:1};
   var m=document.cookie.match(/(^| )django_language=([^;]+)/);
   var cur=m&&LANGS[m[2]]?m[2]:'fr';
   document.documentElement.setAttribute('lang',cur);
-  if(cur==='ar'){document.documentElement.setAttribute('dir','rtl')}else{document.documentElement.removeAttribute('dir')}
+  if(RTL[cur]){document.documentElement.setAttribute('dir','rtl')}else{document.documentElement.removeAttribute('dir')}
   function addCSS(){var s=document.createElement('style');s.textContent=
     '.lang-selector{position:relative;display:inline-block;z-index:300;margin:0 0 0 14px}'+
     '.lang-btn{display:flex;align-items:center;gap:6px;background:rgba(30,180,130,.1);border:1px solid var(--border,#1e1e3a);color:inherit;font-family:inherit;font-size:.8rem;padding:.35rem .7rem;border-radius:6px;cursor:pointer}'+
@@ -82,14 +45,44 @@ class LanguageInjectMiddleware:
     '.lang-dropdown li a.active{color:#1EB482;background:rgba(30,180,130,.08)}'+
     '@media(max-width:960px){.lang-selector{margin:.5rem 0 1rem;width:100%}.lang-btn{width:100%;justify-content:center}.lang-dropdown{right:auto;left:0;width:100%}}'+
     'html[dir="rtl"] .nav-menu{text-align:right}'+
-    'html[dir="rtl"] .dropdown-menu{left:auto;right:0}';
+    'html[dir="rtl"] .dropdown-menu{left:auto;right:0}'+
+    'html[dir="rtl"] .lang-selector{margin:0 14px 0 0}'+
+    'html[dir="rtl"] .lang-dropdown{left:0;right:auto}'+
+    'html[dir="rtl"] input,html[dir="rtl"] textarea{text-align:right}';
     document.head.appendChild(s)}
   addCSS();
-  function inject(c){if(c.querySelector('.lang-selector'))return;var el=document.createElement('div');el.className='lang-selector';
+  function inject(c){var old=c.querySelector('.lang-selector');if(old)old.parentNode&&old.parentNode.removeChild(old);var el=document.createElement('div');el.className='lang-selector';
     el.innerHTML='<button type="button" class="lang-btn" aria-label="Langue"><span>'+LANGS[cur][0]+'</span> <span class="lang-code">'+cur.toUpperCase()+'</span></button><ul class="lang-dropdown">'+ORDER.map(function(code){return '<li><a href="/set-language/?lang='+code+'&next='+encodeURIComponent(location.pathname+location.search)+'"'+(code===cur?' class="active"':'')+'><span>'+LANGS[code][0]+'</span> '+LANGS[code][1]+'</a></li>'}).join('')+'</ul>';
     c.appendChild(el)}
-  var navs=document.querySelectorAll('nav');for(var i=0;i<navs.length;i++){inject(navs[i])}
-  if(cur!=='fr'){document.querySelectorAll('nav a').forEach(function(a){var raw=(a.textContent||'').replace(/\u25BE/g,'').trim();var hit=NAV_T[raw];if(hit&&hit[cur])a.textContent=hit[cur]})}
+  document.querySelectorAll('nav, .pp-nav').forEach(inject);
+  if(cur!=='fr'){
+    var I=window.PIXEL_I18N&&window.PIXEL_I18N.T?window.PIXEL_I18N.T:null;
+    if(I){
+      var KEYS=null;
+      function norm(s){return (s||'').replace(/\u200B/g,'').replace(/\u25BE/g,'').replace(/\s+/g,' ').trim()}
+      function translate(v){if(!v)return null;var hit=I[v];if(hit&&hit[cur]&&hit[cur]!==v)return hit[cur];return null}
+      var walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,null,false);
+      var nodes=[];
+      while(walker.nextNode())nodes.push(walker.currentNode);
+      for(var i=0;i<nodes.length;i++){
+        var n=nodes[i];var p=n.parentNode;
+        if(!p||!p.closest)continue;
+        if(p.closest('.lang-selector,script,style,noscript,textarea,option,input,select'))continue;
+        var raw=n.nodeValue;if(!raw)continue;
+        var t=translate(norm(raw));
+        if(t)n.nodeValue=raw.replace(norm(raw),t);
+      }
+      ['placeholder','title','aria-label','alt'].forEach(function(attr){
+        document.querySelectorAll('['+attr+']').forEach(function(el){
+          var v=norm(el.getAttribute(attr));
+          var t=translate(v);
+          if(t)el.setAttribute(attr,t);
+        });
+      });
+      var tt=translate(norm(document.title));
+      if(tt)document.title=tt;
+    }
+  }
   document.addEventListener('click',function(e){var s=e.target.closest('.lang-selector');document.querySelectorAll('.lang-selector.open').forEach(function(x){if(x!==s)x.classList.remove('open')});if(s)s.classList.toggle('open')});
 })();
 </script>
@@ -108,11 +101,13 @@ class LanguageInjectMiddleware:
             if not isinstance(body, bytes):
                 return response
             if b'</body>' in body:
-                response.content = body.replace(
+                new_body = body.replace(
                     b'</body>',
                     self.SNIPPET.encode('utf-8') + b'</body>',
                     1,
                 )
+                response.content = new_body
+                response['Content-Length'] = str(len(new_body))
         except Exception:
             pass
         return response

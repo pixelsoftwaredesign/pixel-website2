@@ -129,6 +129,12 @@ LANGUAGES = [
     ('ar', 'العربية'),
     ('it', 'Italiano'),
     ('es', 'Español'),
+    ('zh', '中文'),
+    ('ja', '日本語'),
+    ('ru', 'Русский'),
+    ('fa', 'فارسی'),
+    ('ur', 'اردو'),
+    ('hi', 'हिन्दी'),
 ]
 LOCALE_PATHS = [
     BASE_DIR / 'locale',
@@ -136,7 +142,7 @@ LOCALE_PATHS = [
 LANGUAGE_COOKIE_NAME = 'django_language'
 LANGUAGE_COOKIE_AGE = 60 * 60 * 24 * 365  # 1 an
 
-LANGUAGES_BIDI = ['ar']  # langue RTL (droite → gauche)
+LANGUAGES_BIDI = ['ar', 'fa', 'ur']  # langues RTL (droite → gauche)
 
 # ─── Email (PixMail) ──────────────────────────────────
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

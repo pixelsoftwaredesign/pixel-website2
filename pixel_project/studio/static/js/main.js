@@ -14,13 +14,20 @@ if (burgerBtn) {
     ar: ['🇹🇳', 'العربية'],
     it: ['🇮🇹', 'Italiano'],
     es: ['🇪🇸', 'Español'],
+    zh: ['🇨🇳', '中文'],
+    ja: ['🇯🇵', '日本語'],
+    ru: ['🇷🇺', 'Русский'],
+    fa: ['🇮🇷', 'فارسی'],
+    ur: ['🇵🇰', 'اردو'],
+    hi: ['🇮🇳', 'हिन्दी'],
   };
-  const ORDER = ['fr', 'en', 'ar', 'it', 'es'];
+  const ORDER = ['fr', 'en', 'ar', 'it', 'es', 'zh', 'ja', 'ru', 'fa', 'ur', 'hi'];
+  const RTL = { ar: 1, fa: 1, ur: 1 };
   const cookie = document.cookie.match(/(^| )django_language=([^;]+)/);
   const current = cookie && LANGS[cookie[2]] ? cookie[2] : 'fr';
 
   document.documentElement.setAttribute('lang', current);
-  if (current === 'ar') document.documentElement.setAttribute('dir', 'rtl');
+  if (RTL[current]) document.documentElement.setAttribute('dir', 'rtl');
   else document.documentElement.removeAttribute('dir');
 
   function inject(container) {
