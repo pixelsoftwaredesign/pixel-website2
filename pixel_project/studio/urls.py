@@ -159,4 +159,6 @@ urlpatterns = [
     path('api/pixsoftpay/kyc/submit/', views.api_pixsoftpay_kyc_submit, name='api_pixsoftpay_kyc_submit'),
     path('api/pixsoftpay/kyc/status/', views.api_pixsoftpay_kyc_status, name='api_pixsoftpay_kyc_status'),
     path('api/pixsoftpay/profile/photo/', views.api_pixsoftpay_profile_photo, name='api_pixsoftpay_profile_photo'),
+    # ─── Langue ─────────────────────────────────────────────
+    path('set-language/', views.set_language, name='set_language'),
 ]

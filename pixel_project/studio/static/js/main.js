@@ -6,6 +6,100 @@ if (burgerBtn) {
   document.querySelectorAll('.nav-menu a').forEach(l => l.addEventListener('click', () => navMenu.classList.remove('open')));
 }
 
+// ── LANGUE (RTL + sélecteur) ──
+(function () {
+  const LANGS = {
+    fr: ['🇫🇷', 'Français'],
+    en: ['🇬🇧', 'English'],
+    ar: ['🇹🇳', 'العربية'],
+    it: ['🇮🇹', 'Italiano'],
+    es: ['🇪🇸', 'Español'],
+  };
+  const ORDER = ['fr', 'en', 'ar', 'it', 'es'];
+  const cookie = document.cookie.match(/(^| )django_language=([^;]+)/);
+  const current = cookie && LANGS[cookie[2]] ? cookie[2] : 'fr';
+
+  document.documentElement.setAttribute('lang', current);
+  if (current === 'ar') document.documentElement.setAttribute('dir', 'rtl');
+  else document.documentElement.removeAttribute('dir');
+
+  function inject(container) {
+    if (container.querySelector('.lang-selector')) return;
+    const el = document.createElement('div');
+    el.className = 'lang-selector';
+    el.innerHTML = '<button type="button" class="lang-btn" aria-label="Langue"><span>' +
+      LANGS[current][0] + '</span> <span class="lang-code">' + current.toUpperCase() + '</span></button>' +
+      '<ul class="lang-dropdown">' +
+      ORDER.map(code =>
+        '<li><a href="/set-language/?lang=' + code + '&next=' + encodeURIComponent(location.pathname + location.search) + '"' +
+        (code === current ? ' class="active"' : '') + '><span>' + LANGS[code][0] + '</span> ' + LANGS[code][1] + '</a></li>'
+      ).join('') +
+      '</ul>';
+    container.appendChild(el);
+  }
+
+  document.querySelectorAll('nav').forEach(inject);
+  document.querySelectorAll('.pp-nav').forEach(inject);
+
+  // ── Traduction de la navigation (fonctionne sur tous les templates) ──
+  const NAV_T = {
+    'Accueil': { en: 'Home', ar: 'الرئيسية', it: 'Home', es: 'Inicio' },
+    'Logiciels': { en: 'Software', ar: 'البرمجيات', it: 'Software', es: 'Software' },
+    'Pourquoi nous': { en: 'Why us', ar: 'لماذا نحن', it: 'Perché noi', es: 'Por qué' },
+    'Projets': { en: 'Projects', ar: 'المشاريع', it: 'Progetti', es: 'Proyectos' },
+    'Processus': { en: 'Process', ar: 'المنهجية', it: 'Processo', es: 'Proceso' },
+    'Pages': { en: 'Pages', ar: 'الصفحات', it: 'Pagine', es: 'Páginas' },
+    'À propos': { en: 'About', ar: 'من نحن', it: 'Chi siamo', es: 'Acerca de' },
+    'Témoignages': { en: 'Testimonials', ar: 'الشهادات', it: 'Testimonianze', es: 'Testimonios' },
+    'Prix': { en: 'Pricing', ar: 'الأسعار', it: 'Prezzi', es: 'Precios' },
+    'Contact': { en: 'Contact', ar: 'اتصل بنا', it: 'Contatti', es: 'Contacto' },
+    'GestiActiv ERP': { en: 'GestiActiv ERP', ar: 'جستي أكتيف', it: 'GestiActiv ERP', es: 'GestiActiv ERP' },
+    'Tableau de bord': { en: 'Dashboard', ar: 'لوحة التحكم', it: 'Pannello', es: 'Panel' },
+    'Restaurant & Café': { en: 'Restaurant & Café', ar: 'مطعم ومقهى', it: 'Ristorante & Caffè', es: 'Restaurante y Café' },
+    'Pâtisserie Gestio & Caisse': { en: 'Pastry & POS', ar: 'معجنات ونقطة بيع', it: 'Pasticceria & POS', es: 'Repostería y POS' },
+    'Inner Studio 3D': { en: 'Inner Studio 3D', ar: 'إينر ستوديو 3D', it: 'Inner Studio 3D', es: 'Inner Studio 3D' },
+    'Atelier Créatif & Dev': { en: 'Creative Workshop & Dev', ar: 'ورشة إبداعية وتطوير', it: 'Laboratorio Creativo & Dev', es: 'Taller Creativo y Dev' },
+    'Pixel Graphisme': { en: 'Pixel Graphic Design', ar: 'بيكسل للتصميم', it: 'Pixel Grafica', es: 'Pixel Diseño' },
+    'Projets internes': { en: 'Internal projects', ar: 'مشاريع داخلية', it: 'Progetti interni', es: 'Proyectos internos' },
+    'PixMaps — Web App': { en: 'PixMaps — Web App', ar: 'بيكسمابس — تطبيق ويب', it: 'PixMaps — Web App', es: 'PixMaps — Web App' },
+    // PixSoftPay nav
+    'Dashboard': { en: 'Dashboard', ar: 'لوحة التحكم', it: 'Pannello', es: 'Panel' },
+    'Wallet': { en: 'Wallet', ar: 'المحفظة', it: 'Portafoglio', es: 'Monedero' },
+    'Historique': { en: 'History', ar: 'السجل', it: 'Cronologia', es: 'Historial' },
+    'Mon Wallet': { en: 'My Wallet', ar: 'محفظتي', it: 'Il mio portafoglio', es: 'Mi monedero' },
+    'Créer un QR': { en: 'Create QR', ar: 'إنشاء رمز QR', it: 'Crea QR', es: 'Crear QR' },
+    'Envoyer': { en: 'Send', ar: 'إرسال', it: 'Invia', es: 'Enviar' },
+    'Recevoir': { en: 'Receive', ar: 'استلام', it: 'Ricevi', es: 'Recibir' },
+    'Retirer': { en: 'Withdraw', ar: 'سحب', it: 'Preleva', es: 'Retirar' },
+    'Déposer': { en: 'Deposit', ar: 'إيداع', it: 'Deposita', es: 'Depositar' },
+    'Acheter PSX': { en: 'Buy PSX', ar: 'شراء PSX', it: 'Compra PSX', es: 'Comprar PSX' },
+    'Nouveau QR': { en: 'New QR', ar: 'QR جديد', it: 'Nuovo QR', es: 'Nuevo QR' },
+    'Parrainage': { en: 'Referral', ar: 'الإحالة', it: 'Referral', es: 'Referido' },
+    'Vérification': { en: 'Verification', ar: 'التحقق', it: 'Verifica', es: 'Verificación' },
+    'Chain': { en: 'Chain', ar: 'السلسلة', it: 'Catena', es: 'Cadena' },
+    'Token': { en: 'Token', ar: 'العملة', it: 'Token', es: 'Token' },
+    'Vote': { en: 'Vote', ar: 'التصويت', it: 'Voto', es: 'Votar' },
+    'Stake': { en: 'Stake', ar: 'التحصيص', it: 'Stake', es: 'Stake' },
+    'Site': { en: 'Site', ar: 'الموقع', it: 'Sito', es: 'Sitio' },
+    'Connexion': { en: 'Login', ar: 'تسجيل الدخول', it: 'Accedi', es: 'Iniciar sesión' },
+  };
+  if (current !== 'fr') {
+    document.querySelectorAll('nav a, .pp-nav a').forEach(function (a) {
+      const raw = a.textContent.replace(/▾/g, '').trim();
+      const hit = NAV_T[raw];
+      if (hit && hit[current]) a.textContent = hit[current];
+    });
+  }
+
+  document.addEventListener('click', function (e) {
+    const sel = e.target.closest('.lang-selector');
+    document.querySelectorAll('.lang-selector.open').forEach(function (s) {
+      if (s !== sel) s.classList.remove('open');
+    });
+    if (sel) sel.classList.toggle('open');
+  });
+})();
+
 // ── MOBILE DROPDOWN TOGGLE ──
 document.querySelectorAll('.dropdown').forEach(dd => {
   const link = dd.querySelector(':scope > a');

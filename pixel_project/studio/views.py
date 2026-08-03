@@ -13,6 +13,23 @@ from django.utils import timezone
 from .models import UserProfile, ProjetContact, AtelierProfile, PortfolioProject, CodeRepository, GraphismeResource, ERPModule, ERPSubscription, ERPDemoRecord, ERPClient, Moniteur, Candidat, Vehicule, Lecon, Examen, Medecin, Patient, Lit, RendezVous, FacturationSante, ClientHotel, Chambre, ReservationHotel, ServiceHotel, Categorie, Fournisseur, Produit, Vente, ClientJuridique, DossierJuridique, Audience, JournalComptable, EcritureComptable, Facture, DeclarationFiscale, Employe, Contrat, FichePaie, Conge, Formation, MenuItem, TableRestaurant, SoftCodeModule, StudioProject3D, PatisserieRecipe, PatisserieProduct, PlanAbonnement, SouscriptionClient, Paiement, CleActivation, ConfigurationBancaire, ConfigurationPaiementEnLigne, Candidature, MouvementStock, CommandeECommerce, CommandeECommerceItem, Temoignage, PixMailAccount, PixMailContact, PixMailMessage, PixMailAttachment, PixMailFolder, PixMailSignature, SocialProfile, Follow, Post, Like, Comment, Notification, Conversation, ConversationMember, EncryptedMessage, Wallet, Transaction, TwoFactorAuth, Referral, REFERRAL_BONUS_AMOUNT, REFERRAL_THRESHOLD, KYCVerification
 from .services import notifier_activation_cle, notifier_confirmation_commande, notifier_statut_commande
 
+
+def set_language(request):
+    """Change la langue active (session + cookie) puis redirige."""
+    from django.conf import settings
+    from .i18n import SUPPORTED, DEFAULT_LANG
+    lang = request.GET.get('lang', '').lower()
+    if lang not in SUPPORTED:
+        lang = DEFAULT_LANG
+    request.session['lang'] = lang
+    response = redirect(request.GET.get('next') or '/')
+    response.set_cookie(
+        'django_language', lang,
+        max_age=60 * 60 * 24 * 365, httponly=False,
+        samesite='Lax', secure=not settings.DEBUG,
+    )
+    return response
+
 def index(request):
     projects_delivered = PortfolioProject.objects.count() + CodeRepository.objects.count() + GraphismeResource.objects.count() + StudioProject3D.objects.count() + PatisserieRecipe.objects.count()
     contacts = ProjetContact.objects.count()
