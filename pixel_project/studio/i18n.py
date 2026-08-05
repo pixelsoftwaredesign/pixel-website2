@@ -162,7 +162,7 @@ _T = {
     'Envoyer →': {'en': 'Send →', 'ar': 'إرسال →', 'it': 'Invia →', 'es': 'Enviar →', 'zh': '发送→', 'ja': '送信 →', 'ru': 'Отправить →', 'fa': 'ارسال →', 'ur': 'بھیجیں →', 'hi': 'भेजें →'},
     'Se connecter': {'en': 'Log in', 'ar': 'تسجيل الدخول', 'it': 'Accedi', 'es': 'Iniciar sesión', 'zh': '登录', 'ja': 'ログイン', 'ru': 'Войти', 'fa': 'ورود به سیستم', 'ur': 'لاگ ان کریں', 'hi': 'लॉग इन करें'},
     "S'inscrire": {'en': 'Sign up', 'ar': 'الاشتراك', 'it': 'Iscriviti', 'es': 'Regístrese', 'zh': '注册', 'ja': 'サインアップ', 'ru': 'Зарегистрироваться', 'fa': 'ثبت نام', 'ur': 'سائن اپ', 'hi': 'रजिस्टर'},
-    'Se déconnecter': {'en': 'Se disconnect', 'ar': 'Se قطع الاتصال', 'it': 'Se disconnetti', 'es': 'Se desconectar', 'zh': '自动断开连接', 'ja': '切断', 'ru': 'Se отключить', 'fa': '|', 'ur': 'لاگ آؤٹ کریں۔', 'hi': 'लॉग आउट करें'},
+    'Se déconnecter': {'en': 'Log out', 'ar': 'تسجيل الخروج', 'it': 'Disconnetti', 'es': 'Cerrar sesión', 'zh': '退出登录', 'ja': 'ログアウト', 'ru': 'Выйти', 'fa': 'خروج', 'ur': 'لاگ آؤٹ کریں۔', 'hi': 'लॉग आउट करें'},
     'Créer mon compte': {'en': 'Create my account', 'ar': 'إنشاء حسابي', 'it': 'Crea il mio account', 'es': 'Crear mi cuenta', 'zh': '创建我的帐户', 'ja': 'アカウントを作成', 'ru': 'Создать мою учетную запись', 'fa': 'ایجاد حساب کاربری', 'ur': 'میرا اکاؤنٹ بنائیں', 'hi': 'मेरा खाता बनाएं'},
     'Total': {'en': 'Total', 'ar': 'الإجمالي', 'it': 'Totale', 'es': 'Total', 'zh': '总计', 'ja': '合計', 'ru': 'Всего', 'fa': 'Total', 'ur': ' ٹوٹل', 'hi': 'कुल'},
     'Solde disponible': {'en': 'Available Balance', 'ar': 'الرصيد المتوفر', 'it': 'Saldo disponibile', 'es': 'Saldo disponible', 'zh': '可用余额', 'ja': '利用可能な残高', 'ru': 'Доступный баланс', 'fa': 'موجودی موجود', 'ur': 'بیلنس دستیاب', 'hi': 'उपलब्ध शेष'},

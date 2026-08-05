@@ -86,9 +86,14 @@ class LanguageInjectMiddleware:
         if(!raw)return null;
         var n=norm(raw);
         if(!n)return null;
+        var nl=n.toLowerCase();
+        if(nl==='pixel software design'||nl==='pixelsoftwaredesign')return raw;
         var key=cur+'\u0001'+n;
         if(key in cache)return cache[key];
-        var out=restore(trPhrase(protect(n)));
+        var hit=I[n];
+        var out;
+        if(hit&&hit[cur]&&hit[cur]!==n)out=hit[cur];
+        else out=restore(trPhrase(protect(n)));
         cache[key]=out;
         return out;
       }
