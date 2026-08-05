@@ -24,7 +24,7 @@ class LanguageInjectMiddleware:
     modifier un par un. Le dictionnaire est chargé depuis /i18n.js."""
 
     SNIPPET = r"""
-<script src="/i18n.js"></script>
+<script src="/i18n.js?v=20260805"></script>
 <script>
 (function(){
   var LANGS={fr:['\u{1F1EB}\u{1F1F7}','Français'],en:['\u{1F1EC}\u{1F1E7}','English'],ar:['\u{1F1F9}\u{1F1F3}','العربية'],it:['\u{1F1EE}\u{1F1F9}','Italiano'],es:['\u{1F1EA}\u{1F1F8}','Español'],zh:['\u{1F1E8}\u{1F1F3}','中文'],ja:['\u{1F1EF}\u{1F1F5}','日本語'],ru:['\u{1F1F7}\u{1F1FA}','Русский'],fa:['\u{1F1EE}\u{1F1F7}','فارسی'],ur:['\u{1F1F5}\u{1F1F0}','اردو'],hi:['\u{1F1EE}\u{1F1F3}','हिन्दी']};
