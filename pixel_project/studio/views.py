@@ -1375,7 +1375,7 @@ def api_me(request):
                 "atelier_role": atelier.role if atelier else None,
             }
         })
-    return JsonResponse({"status": "error", "user": None}, status=401)
+    return JsonResponse({"status": "success", "user": None})
 
 # ─── Dashboard central ──────────────────────────────────────
 def dashboard(request):
