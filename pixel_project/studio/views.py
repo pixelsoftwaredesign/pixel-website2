@@ -1408,9 +1408,9 @@ def facture_commande(request, cmd_id):
     societe = {
         'nom': 'Pixel Software Design',
         'slogan': "L'architecture de l'innovation",
-        'adresse': 'Tunis, Tunisie',
-        'email': 'contact@pixelsoftwaredesign.com',
-        'tel': '+216 XX XXX XXX',
+        'adresse': 'El Hamma, Gabès, Tunisie',
+        'email': 'pixelsoftwaredesign@gmail.com',
+        'tel': '+216 52 675 027',
         'registre': 'Matricule: XXXXXXXX/X/X/XXX',
     }
     return render(request, 'studio/facture.html', {
