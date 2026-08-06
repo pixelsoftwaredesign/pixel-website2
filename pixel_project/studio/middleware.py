@@ -88,6 +88,7 @@ class LanguageInjectMiddleware:
         if(!n)return null;
         var nl=n.toLowerCase();
         if(nl==='pixel software design'||nl==='pixelsoftwaredesign')return raw;
+        if(n.indexOf('@')!==-1)return raw;
         var key=cur+'\u0001'+n;
         if(key in cache)return cache[key];
         var hit=I[n];
