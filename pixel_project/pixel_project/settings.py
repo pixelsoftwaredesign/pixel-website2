@@ -64,6 +64,7 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'studio.middleware.LanguageMiddleware',
     'studio.middleware.LanguageInjectMiddleware',
+    'studio.middleware.SEOInjectMiddleware',
     'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',

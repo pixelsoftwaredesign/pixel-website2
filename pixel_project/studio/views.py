@@ -54,6 +54,42 @@ def _i18n_js():
         )
     return _i18n_js_cache
 
+def robots_txt(request):
+    from django.http import HttpResponse
+    return HttpResponse(
+        "User-agent: *\n"
+        "Disallow: /api/\n"
+        "Disallow: /admin/\n"
+        "Disallow: /login/\n"
+        "Disallow: /pixsoftpay/\n"
+        "Disallow: /ecommerce/panier/\n"
+        "Disallow: /social/messagerie/\n"
+        "Allow: /\n"
+        "Sitemap: https://pixelsoftwaredesign.xyz/sitemap.xml\n",
+        content_type='text/plain',
+    )
+
+
+def sitemap_xml(request):
+    from django.http import HttpResponse
+    SITE = 'https://pixelsoftwaredesign.xyz'
+    urls = [
+        '/', '/a-propos/', '/portfolio/', '/prix/', '/faq/', '/temoignages/',
+        '/contact/', '/recrutement/', '/gestiactiv/', '/restaurant/',
+        '/patisserie/', '/pixelsoftcode/', '/innerstudio/', '/uicatalogue/',
+        '/graphisme/', '/atelierdev/', '/atelier/', '/pixmail/', '/logiciel-offline/',
+    ]
+    items = ''.join(
+        '<url><loc>%s%s</loc><changefreq>%s</changefreq><priority>%s</priority></url>' % (
+            SITE, u, ('weekly' if u in ('/',) else 'monthly'), ('1.0' if u == '/' else '0.8'))
+        for u in urls
+    )
+    return HttpResponse(
+        '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + items + '\n</urlset>\n',
+        content_type='application/xml',
+    )
+
+
 def index(request):
     projects_delivered = PortfolioProject.objects.count() + CodeRepository.objects.count() + GraphismeResource.objects.count() + StudioProject3D.objects.count() + PatisserieRecipe.objects.count()
     contacts = ProjetContact.objects.count()
@@ -1606,7 +1642,19 @@ def faq(request):
         {'q': "Proposez-vous des services de maintenance après livraison ?", 'a': "Oui, nous proposons des contrats de maintenance et de support technique pour tous nos logiciels. Les abonnements PixelSoftCode incluent la maintenance et les mises à jour."},
         {'q': "Comment rejoindre l'équipe Pixel Software Design ?", 'a': "Consultez notre page Recrutement pour postuler en tant que worker (employé), partenaire ou freelance. Nous sommes toujours à la recherche de talents passionnés par l'innovation technologique."},
     ]
-    return render(request, 'studio/faq.html', {'faqs': faqs})
+    import json
+    faq_schema = {
+        '@context': 'https://schema.org',
+        '@type': 'FAQPage',
+        'mainEntity': [
+            {'@type': 'Question', 'name': f['q'], 'acceptedAnswer': {'@type': 'Answer', 'text': f['a']}}
+            for f in faqs
+        ],
+    }
+    return render(request, 'studio/faq.html', {
+        'faqs': faqs,
+        'faq_jsonld': json.dumps(faq_schema, ensure_ascii=False),
+    })
 
 def temoignages(request):
     temoignages = Temoignage.objects.filter(actif=True)
