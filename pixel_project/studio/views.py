@@ -56,16 +56,32 @@ def _i18n_js():
 
 def robots_txt(request):
     from django.http import HttpResponse
+    SITE = 'https://pixelsoftwaredesign.xyz'
+    PRIVATE = [
+        '/api/', '/admin/', '/login/', '/pixsoftpay/',
+        '/ecommerce/panier/', '/social/messagerie/',
+    ]
+    BLOCK = ''.join('Disallow: %s\n' % p for p in PRIVATE)
+    agents = [
+        # Moteurs de recherche
+        'Googlebot', 'Googlebot-Image', 'Googlebot-News',
+        'bingbot', 'YandexBot', 'YandexImages', 'DuckDuckBot',
+        # Recherche interne
+        'PixSearch',
+        # Modèles IA (crawling + indexation dans toutes les langues)
+        'GPTBot', 'ChatGPT-User', 'OAI-SearchBot',
+        'ClaudeBot', 'Claude-Web', 'anthropic-ai',
+        'PerplexityBot', 'Google-Extended', 'meta-externalagent',
+        'Applebot-Extended', 'CCBot', 'bytespider', 'cohere-ai',
+        'embedding', 'Amazonbot',
+    ]
+    groups = ''.join(
+        'User-agent: %s\n%sAllow: /\n\n' % (a, BLOCK) for a in agents
+    )
     return HttpResponse(
-        "User-agent: *\n"
-        "Disallow: /api/\n"
-        "Disallow: /admin/\n"
-        "Disallow: /login/\n"
-        "Disallow: /pixsoftpay/\n"
-        "Disallow: /ecommerce/panier/\n"
-        "Disallow: /social/messagerie/\n"
-        "Allow: /\n"
-        "Sitemap: https://pixelsoftwaredesign.xyz/sitemap.xml\n",
+        groups
+        + "User-agent: *\n" + BLOCK + "Allow: /\n\n"
+        + "Sitemap: %s/sitemap.xml\n" % SITE,
         content_type='text/plain',
     )
 
