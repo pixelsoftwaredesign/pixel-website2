@@ -73,19 +73,27 @@ def robots_txt(request):
 def sitemap_xml(request):
     from django.http import HttpResponse
     SITE = 'https://pixelsoftwaredesign.xyz'
+    LANG_CODES = ('fr', 'en', 'ar', 'it', 'es', 'zh', 'ja', 'ru', 'fa', 'ur', 'hi')
+    LAST_MOD = '2026-08-12'
     urls = [
         '/', '/a-propos/', '/portfolio/', '/prix/', '/faq/', '/temoignages/',
         '/contact/', '/recrutement/', '/gestiactiv/', '/restaurant/',
         '/patisserie/', '/pixelsoftcode/', '/innerstudio/', '/uicatalogue/',
         '/graphisme/', '/atelierdev/', '/atelier/', '/pixmail/', '/logiciel-offline/',
     ]
-    items = ''.join(
-        '<url><loc>%s%s</loc><changefreq>%s</changefreq><priority>%s</priority></url>' % (
-            SITE, u, ('weekly' if u in ('/',) else 'monthly'), ('1.0' if u == '/' else '0.8'))
-        for u in urls
-    )
+
+    def url_xml(u):
+        loc = SITE + u
+        alt = ''.join('<xhtml:link rel="alternate" hreflang="%s" href="%s%s"/>'
+                      % (c, loc, '' if c == 'fr' else '?lang=' + c) for c in LANG_CODES)
+        return '<url><loc>%s</loc><lastmod>%s</lastmod><changefreq>%s</changefreq><priority>%s</priority>%s</url>' % (
+            loc, LAST_MOD, ('weekly' if u == '/' else 'monthly'), ('1.0' if u == '/' else '0.8'), alt)
+
+    items = ''.join(url_xml(u) for u in urls)
     return HttpResponse(
-        '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + items + '\n</urlset>\n',
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" '
+        'xmlns:xhtml="http://www.w3.org/1999/xhtml">\n' + items + '\n</urlset>\n',
         content_type='application/xml',
     )
 

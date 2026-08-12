@@ -192,6 +192,28 @@ class SEOInjectMiddleware:
 
     DEFAULT_DESCRIPTION = "Pixel Software Design : agence de développement logiciel en Tunisie — sites web, applications, ERP, SaaS, design et blockchain."
 
+    GEO = ('33.8886', '9.7975')
+
+    PATH_NAMES = {
+        '/': 'Accueil', '/a-propos/': 'À propos', '/contact/': 'Contact',
+        '/portfolio/': 'Portfolio', '/prix/': 'Prix & abonnements', '/faq/': 'FAQ',
+        '/temoignages/': 'Témoignages', '/recrutement/': 'Recrutement',
+        '/gestiactiv/': 'GestiActiv ERP', '/restaurant/': 'Restaurant & Café',
+        '/patisserie/': 'Pâtisserie Gestio', '/pixelsoftcode/': 'PixelSoftCode',
+        '/innerstudio/': 'Inner Studio 3D', '/uicatalogue/': 'Atelier Créatif & Dev',
+        '/graphisme/': 'Pixel Graphisme', '/pixmail/': 'PixMail',
+        '/pixsoftpay/': 'PixSoftPay', '/logiciel-offline/': 'Logiciels hors-ligne',
+        '/login/': 'Connexion', '/register/': 'Inscription',
+        '/atelierdev/': 'Atelier Dev', '/atelier/': 'Atelier',
+    }
+
+    SOFTWARE = {'/gestiactiv/', '/restaurant/', '/patisserie/', '/pixelsoftcode/', '/pixmail/', '/logiciel-offline/'}
+    SERVICES = {'/innerstudio/', '/uicatalogue/', '/graphisme/', '/atelierdev/', '/atelier/'}
+    PAGE_TYPES = {
+        '/': 'WebPage', '/a-propos/': 'AboutPage', '/contact/': 'ContactPage',
+        '/portfolio/': 'CollectionPage', '/pixsoftpay/': 'FinancialService',
+    }
+
     @classmethod
     def _description(cls, path):
         for prefix, desc in cls.DESCRIPTIONS.items():
@@ -230,7 +252,12 @@ class SEOInjectMiddleware:
         image = cls.SITE + '/static/favicon.svg'
         return (
             '<meta name="description" content="%s">\n' % desc
-            + '<meta name="robots" content="index, follow">\n'
+            + '<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">\n'
+            + '<meta name="author" content="Pixel Software Design">\n'
+            + '<meta name="geo.region" content="TN-81">\n'
+            + '<meta name="geo.placename" content="El Hamma, Gabès, Tunisie">\n'
+            + '<meta name="geo.position" content="%s;%s">\n' % cls.GEO
+            + '<meta name="ICBM" content="%s, %s">\n' % cls.GEO
             + '<link rel="canonical" href="%s">\n' % url
             + cls._hreflang(path) + '\n'
             + '<meta property="og:site_name" content="Pixel Software Design">\n'
@@ -248,7 +275,8 @@ class SEOInjectMiddleware:
         )
 
     @classmethod
-    def _jsonld(cls):
+    def _jsonld(cls, lang):
+        lat, lng = cls.GEO
         return (
             '<script type="application/ld+json">' + json.dumps({
                 '@context': 'https://schema.org',
@@ -268,9 +296,28 @@ class SEOInjectMiddleware:
                             '@type': 'PostalAddress',
                             'addressLocality': 'El Hamma',
                             'addressRegion': 'Gabès',
+                            'postalCode': '6020',
                             'addressCountry': 'TN',
                         },
-                        'openingHours': 'Mo-Fr 09:00-18:00',
+                        'geo': {
+                            '@type': 'GeoCoordinates',
+                            'latitude': float(lat),
+                            'longitude': float(lng),
+                        },
+                        'areaServed': {'@type': 'Country', 'name': 'Tunisie'},
+                        'contactPoint': {
+                            '@type': 'ContactPoint',
+                            'telephone': '+216 52 675 027',
+                            'email': 'pixelsoftwaredesign@gmail.com',
+                            'contactType': 'customer service',
+                            'availableLanguage': ['French', 'English', 'Arabic'],
+                        },
+                        'openingHoursSpecification': [{
+                            '@type': 'OpeningHoursSpecification',
+                            'dayOfWeek': ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+                            'opens': '09:00',
+                            'closes': '18:00',
+                        }],
                         'priceRange': '$$',
                     },
                     {
@@ -278,16 +325,60 @@ class SEOInjectMiddleware:
                         '@id': cls.SITE + '/#website',
                         'url': cls.SITE + '/',
                         'name': 'Pixel Software Design',
+                        'inLanguage': cls.LANG_CODES,
                         'publisher': {'@id': cls.SITE + '/#org'},
                     },
                 ],
             }, ensure_ascii=False) + '</script>'
         )
 
+    @classmethod
+    def _schema_type(cls, path):
+        if path in cls.SOFTWARE:
+            return 'SoftwareApplication'
+        if path in cls.SERVICES:
+            return 'Service'
+        return cls.PAGE_TYPES.get(path, 'WebPage')
+
+    @classmethod
+    def _breadcrumbs(cls, path):
+        name = cls.PATH_NAMES.get(path, path.strip('/').replace('-', ' ').title())
+        items = [{'@type': 'ListItem', 'position': 1, 'name': 'Accueil', 'item': cls.SITE + '/'}]
+        if path != '/':
+            items.append({'@type': 'ListItem', 'position': 2, 'name': name, 'item': cls._canonical(path)})
+        return {'@type': 'BreadcrumbList', 'itemListElement': items}
+
+    @classmethod
+    def _page_jsonld(cls, path, title, desc, lang):
+        url = cls._canonical(path)
+        stype = cls._schema_type(path)
+        node = {
+            '@type': stype,
+            '@id': url + '#page',
+            'url': url,
+            'name': title,
+            'description': desc,
+            'inLanguage': lang,
+            'isPartOf': {'@id': cls.SITE + '/#website'},
+            'mainEntityOfPage': url,
+            'publisher': {'@id': cls.SITE + '/#org'},
+        }
+        if stype in ('SoftwareApplication', 'Service', 'FinancialService'):
+            node['provider'] = {'@id': cls.SITE + '/#org'}
+            node['areaServed'] = 'TN'
+            node['availableLanguage'] = ['fr', 'en', 'ar']
+            if stype == 'SoftwareApplication':
+                node['applicationCategory'] = 'BusinessApplication'
+                node['operatingSystem'] = 'Web, Windows, macOS, Linux, Android'
+        return '<script type="application/ld+json">' + json.dumps(
+            {'@context': 'https://schema.org', '@graph': [node, cls._breadcrumbs(path)]},
+            ensure_ascii=False) + '</script>'
+
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
+        lang = getattr(request, 'LANGUAGE_CODE', 'fr') or 'fr'
         response = self.get_response(request)
         try:
             content_type = response.get('Content-Type', '')
@@ -302,8 +393,13 @@ class SEOInjectMiddleware:
             path = request.path
             title = self._title(text)
             desc = self._description(path)
-            extra = self._head_extra(path, title, desc) + self._jsonld()
+            extra = self._head_extra(path, title, desc) + self._jsonld(lang) + self._page_jsonld(path, title, desc, lang)
             new_text = text.replace('</head>', extra + '</head>', 1)
+            if lang != 'fr':
+                new_text = re.sub(
+                    r'(<html\b[^>]*?)\blang="fr"',
+                    lambda m: m.group(1) + 'lang="%s"' % lang,
+                    new_text, count=1)
             response.content = new_text.encode('utf-8')
             response['Content-Length'] = str(len(response.content))
         except Exception:
