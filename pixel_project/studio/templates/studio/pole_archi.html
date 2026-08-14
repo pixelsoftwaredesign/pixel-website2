@@ -8,41 +8,68 @@
 <meta name="description" content="Pôle Archi de Pixel Software Design : ingénierie structurelle et technique, architecture de bâtiments et design d'intérieur. Conception, plans, rendus 3D et suivi de chantier.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,2 93,26 93,74 50,98 7,74 7,26' fill='%231EB482'/%3E%3Cpath d='M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z' fill='white' opacity='0.92'/%3E%3C/svg%3E">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpolygon points='50,2 93,26 93,74 50,98 7,74 7,26' fill='%23A67C3D'/%3E%3Cpath d='M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z' fill='white' opacity='0.92'/%3E%3C/svg%3E">
 <link rel="stylesheet" href="{% static 'css/style.css' %}">
 <style>
+:root{
+  --bg:#F6F1E7;--surface:#EFE7D8;--card:#FCF9F2;
+  --border:rgba(138,110,72,0.20);--accent:#A67C3D;
+  --a2:#B08D57;--a3:#C9A668;--a4:#8A6A3B;
+  --text:#33281D;--muted:rgba(60,46,28,0.62);
+}
+body{background:var(--bg);color:var(--text)}
+nav{background:rgba(246,241,231,.92);border-bottom-color:var(--border)}
+nav .logo-text span{color:var(--accent)}
+.dropdown-menu{background:#F3ECDE}
+.dropdown-menu a:hover{background:rgba(166,124,61,.10)}
+@media(max-width:960px){.nav-menu{background:rgba(246,241,231,.97)}}
+h1,.stitle{font-family:'Playfair Display',serif;letter-spacing:-.01em}
+h1{font-weight:600}
+.h1-sub{font-family:'Space Grotesk',sans-serif;color:rgba(60,46,28,.7)}
+.h1-grad{background:linear-gradient(120deg,#C9A668 0%,#A67C3D 50%,#8A6A3B 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .hero-product{min-height:75vh;display:flex;align-items:center;padding:9rem 5rem 5rem;position:relative;overflow:hidden}
 .hero-product canvas{position:absolute;inset:0;pointer-events:none;z-index:0}
 .hero-product .hero-inner{position:relative;z-index:1;max-width:820px}
 .tag-prod{display:inline-flex;align-items:center;gap:.5rem;font-family:'Space Mono',monospace;font-size:.6rem;text-transform:uppercase;letter-spacing:.15em;padding:.3rem .8rem;border-radius:999px;margin-bottom:1.5rem;border:1px solid}
-.tag-archi{color:#E8B04B;border-color:rgba(232,176,75,.35)}
+.tag-archi{color:#A67C3D;border-color:rgba(166,124,61,.4);background:rgba(166,124,61,.06)}
 .pole-badges{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1.5rem}
-.pole-badge{background:rgba(232,176,75,.1);border:1px solid rgba(232,176,75,.25);color:#E8B04B;font-family:'Space Mono',monospace;font-size:.65rem;padding:.3rem .8rem;border-radius:999px}
+.pole-badge{background:rgba(166,124,61,.08);border:1px solid rgba(166,124,61,.3);color:#8A6A3B;font-family:'Space Mono',monospace;font-size:.65rem;padding:.3rem .8rem;border-radius:999px}
 .features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin-top:2.5rem}
-.feature-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.5rem;transition:border-color .2s}
-.feature-card:hover{border-color:rgba(232,176,75,.45)}
+.feature-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1.5rem;transition:border-color .2s,transform .2s}
+.feature-card:hover{border-color:rgba(166,124,61,.45);transform:translateY(-2px)}
 .feature-card .icon{font-size:1.8rem;margin-bottom:.5rem}
-.feature-card h4{font-size:.9rem;font-weight:600;margin-bottom:.3rem}
+.feature-card h4{font-size:.9rem;font-weight:700;margin-bottom:.3rem}
 .feature-card p{font-size:.78rem;color:var(--muted);line-height:1.6}
 .tech-stack{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1.5rem}
-.tech-badge{background:rgba(232,176,75,.08);border:1px solid rgba(232,176,75,.25);color:#E8B04B;font-family:'Space Mono',monospace;font-size:.65rem;padding:.25rem .7rem;border-radius:999px}
+.tech-badge{background:rgba(166,124,61,.08);border:1px solid rgba(166,124,61,.28);color:#8A6A3B;font-family:'Space Mono',monospace;font-size:.65rem;padding:.25rem .7rem;border-radius:999px}
 .cta-bar{display:flex;gap:1rem;flex-wrap:wrap;margin-top:2.5rem}
-.etape-num{font-family:'Space Mono',monospace;color:#E8B04B;font-size:1.6rem;font-weight:700}
+.etape-num{font-family:'Space Mono',monospace;color:#A67C3D;font-size:1.6rem;font-weight:700}
+.svc-card:hover{border-color:rgba(166,124,61,.45)}
+.ssub{color:var(--muted)}
+.cg select option{background:#F3ECDE}
+.stag{color:var(--accent)}
+.btn-p{background:var(--accent);color:#FBF6EC}
+.btn-s{color:var(--text);border-color:var(--border)}
+.btn-s:hover{border-color:var(--accent);background:rgba(166,124,61,.06)}
+.cinfo-item .ci{background:rgba(166,124,61,.12);border-color:var(--border)}
+footer{background:var(--surface);border-top-color:var(--border)}
+.fcopy,.flinks a{color:rgba(60,46,28,.62)}
+.flinks a:hover{color:var(--accent)}
 </style>
 </head>
 <body>
 
 <svg style="display:none"><defs><symbol id="pxl" viewBox="0 0 100 100">
 <polygon points="50,2 93,26 93,74 50,98 7,74 7,26" fill="none"/>
-<polygon points="50,2 93,26 70,14" fill="#2DBD6E"/><polygon points="50,2 70,14 50,30 30,14" fill="#3DC87A"/>
-<polygon points="50,2 30,14 7,26" fill="#1EB482"/><polygon points="93,26 93,74 78,50" fill="#1A9BAF"/>
-<polygon points="93,26 78,50 70,14" fill="#1CB89A"/><polygon points="70,14 78,50 50,30" fill="#22C490"/>
-<polygon points="50,30 78,50 60,72 40,72 22,50" fill="#1A9BAF"/><polygon points="7,26 30,14 22,50" fill="#1565C0"/>
-<polygon points="30,14 50,30 22,50" fill="#1878C8"/><polygon points="7,26 22,50 7,74" fill="#1565C0"/>
-<polygon points="7,74 22,50 40,72 50,98 30,86" fill="#1A9BAF"/><polygon points="93,74 78,50 60,72 50,98 70,86" fill="#1565C0"/>
-<polygon points="50,98 70,86 93,74" fill="#1878C8"/><polygon points="50,98 30,86 7,74" fill="#1A9BAF"/>
-<polygon points="40,72 60,72 50,98 30,86" fill="#1CB89A"/>
+<polygon points="50,2 93,26 70,14" fill="#B08D57"/><polygon points="50,2 70,14 50,30 30,14" fill="#C9A668"/>
+<polygon points="50,2 30,14 7,26" fill="#A67C3D"/><polygon points="93,26 93,74 78,50" fill="#8A6A3B"/>
+<polygon points="93,26 78,50 70,14" fill="#B08D57"/><polygon points="70,14 78,50 50,30" fill="#C4A262"/>
+<polygon points="50,30 78,50 60,72 40,72 22,50" fill="#8A6A3B"/><polygon points="7,26 30,14 22,50" fill="#7A5C33"/>
+<polygon points="30,14 50,30 22,50" fill="#8A6A3B"/><polygon points="7,26 22,50 7,74" fill="#7A5C33"/>
+<polygon points="7,74 22,50 40,72 50,98 30,86" fill="#8A6A3B"/><polygon points="93,74 78,50 60,72 50,98 70,86" fill="#7A5C33"/>
+<polygon points="50,98 70,86 93,74" fill="#8A6A3B"/><polygon points="50,98 30,86 7,74" fill="#8A6A3B"/>
+<polygon points="40,72 60,72 50,98 30,86" fill="#B08D57"/>
 <path d="M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z" fill="white" opacity="0.92"/></symbol></defs></svg>
 
 <nav>
@@ -181,7 +208,7 @@
         <div class="cg"><label>Prénom / Nom</label><input type="text" id="archiName" placeholder="Ahmed Ben Ali" required></div>
         <div class="cg"><label>Email</label><input type="email" id="archiEmail" placeholder="ahmed@exemple.com" required></div>
       </div>
-      <div class="cg"><label>Type de projet</label><select id="archiType" style="width:100%;padding:.7rem;border-radius:6px;border:1px solid var(--border);background:var(--card);color:#fff">
+      <div class="cg"><label>Type de projet</label><select id="archiType" style="width:100%;padding:.7rem;border-radius:6px;border:1px solid var(--border);background:var(--card);color:#33281D">
         <option value="">— Choisir —</option>
         <option>Ingénierie (structure / fluides)</option>
         <option>Architecture (bâtiment / permis)</option>
@@ -206,7 +233,7 @@
 <script>
 (function(){const c=document.getElementById('archi-canvas');if(!c)return
 function r(){c.width=window.innerWidth;c.height=window.innerHeight};r();window.addEventListener('resize',r)
-const x=c.getContext('2d'),cols=['#E8B04B','#F0C060','#C88A2D','#FFF0D0'],sz=30
+const x=c.getContext('2d'),cols=['#C9A668','#A67C3D','#8A6A3B','#E8D9BC'],sz=30
 const gc=Math.ceil(c.width/sz)+1,gr=Math.ceil(c.height/sz)+1
 const cells=Array.from({length:gc*gr},(_,i)=>({x:(i%gc)*sz,y:Math.floor(i/gc)*sz,a:Math.random()*.03,t:Math.random()*.03,s:.002+Math.random()*.005,c:cols[Math.floor(Math.random()*cols.length)]}))
 !function loop(){x.clearRect(0,0,c.width,c.height);cells.forEach(c=>{c.a+=(c.t-c.a)*c.s;if(Math.abs(c.a-c.t)<.001)c.t=Math.random()<.025?.15+Math.random()*.25:Math.random()*.03;if(c.a>.003){x.globalAlpha=c.a;x.fillStyle=c.c;x.fillRect(c.x+1,c.y+1,sz-2,sz-2)}});x.globalAlpha=1;requestAnimationFrame(loop)}()})()
@@ -214,8 +241,8 @@ const cells=Array.from({length:gc*gr},(_,i)=>({x:(i%gc)*sz,y:Math.floor(i/gc)*sz
 async function handleArchisubmit(e){e.preventDefault();const st=document.getElementById('archiStatus')
 st.textContent='Envoi en cours...';st.style.color='var(--muted)'
 try{const r=await fetch('/api/contact/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},body:JSON.stringify({username:document.getElementById('archiName').value,useremail:document.getElementById('archiEmail').value,usermessage:'['+document.getElementById('archiType').value+'] '+document.getElementById('archiMessage').value})})
-const d=await r.json();st.textContent=d.message;st.style.color=r.ok?'#1EB482':'#E5484D'
-if(r.ok)e.target.reset()}catch(err){st.textContent='Erreur réseau, réessayez.';st.style.color='#E5484D'}}
+const d=await r.json();st.textContent=d.message;st.style.color=r.ok?'#A67C3D':'#B3542E'
+if(r.ok)e.target.reset()}catch(err){st.textContent='Erreur réseau, réessayez.';st.style.color='#B3542E'}}
 </script>
 </body>
 </html>
