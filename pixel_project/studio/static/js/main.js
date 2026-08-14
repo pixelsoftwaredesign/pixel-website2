@@ -105,6 +105,7 @@ if (burgerBtn) {
     });
     if (sel) sel.classList.toggle('open');
   });
+  window.PIXEL_LANG_HANDLER = 1;
 })();
 
 // ── MOBILE DROPDOWN TOGGLE ──
