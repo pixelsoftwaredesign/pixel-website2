@@ -611,6 +611,10 @@ def pwa_app(request, path=''):
             raise Http404
     content_type = mimetypes.guess_type(file_path)[0] or 'application/octet-stream'
     response = FileResponse(open(file_path, 'rb'), content_type=content_type)
+    if path in ('', 'index.html', 'sw.js', 'manifest.json'):
+        response['Cache-Control'] = 'no-cache, no-store, must-revalidate'
+    else:
+        response['Cache-Control'] = 'public, max-age=31536000, immutable'
     return response
 
 def patisserie(request):
