@@ -590,6 +590,29 @@ def innerstudio(request):
 def pole_archi(request):
     return render(request, 'studio/pole_archi.html')
 
+# ─── PWA (version mobile React) ─────────────────────────────
+from django.http import FileResponse, Http404
+import mimetypes, os
+
+PWA_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'pwa')
+
+def pwa_app(request, path=''):
+    if not path:
+        path = 'index.html'
+    if not os.path.normpath(os.path.join(PWA_DIR, path)).startswith(PWA_DIR):
+        raise Http404
+    file_path = os.path.join(PWA_DIR, path)
+    if os.path.isdir(file_path):
+        file_path = os.path.join(file_path, 'index.html')
+    if not os.path.exists(file_path):
+        if os.path.exists(os.path.join(PWA_DIR, 'index.html')):
+            file_path = os.path.join(PWA_DIR, 'index.html')
+        else:
+            raise Http404
+    content_type = mimetypes.guess_type(file_path)[0] or 'application/octet-stream'
+    response = FileResponse(open(file_path, 'rb'), content_type=content_type)
+    return response
+
 def patisserie(request):
     recipes_count = PatisserieRecipe.objects.count()
     products_count = PatisserieProduct.objects.count()

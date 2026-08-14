@@ -36,10 +36,13 @@
       "backgroundColor": "#05100D",
       "description": "Application mobile Pixel Software Design : accueil, services, Pôle Archi, portfolio, prix, FAQ et contact.",
       "lang": "fr",
-      "startUrl": "/",
+      "startUrl": "/app/",
       "display": "standalone",
       "orientation": "portrait",
-      "scope": "/"
+      "scope": "/app/"
+    },
+    "experiments": {
+      "baseUrl": "/app"
     },
     "plugins": [
       "expo-router"
