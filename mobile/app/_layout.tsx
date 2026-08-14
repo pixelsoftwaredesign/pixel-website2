@@ -7,7 +7,7 @@ import Head from 'expo-router/head';
 export default function RootLayout() {
   useEffect(() => {
     if (Platform.OS === 'web' && typeof document !== 'undefined' && 'serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/sw.js').catch(() => {});
+      navigator.serviceWorker.register('/app/sw.js').catch(() => {});
     }
   }, []);
 
@@ -17,8 +17,8 @@ export default function RootLayout() {
         <title>Pixel Software Design — App</title>
         <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
         <meta name="theme-color" content="#05100D" />
-        <link rel="manifest" href="/manifest.json" />
-        <link rel="apple-touch-icon" href="/icon.png" />
+        <link rel="manifest" href="/app/manifest.json" />
+        <link rel="apple-touch-icon" href="/app/icon.png" />
       </Head>
       <StatusBar style="light" />
       <Stack screenOptions={{ headerShown: false }}>

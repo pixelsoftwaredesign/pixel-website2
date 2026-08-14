@@ -170,14 +170,14 @@ footer{padding:2.5rem 5rem;border-top:1px solid var(--border);display:flex;justi
 .flinks a:hover{color:var(--accent)}
 
 @media(max-width:960px){
-  nav{padding:.8rem 1.5rem}
-  .nav-menu{position:fixed;top:62px;left:0;right:0;bottom:0;background:rgba(5,16,13,.96);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);flex-direction:column;padding:1.5rem 2rem 4rem;gap:0;transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);border-top:1px solid var(--border);overflow-y:auto;-webkit-overflow-scrolling:touch}
+  nav{padding:.8rem 1.5rem;height:62px;min-height:62px}
+  .nav-menu{position:fixed;top:62px;left:0;right:0;bottom:0;background:rgba(5,16,13,.96);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);flex-direction:column;padding:1rem 1.5rem 2.5rem;gap:0;transform:translateX(100%);transition:transform .35s cubic-bezier(.4,0,.2,1);border-top:1px solid var(--border);overflow-y:auto;-webkit-overflow-scrolling:touch;z-index:210}
   .nav-menu.open{transform:translateX(0)}
-  .nav-menu > li{padding:.5rem 0;border-bottom:1px solid rgba(30,180,130,.07)}
+  .nav-menu > li{padding:.4rem 0;border-bottom:1px solid rgba(30,180,130,.07)}
   .nav-menu > li:last-child{border-bottom:none}
-  .nav-menu > li > a{font-size:.95rem;padding:.5rem 0;display:block;color:var(--muted);transition:color .2s}
+  .nav-menu > li > a{font-size:.92rem;padding:.45rem 0;display:block;color:var(--muted);transition:color .2s}
   .nav-menu > li > a:hover,.nav-menu > li > a.nav-link{color:var(--text)}
-  .nav-menu > li > a.nav-cta{margin-top:.6rem;text-align:center;display:block;background:var(--accent)!important;color:#05100D!important;padding:.7rem 1.5rem;border-radius:8px;font-weight:700}
+  .nav-menu > li > a.nav-cta{margin-top:.6rem;text-align:center;display:block;background:var(--accent)!important;color:#05100D!important;padding:.6rem 1.5rem;border-radius:8px;font-weight:700}
   .burger{display:flex}
   .nav-menu.open~.burger span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
   .nav-menu.open~.burger span:nth-child(2){opacity:0}
@@ -224,9 +224,11 @@ footer{padding:2.5rem 5rem;border-top:1px solid var(--border);display:flex;justi
 .lang-dropdown li a:hover{color:var(--text);background:rgba(30,180,130,.1)}
 .lang-dropdown li a.active{color:var(--accent);background:rgba(30,180,130,.08)}
 @media(max-width:960px){
-  .lang-selector{margin:.5rem 0 1rem;width:100%}
-  .lang-btn{width:100%;justify-content:center}
-  .lang-dropdown{right:auto;left:0;width:100%}
+  .lang-selector{margin:0;width:auto;order:1}
+  .lang-btn{width:auto;padding:.3rem .65rem;font-size:.72rem;gap:4px}
+  .lang-code{font-size:.62rem}
+  #burgerBtn{order:2}
+  .lang-dropdown{right:auto;left:auto;width:100%}
 }
 
 /* ─── Support RTL (arabe, persan, ourdou) ────────────── */

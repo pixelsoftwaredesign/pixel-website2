@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  View, Text, StyleSheet, Pressable, ScrollView, Linking, Platform,
+  View, Text, StyleSheet, Pressable, ScrollView, Linking, Platform, useWindowDimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -41,13 +41,15 @@ function Logo({ theme }: { theme: Theme }) {
 export function Header({ theme }: { theme: Theme }) {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
+  const { width } = useWindowDimensions();
+  const wide = width >= 900;
   return (
     <SafeAreaView edges={['top']} style={{ backgroundColor: theme.bg }}>
       <View style={[styles.header, { backgroundColor: theme.bg, borderColor: theme.border }]}>
         <Pressable onPress={() => router.push('/')}>
           <Logo theme={theme} />
         </Pressable>
-        {isWeb && (
+        {isWeb && wide && (
           <View style={styles.headerLinks}>
             {LINKS.slice(0, 5).map((l) => (
               <Pressable key={l.href} onPress={() => router.push(l.href as never)}>
