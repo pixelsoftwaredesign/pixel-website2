@@ -1,0 +1,48 @@
+{
+  "expo": {
+    "name": "Pixel Software Design",
+    "slug": "pixel-software-design-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "scheme": "pixelsd",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#05100D"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "xyz.pixelsoftwaredesign.mobile"
+    },
+    "android": {
+      "package": "xyz.pixelsoftwaredesign.mobile",
+      "adaptiveIcon": {
+        "backgroundColor": "#05100D",
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "monochromeImage": "./assets/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single",
+      "favicon": "./assets/favicon.png",
+      "name": "Pixel Software Design — App",
+      "shortName": "PixelSD",
+      "themeColor": "#05100D",
+      "backgroundColor": "#05100D",
+      "description": "Application mobile Pixel Software Design : accueil, services, Pôle Archi, portfolio, prix, FAQ et contact.",
+      "lang": "fr",
+      "startUrl": "/",
+      "display": "standalone",
+      "orientation": "portrait",
+      "scope": "/"
+    },
+    "plugins": [
+      "expo-router"
+    ]
+  }
+}
