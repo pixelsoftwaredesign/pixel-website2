@@ -7,7 +7,7 @@ import Head from 'expo-router/head';
 export default function RootLayout() {
   useEffect(() => {
     if (Platform.OS === 'web' && typeof document !== 'undefined' && 'serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/app/sw.js').catch(() => {});
+      navigator.serviceWorker.register('/app/sw-worker.js').catch(() => {});
     }
   }, []);
 

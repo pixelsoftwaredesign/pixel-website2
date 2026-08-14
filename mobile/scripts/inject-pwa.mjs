@@ -15,7 +15,7 @@ if (!html.includes('rel="manifest"')) {
   html = html.replace('</head>', head + '\n</head>');
 }
 
-const sw = '\n<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("/app/sw.js").catch(()=>{});}</script>';
+const sw = '\n<script>if("serviceWorker" in navigator){navigator.serviceWorker.register("/app/sw-worker.js").catch(()=>{});}</script>';
 if (!html.includes('sw.js')) {
   html = html.replace('</body>', sw + '\n</body>');
 }
