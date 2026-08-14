@@ -181,6 +181,7 @@ class SEOInjectMiddleware:
         '/patisserie/': "Pâtisserie Gestio & Caisse : logiciel de caisse et de gestion pour les pâtisseries et commerces de proximité.",
         '/pixelsoftcode/': "PixelSoftCode : plateforme d'abonnement SaaS de Pixel Software Design pour développer, héberger et gérer vos applications.",
         '/innerstudio/': "Inner Studio 3D : modélisation, visualisation et rendu 3D pour vos projets architecturaux et industriels.",
+        '/archi/': "Pôle Archi de Pixel Software Design : ingénierie structurelle et technique, architecture de bâtiments et design d'intérieur à El Hamma, Gabès, Tunisie. Conception, plans, rendus 3D et suivi de chantier.",
         '/uicatalogue/': "Atelier Créatif & Dev : design UI/UX, catalogues d'interfaces et développement créatif par Pixel Software Design.",
         '/graphisme/': "Pixel Graphisme : flyers, cartes de visite, logos et identité visuelle pour votre marque par Pixel Software Design.",
         '/pixmail/': "PixMail : service de messagerie professionnel sécurisé par Pixel Software Design.",
@@ -200,7 +201,7 @@ class SEOInjectMiddleware:
         '/temoignages/': 'Témoignages', '/recrutement/': 'Recrutement',
         '/gestiactiv/': 'GestiActiv ERP', '/restaurant/': 'Restaurant & Café',
         '/patisserie/': 'Pâtisserie Gestio', '/pixelsoftcode/': 'PixelSoftCode',
-        '/innerstudio/': 'Inner Studio 3D', '/uicatalogue/': 'Atelier Créatif & Dev',
+        '/innerstudio/': 'Inner Studio 3D', '/archi/': 'Pôle Archi', '/uicatalogue/': 'Atelier Créatif & Dev',
         '/graphisme/': 'Pixel Graphisme', '/pixmail/': 'PixMail',
         '/pixsoftpay/': 'PixSoftPay', '/logiciel-offline/': 'Logiciels hors-ligne',
         '/login/': 'Connexion', '/register/': 'Inscription',
@@ -208,7 +209,7 @@ class SEOInjectMiddleware:
     }
 
     SOFTWARE = {'/gestiactiv/', '/restaurant/', '/patisserie/', '/pixelsoftcode/', '/pixmail/', '/logiciel-offline/'}
-    SERVICES = {'/innerstudio/', '/uicatalogue/', '/graphisme/', '/atelierdev/', '/atelier/'}
+    SERVICES = {'/innerstudio/', '/archi/', '/uicatalogue/', '/graphisme/', '/atelierdev/', '/atelier/'}
     PAGE_TYPES = {
         '/': 'WebPage', '/a-propos/': 'AboutPage', '/contact/': 'ContactPage',
         '/portfolio/': 'CollectionPage', '/pixsoftpay/': 'FinancialService',
@@ -217,7 +218,7 @@ class SEOInjectMiddleware:
     @classmethod
     def _description(cls, path):
         for prefix, desc in cls.DESCRIPTIONS.items():
-            if path == prefix or path.startswith(prefix):
+            if path == prefix or (prefix != '/' and path.startswith(prefix)):
                 return desc
         return cls.DEFAULT_DESCRIPTION
 
