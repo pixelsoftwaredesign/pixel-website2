@@ -1,4 +1,4 @@
-const CACHE = 'pixelsd-v1';
+const CACHE = 'pixelsd-v2';
 const CORE = ['/app/', '/app/manifest.json'];
 
 self.addEventListener('install', (event) => {
@@ -20,6 +20,18 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const req = event.request;
   if (req.method !== 'GET') return;
+  if (req.mode === 'navigate') {
+    event.respondWith(
+      fetch(req)
+        .then((res) => {
+          const copy = res.clone();
+          caches.open(CACHE).then((cache) => cache.put('/app/', copy));
+          return res;
+        })
+        .catch(() => caches.match('/app/'))
+    );
+    return;
+  }
   event.respondWith(
     caches.match(req).then(
       (cached) =>
@@ -32,7 +44,7 @@ self.addEventListener('fetch', (event) => {
             }
             return res;
           })
-          .catch(() => caches.match('/'))
+          .catch(() => caches.match('/app/'))
     )
   );
 });

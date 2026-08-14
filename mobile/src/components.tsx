@@ -61,24 +61,24 @@ export function Header({ theme }: { theme: Theme }) {
         <Pressable style={[styles.hamburger, { borderColor: theme.border }]} onPress={() => setOpen((o) => !o)}>
           <Text style={{ color: theme.text, fontSize: 18 }}>☰</Text>
         </Pressable>
-        {open && (
-          <View style={[styles.menu, { backgroundColor: theme.surface, borderColor: theme.border }]}>
-            {LINKS.map((l) => (
-              <Pressable
-                key={l.href}
-                onPress={() => {
-                  setOpen(false);
-                  router.push(l.href as never);
-                }}
-              >
-                <Text style={[styles.menuItem, { color: theme.text }]}>
-                  {l.emoji} {l.label}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-        )}
       </View>
+      {open && (
+        <View style={[styles.menu, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          {LINKS.map((l) => (
+            <Pressable
+              key={l.href}
+              onPress={() => {
+                setOpen(false);
+                router.push(l.href as never);
+              }}
+            >
+              <Text style={[styles.menuItem, { color: theme.text }]}>
+                {l.emoji} {l.label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      )}
     </SafeAreaView>
   );
 }
@@ -180,8 +180,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderRadius: 6, paddingHorizontal: 10, paddingVertical: 6,
   },
   menu: {
-    position: 'absolute', top: 60, right: 16, left: 16, zIndex: 50,
-    borderRadius: 10, borderWidth: 1, padding: 8,
+    borderBottomWidth: 1, paddingHorizontal: 20, paddingTop: 4, paddingBottom: 14,
   },
   menuItem: { paddingVertical: 10, fontSize: 15 },
   footer: {
