@@ -13,6 +13,7 @@ urlpatterns = [
     path('innerstudio/management/', views.gestion_innerstudio, name='gestion_innerstudio'),
     path('patisserie/management/', views.gestion_patisserie, name='gestion_patisserie'),
     path('innerstudio/', views.innerstudio, name='innerstudio'),
+    path('archi/', views.pole_archi, name='pole_archi'),
     path('patisserie/', views.patisserie, name='patisserie'),
     path('uicatalogue/', views.uicatalogue, name='uicatalogue'),
     path('graphisme/', views.graphiste, name='graphiste'),

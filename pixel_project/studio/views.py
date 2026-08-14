@@ -96,6 +96,7 @@ def sitemap_xml(request):
         '/contact/', '/recrutement/', '/gestiactiv/', '/restaurant/',
         '/patisserie/', '/pixelsoftcode/', '/innerstudio/', '/uicatalogue/',
         '/graphisme/', '/atelierdev/', '/atelier/', '/pixmail/', '/logiciel-offline/',
+        '/archi/',
     ]
 
     def url_xml(u):
@@ -585,6 +586,9 @@ def innerstudio(request):
     return render(request, 'studio/innerstudio.html', {
         'projects_count': projects_count or 120,
     })
+
+def pole_archi(request):
+    return render(request, 'studio/pole_archi.html')
 
 def patisserie(request):
     recipes_count = PatisserieRecipe.objects.count()
