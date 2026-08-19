@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: pixelsoftwaredesign
+    runtime: docker
+    dockerfilePath: Dockerfile
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: DJANGO_ALLOWED_HOSTS
+        value: "pixelsoftwaredesign.xyz,www.pixelsoftwaredesign.xyz,pixelsoftwaredesign.onrender.com"
+      - key: SITE_URL
+        value: "https://pixelsoftwaredesign.xyz"
+      - key: DJANGO_CSRF_TRUSTED_ORIGINS
+        value: "https://pixelsoftwaredesign.xyz,https://www.pixelsoftwaredesign.xyz"
+      - key: PORT
+        value: "8000"
