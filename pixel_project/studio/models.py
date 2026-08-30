@@ -20,6 +20,8 @@ class ProjetContact(models.Model):
     email = models.EmailField(verbose_name="Email")
     message = models.TextField(verbose_name="Message")
     date_reception = models.DateTimeField(auto_now_add=True, verbose_name="Date de réception")
+    a_repondu = models.BooleanField(default=False, verbose_name="Réponse envoyée")
+    date_reponse = models.DateTimeField(null=True, blank=True, verbose_name="Date de réponse")
 
     class Meta:
         verbose_name = "Projet reçu"

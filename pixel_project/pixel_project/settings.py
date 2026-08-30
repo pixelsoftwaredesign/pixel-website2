@@ -152,9 +152,9 @@ EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = 'PixMail <noreply@pxelsoftware-64fcd.web.app>'
+DEFAULT_FROM_EMAIL = 'Pixel Software Design <pixelsoftwaredesign@gmail.com>'
 PIXMAIL_DOMAIN = 'pxelsoftware-64fcd.web.app'
-PIXMAIL_FROM_EMAIL = 'PixMail <noreply@pxelsoftware-64fcd.web.app>'
+PIXMAIL_FROM_EMAIL = 'Pixel Software Design <pixelsoftwaredesign@gmail.com>'
 SITE_URL = os.getenv('SITE_URL', 'http://localhost:8000')
 
 if not EMAIL_HOST_USER:

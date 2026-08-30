@@ -1,4 +1,11 @@
 from django.contrib import admin
+from django.contrib import messages
+from django.core.mail import send_mail
+from django.conf import settings
+from django.http import HttpResponseRedirect
+from django.shortcuts import render, get_object_or_404
+from django.urls import path
+from django.utils import timezone
 from .models import UserProfile, ProjetContact, AtelierProfile, PortfolioProject, CodeRepository, GraphismeResource, ERPClient, ERPModule, ERPSubscription, ERPDemoRecord, Moniteur, Candidat, Vehicule, Lecon, Examen, Medecin, Patient, Lit, RendezVous, FacturationSante, ClientHotel, Chambre, ReservationHotel, ServiceHotel, Categorie, Fournisseur, Produit, Vente, ClientJuridique, DossierJuridique, Audience, JournalComptable, EcritureComptable, Facture, DeclarationFiscale, Employe, Contrat, FichePaie, Conge, Formation, MenuItem, TableRestaurant, SoftCodeModule, StudioProject3D, PatisserieRecipe, PatisserieProduct, PlanAbonnement, SouscriptionClient, Paiement, CleActivation, ConfigurationBancaire, ConfigurationPaiementEnLigne, Candidature, MouvementStock, CommandeECommerce, CommandeECommerceItem, Temoignage, PixMailAccount, PixMailContact, PixMailMessage, PixMailAttachment, PixMailFolder, PixMailSignature, SocialProfile, Follow, Post, Like, Comment, Notification, Conversation, ConversationMember, EncryptedMessage, Wallet, Transaction, TwoFactorAuth, Referral, KYCVerification
 
 @admin.register(UserProfile)
@@ -8,10 +15,53 @@ class UserProfileAdmin(admin.ModelAdmin):
 
 @admin.register(ProjetContact)
 class ProjetContactAdmin(admin.ModelAdmin):
-    list_display = ('nom', 'email', 'date_reception')
+    list_display = ('nom', 'email', 'date_reception', 'a_repondu')
     search_fields = ('nom', 'email', 'message')
-    list_filter = ('date_reception',)
-    readonly_fields = ('date_reception',)
+    list_filter = ('date_reception', 'a_repondu')
+    readonly_fields = ('date_reception', 'date_reponse')
+    list_editable = ('a_repondu',)
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom = [
+            path('<int:pk>/repondre/', self.admin_site.admin_view(self.repondre_view), name='studio_projetcontact_repondre'),
+        ]
+        return custom + urls
+
+    def repondre_view(self, request, pk):
+        contact = get_object_or_404(ProjetContact, pk=pk)
+        if request.method == 'POST':
+            sujet = request.POST.get('sujet', '').strip()
+            corps = request.POST.get('corps', '').strip()
+            if not sujet or not corps:
+                messages.error(request, "Sujet et message sont obligatoires.")
+            else:
+                try:
+                    if getattr(settings, 'EMAIL_HOST_USER', ''):
+                        send_mail(
+                            f"[Pixel Software Design] {sujet}",
+                            corps,
+                            settings.DEFAULT_FROM_EMAIL,
+                            [contact.email],
+                            fail_silently=False,
+                        )
+                        contact.a_repondu = True
+                        contact.date_reponse = timezone.now()
+                        contact.save(update_fields=['a_repondu', 'date_reponse'])
+                        messages.success(request, f"Réponse envoyée à {contact.email}.")
+                    else:
+                        messages.error(request, "SMTP non configuré (EMAIL_HOST_USER vide). Configurez les variables EMAIL_HOST_USER / EMAIL_HOST_PASSWORD pour envoyer des emails.")
+                except Exception as exc:
+                    messages.error(request, f"Erreur lors de l'envoi : {exc}")
+            return HttpResponseRedirect(request.path)
+        contexte = {
+            'contact': contact,
+            'title': f"Répondre à {contact.nom}",
+            'opts': self.model._meta,
+            'has_view_permission': self.has_view_permission(request, contact),
+            'has_change_permission': self.has_change_permission(request, contact),
+        }
+        return render(request, 'admin/studio/projetcontact/repondre.html', contexte)
 
 @admin.register(AtelierProfile)
 class AtelierProfileAdmin(admin.ModelAdmin):

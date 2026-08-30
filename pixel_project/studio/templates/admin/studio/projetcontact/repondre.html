@@ -1,0 +1,37 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<div id="content-main" style="max-width:42rem">
+  <div style="background:#f6f8fa;border:1px solid #d0d7de;border-radius:8px;padding:1rem 1.25rem;margin-bottom:1.25rem">
+    <p><strong>{{ contact.nom }}</strong> &lt;<a href="mailto:{{ contact.email }}">{{ contact.email }}</a>&gt;</p>
+    <p style="color:#57606a;font-size:.9rem">{{ contact.date_reception|date:"d/m/Y à H:i" }}</p>
+    <blockquote style="margin:.75rem 0 0;padding:.75rem 1rem;background:#fff;border-left:3px solid #1EB482;border-radius:4px;white-space:pre-wrap">{{ contact.message }}</blockquote>
+  </div>
+
+  <form method="post" action="">
+    {% csrf_token %}
+    <fieldset class="module aligned">
+      {% if message_type %}<div class="alert alert-{{ message_type }}" style="margin:.5rem 0"></div>{% endif %}
+      <div class="form-row">
+        <label for="id_sujet">Sujet :</label>
+        <input type="text" id="id_sujet" name="sujet" value="Re: Votre projet chez Pixel Software Design" required
+               style="width:100%;margin-top:.25rem">
+      </div>
+      <div class="form-row" style="margin-top:.75rem">
+        <label for="id_corps">Message :</label>
+        <textarea id="id_corps" name="corps" rows="10" required
+                  style="width:100%;margin-top:.25rem">Bonjour {{ contact.nom }},
+
+Merci pour votre message. Nous sommes bien motivés pour échanger avec vous sur votre projet.
+
+Cordialement,
+L'équipe Pixel Software Design
++216 52 675 027</textarea>
+      </div>
+    </fieldset>
+    <div class="submit-row" style="margin-top:1rem">
+      <input type="submit" value="Envoyer la réponse" class="default" name="_save">
+      <a href="{% url 'admin:studio_projetcontact_changelist' %}" style="margin-left:1rem">Retour à la liste</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
