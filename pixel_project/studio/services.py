@@ -1,21 +1,16 @@
-from django.core.mail import EmailMessage
 from django.conf import settings
 from django.utils import timezone
+from .emailing import envoyer_email as _envoyer_email
 
 SITE_NAME = "Pixel Software Design"
 
 def envoyer_email(destinataire, sujet, message):
-    msg_id = '<pixel-{}-{}@localhost>'.format(
-        int(timezone.now().timestamp()), destinataire.split('@')[0]
+    _envoyer_email(
+        f"[{SITE_NAME}] {sujet}",
+        message,
+        message.replace('\n', '<br>\n'),
+        [destinataire],
     )
-    msg = EmailMessage(
-        subject=f"[{SITE_NAME}] {sujet}",
-        body=message,
-        from_email=settings.DEFAULT_FROM_EMAIL,
-        to=[destinataire],
-        headers={'Message-ID': msg_id},
-    )
-    msg.send(fail_silently=False)
 
 def notifier_activation_cle(souscription, code):
     sujet = "Votre clé d'activation PixelSoftCode"

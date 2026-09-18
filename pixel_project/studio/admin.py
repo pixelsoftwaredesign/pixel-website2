@@ -1,6 +1,5 @@
 from django.contrib import admin
 from django.contrib import messages
-from django.core.mail import send_mail
 from django.conf import settings
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
@@ -39,20 +38,19 @@ class ProjetContactAdmin(admin.ModelAdmin):
                 messages.error(request, "Sujet et message sont obligatoires.")
             else:
                 try:
-                    if getattr(settings, 'EMAIL_HOST_USER', ''):
-                        send_mail(
+                    if getattr(settings, 'RESEND_API_KEY', '') or getattr(settings, 'EMAIL_HOST_USER', ''):
+                        envoyer_email(
                             f"[Pixel Software Design] {sujet}",
                             corps,
-                            settings.DEFAULT_FROM_EMAIL,
+                            corps,
                             [contact.email],
-                            fail_silently=False,
                         )
                         contact.a_repondu = True
                         contact.date_reponse = timezone.now()
                         contact.save(update_fields=['a_repondu', 'date_reponse'])
                         messages.success(request, f"Réponse envoyée à {contact.email}.")
                     else:
-                        messages.error(request, "SMTP non configuré (EMAIL_HOST_USER vide). Configurez les variables EMAIL_HOST_USER / EMAIL_HOST_PASSWORD pour envoyer des emails.")
+                        messages.error(request, "Envoi non configuré (RESEND_API_KEY ou EMAIL_HOST_USER vide).")
                 except Exception as exc:
                     messages.error(request, f"Erreur lors de l'envoi : {exc}")
             return HttpResponseRedirect(request.path)
