@@ -1,0 +1,34 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<div id="content-main" style="max-width:44rem">
+  <div style="background:#f6f8fa;border:1px solid #d0d7de;border-radius:8px;padding:1rem 1.25rem;margin-bottom:1.25rem">
+    <p style="margin:0"><strong>Campagne :</strong> {{ campagne.sujet }}</p>
+    <p style="color:#57606a;font-size:.9rem;margin:.5rem 0 0">
+      Seront envoyés à <strong>{{ nb_abonnes }}</strong> abonné(s) actif(s).
+      Chaque email contiendra automatiquement un lien de désabonnement.
+    </p>
+  </div>
+
+  <form method="post" action="">
+    {% csrf_token %}
+    <fieldset class="module aligned">
+      <div class="form-row">
+        <label for="id_sujet">Sujet de l'email :</label>
+        <input type="text" id="id_sujet" name="sujet" value="{{ campagne.sujet }}" required
+               style="width:100%;margin-top:.25rem">
+      </div>
+      <div class="form-row" style="margin-top:.75rem">
+        <label for="id_contenu_html">Contenu (HTML) :</label>
+        <textarea id="id_contenu_html" name="contenu_html" rows="18" required
+                  style="width:100%;margin-top:.25rem;font-family:ui-monospace,monospace;font-size:.85rem">{{ campagne.contenu_html }}</textarea>
+        <p style="color:#57606a;font-size:.8rem;margin:.5rem 0 0">Vous pouvez utiliser du HTML (titres, boutons, images&#8230;). Le lien de désabonnement sera ajouté automatiquement en bas de l'email.</p>
+      </div>
+    </fieldset>
+    <div class="submit-row" style="margin-top:1rem">
+      <input type="submit" value="Envoyer la campagne" class="default" name="_save"
+             onclick="return confirm('Envoyer cette campagne à {{ nb_abonnes }} abonné(s) ?')">
+      <a href="{% url 'admin:studio_newslettercampaign_changelist' %}" style="margin-left:1rem">Retour à la liste</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

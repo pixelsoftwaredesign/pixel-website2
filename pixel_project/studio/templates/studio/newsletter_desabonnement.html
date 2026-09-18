@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Désabonnement — Pixel Software Design</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#081A14;color:#E6F2ED;font-family:'Space Grotesk',sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center}
+  .card{background:#0D241C;border:1px solid #1EB48233;border-radius:16px;padding:2.5rem 2rem;max-width:480px;width:100%}
+  .logo{display:inline-block;width:56px;height:56px;margin-bottom:1.25rem}
+  h1{font-size:1.35rem;font-weight:700;margin-bottom:.75rem;color:#fff}
+  p{color:#9DB5AC;font-size:.95rem;line-height:1.6;margin-bottom:1.5rem}
+  a.btn{display:inline-block;background:#1EB482;color:#05100D;padding:.8rem 1.8rem;border-radius:8px;font-weight:700;text-decoration:none;transition:transform .2s,opacity .2s}
+  a.btn:hover{transform:translateY(-2px);opacity:.9}
+  .muted{font-size:.75rem;color:#5d7a6f;font-family:'Space Mono',monospace;margin-top:1.5rem}
+</style>
+</head>
+<body>
+  <div class="card">
+    <svg class="logo" viewBox="0 0 100 100" aria-hidden="true">
+      <polygon points="50,2 93,26 93,74 50,98 7,74 7,26" fill="none"/>
+      <polygon points="50,2 93,26 70,14" fill="#2DBD6E"/>
+      <polygon points="50,2 70,14 50,30 30,14" fill="#3DC87A"/>
+      <polygon points="50,2 30,14 7,26" fill="#1EB482"/>
+      <polygon points="93,26 93,74 78,50" fill="#1A9BAF"/>
+      <polygon points="93,26 78,50 70,14" fill="#1CB89A"/>
+      <polygon points="70,14 78,50 50,30" fill="#22C490"/>
+      <polygon points="50,30 78,50 60,72 40,72 22,50" fill="#1A9BAF"/>
+      <polygon points="7,26 30,14 22,50" fill="#1565C0"/>
+      <polygon points="30,14 50,30 22,50" fill="#1878C8"/>
+      <polygon points="7,26 22,50 7,74" fill="#1565C0"/>
+      <polygon points="7,74 22,50 40,72 50,98 30,86" fill="#1A9BAF"/>
+      <polygon points="93,74 78,50 60,72 50,98 70,86" fill="#1565C0"/>
+      <polygon points="50,98 70,86 93,74" fill="#1878C8"/>
+      <polygon points="40,72 60,72 50,98 30,86" fill="#1CB89A"/>
+      <path d="M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z" fill="white" opacity="0.92"/>
+    </svg>
+    {% if statut == 'desabonne' %}
+      <h1>Vous êtes désabonné</h1>
+      <p>Votre adresse a bien été retirée de notre newsletter. Vous ne recevrez plus de campagnes Pixel Software Design.</p>
+    {% elif statut == 'deja_desabonne' %}
+      <h1>Déjà fait</h1>
+      <p>Cette adresse était déjà désabonnée de notre newsletter.</p>
+    {% elif statut == 'invalide' %}
+      <h1>Lien invalide</h1>
+      <p>Ce lien de désabonnement n'est pas reconnu. Si le problème persiste, contactez-nous à pixelsoftwaredesign@gmail.com.</p>
+    {% else %}
+      <h1>Désabonnement</h1>
+      <p>Utilisez le lien présent dans un de nos emails pour vous désabonner.</p>
+    {% endif %}
+    <a class="btn" href="/">Retour au site</a>
+    <div class="muted">Pixel Software Design · El Hamma, Gabès</div>
+  </div>
+</body>
+</html>

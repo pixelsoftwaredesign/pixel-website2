@@ -2,11 +2,12 @@ from django.contrib import admin
 from django.contrib import messages
 from django.core.mail import send_mail
 from django.conf import settings
-from django.http import HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
-from django.urls import path
+from django.urls import path, reverse
 from django.utils import timezone
-from .models import UserProfile, ProjetContact, AtelierProfile, PortfolioProject, CodeRepository, GraphismeResource, ERPClient, ERPModule, ERPSubscription, ERPDemoRecord, Moniteur, Candidat, Vehicule, Lecon, Examen, Medecin, Patient, Lit, RendezVous, FacturationSante, ClientHotel, Chambre, ReservationHotel, ServiceHotel, Categorie, Fournisseur, Produit, Vente, ClientJuridique, DossierJuridique, Audience, JournalComptable, EcritureComptable, Facture, DeclarationFiscale, Employe, Contrat, FichePaie, Conge, Formation, MenuItem, TableRestaurant, SoftCodeModule, StudioProject3D, PatisserieRecipe, PatisserieProduct, PlanAbonnement, SouscriptionClient, Paiement, CleActivation, ConfigurationBancaire, ConfigurationPaiementEnLigne, Candidature, MouvementStock, CommandeECommerce, CommandeECommerceItem, Temoignage, PixMailAccount, PixMailContact, PixMailMessage, PixMailAttachment, PixMailFolder, PixMailSignature, SocialProfile, Follow, Post, Like, Comment, Notification, Conversation, ConversationMember, EncryptedMessage, Wallet, Transaction, TwoFactorAuth, Referral, KYCVerification
+import csv, re
+from .models import UserProfile, ProjetContact, AtelierProfile, PortfolioProject, CodeRepository, GraphismeResource, ERPClient, ERPModule, ERPSubscription, ERPDemoRecord, Moniteur, Candidat, Vehicule, Lecon, Examen, Medecin, Patient, Lit, RendezVous, FacturationSante, ClientHotel, Chambre, ReservationHotel, ServiceHotel, Categorie, Fournisseur, Produit, Vente, ClientJuridique, DossierJuridique, Audience, JournalComptable, EcritureComptable, Facture, DeclarationFiscale, Employe, Contrat, FichePaie, Conge, Formation, MenuItem, TableRestaurant, SoftCodeModule, StudioProject3D, PatisserieRecipe, PatisserieProduct, PlanAbonnement, SouscriptionClient, Paiement, CleActivation, ConfigurationBancaire, ConfigurationPaiementEnLigne, Candidature, MouvementStock, CommandeECommerce, CommandeECommerceItem, Temoignage, PixMailAccount, PixMailContact, PixMailMessage, PixMailAttachment, PixMailFolder, PixMailSignature, SocialProfile, Follow, Post, Like, Comment, Notification, Conversation, ConversationMember, EncryptedMessage, Wallet, Transaction, TwoFactorAuth, Referral, KYCVerification, NewsletterSubscriber, NewsletterCampaign
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
@@ -62,6 +63,134 @@ class ProjetContactAdmin(admin.ModelAdmin):
             'has_change_permission': self.has_change_permission(request, contact),
         }
         return render(request, 'admin/studio/projetcontact/repondre.html', contexte)
+
+# ─── Newsletter ────────────────────────────────────────────
+def _smtp_config_ok():
+    """Vrai si le backend SMTP réel a des identifiants (les backends console/locmem passent)."""
+    if getattr(settings, 'EMAIL_BACKEND', '') != 'django.core.mail.backends.smtp.EmailBackend':
+        return True
+    return bool(getattr(settings, 'EMAIL_HOST_USER', ''))
+
+def _envoi_campagne(request, campagne, sujet=None, contenu=None):
+    """Envoie une campagne à tous les abonnés actifs. Retourne le nombre d'emails envoyés."""
+    sujet = (sujet or campagne.sujet).strip()
+    contenu = (contenu or campagne.contenu_html).strip()
+    if not _smtp_config_ok():
+        raise RuntimeError("SMTP non configuré (EMAIL_HOST_USER vide). Configurez les variables EMAIL_HOST_USER / EMAIL_HOST_PASSWORD.")
+    abonnes = NewsletterSubscriber.objects.filter(actif=True)
+    nb = 0
+    erreurs = []
+    base_url = request.build_absolute_uri(reverse('newsletter_desabonnement'))
+    for sub in abonnes:
+        try:
+            desabonnement_url = f"{base_url}?token={sub.token}"
+            html = contenu + (
+                '<hr style="border:none;border-top:1px solid #eee;margin:24px 0 12px">'
+                f'<p style="font-family:Arial,sans-serif;font-size:12px;color:#8a8a8a;margin:0">'
+                f'Vous recevez cet email car vous êtes abonné à la newsletter Pixel Software Design. '
+                f'<a href="{desabonnement_url}" style="color:#1EB482">Se désabonner</a></p>'
+            )
+            send_mail(
+                sujet,
+                re.sub(r'<[^>]+>', ' ', contenu),
+                settings.DEFAULT_FROM_EMAIL,
+                [sub.email],
+                html_message=html,
+                fail_silently=False,
+            )
+            nb += 1
+        except Exception as exc:
+            erreurs.append(f"{sub.email} : {exc}")
+    if erreurs:
+        messages.warning(request, f"Échec pour {len(erreurs)} adresse(s) (ex : {erreurs[0]}).")
+    return nb
+
+@admin.register(NewsletterSubscriber)
+class NewsletterSubscriberAdmin(admin.ModelAdmin):
+    list_display = ('email', 'nom', 'actif', 'date_inscription')
+    search_fields = ('email', 'nom')
+    list_filter = ('actif', 'date_inscription')
+    list_editable = ('actif',)
+    readonly_fields = ('token', 'date_inscription')
+    actions = ['export_csv']
+
+    def export_csv(self, request, queryset):
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="newsletter_abonnes_{}.csv"'.format(timezone.now().strftime('%Y%m%d_%H%M'))
+        writer = csv.writer(response)
+        writer.writerow(['Email', 'Nom', "Date d'inscription", 'Actif'])
+        for sub in queryset:
+            writer.writerow([sub.email, sub.nom, sub.date_inscription.strftime('%d/%m/%Y %H:%M'), 'Oui' if sub.actif else 'Non'])
+        return response
+    export_csv.short_description = "Exporter la sélection en CSV"
+
+@admin.register(NewsletterCampaign)
+class NewsletterCampaignAdmin(admin.ModelAdmin):
+    list_display = ('sujet', 'date_creation', 'envoye', 'date_envoi', 'nb_destinataires')
+    list_filter = ('envoye', 'date_creation')
+    search_fields = ('sujet', 'contenu_html')
+    readonly_fields = ('date_creation', 'date_envoi', 'nb_destinataires')
+    actions = ['envoyer_campagne_action']
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom = [
+            path('<int:pk>/envoyer/', self.admin_site.admin_view(self.envoyer_campagne_view), name='studio_newslettercampaign_envoyer'),
+        ]
+        return custom + urls
+
+    def envoyer_campagne_action(self, request, queryset):
+        selection = queryset.exclude(envoye=True)
+        if not selection.exists():
+            messages.error(request, "Aucune campagne non envoyée sélectionnée.")
+            return
+        erreurs = 0
+        for campagne in selection:
+            if not _smtp_config_ok():
+                erreurs += 1
+                continue
+            try:
+                nb = _envoi_campagne(request, campagne)
+                campagne.envoye = True
+                campagne.nb_destinataires = nb
+                campagne.date_envoi = timezone.now()
+                campagne.save(update_fields=['envoye', 'nb_destinataires', 'date_envoi'])
+            except Exception as exc:
+                erreurs += 1
+        messages.success(request, f"{selection.count() - erreurs} campagne(s) envoyée(s).")
+    envoyer_campagne_action.short_description = "Envoyer la ou les campagnes sélectionnées"
+
+    def envoyer_campagne_view(self, request, pk):
+        campagne = get_object_or_404(NewsletterCampaign, pk=pk)
+        if request.method == 'POST':
+            sujet = request.POST.get('sujet', '').strip()
+            contenu = request.POST.get('contenu_html', '').strip()
+            if not sujet or not contenu:
+                messages.error(request, "Sujet et contenu sont obligatoires.")
+            elif campagne.envoye:
+                messages.error(request, "Cette campagne a déjà été envoyée.")
+            else:
+                try:
+                    nb = _envoi_campagne(request, campagne, sujet=sujet, contenu=contenu)
+                    campagne.sujet = sujet
+                    campagne.contenu_html = contenu
+                    campagne.envoye = True
+                    campagne.nb_destinataires = nb
+                    campagne.date_envoi = timezone.now()
+                    campagne.save(update_fields=['sujet', 'contenu_html', 'envoye', 'nb_destinataires', 'date_envoi'])
+                    messages.success(request, f"Campagne envoyée à {nb} abonné(s).")
+                except Exception as exc:
+                    messages.error(request, f"Erreur lors de l'envoi : {exc}")
+            return HttpResponseRedirect(request.path)
+        contexte = {
+            'campagne': campagne,
+            'nb_abonnes': NewsletterSubscriber.objects.filter(actif=True).count(),
+            'title': f"Envoyer la campagne : {campagne.sujet}",
+            'opts': self.model._meta,
+            'has_view_permission': self.has_view_permission(request, campagne),
+            'has_change_permission': self.has_change_permission(request, campagne),
+        }
+        return render(request, 'admin/studio/newslettercampaign/envoyer.html', contexte)
 
 @admin.register(AtelierProfile)
 class AtelierProfileAdmin(admin.ModelAdmin):

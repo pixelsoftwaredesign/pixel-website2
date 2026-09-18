@@ -1,7 +1,7 @@
 import json
 from django.test import TestCase, Client
 from django.contrib.auth.models import User
-from .models import MenuItem, TableRestaurant, SoftCodeModule, StudioProject3D, PatisserieRecipe, PatisserieProduct, ERPClient, ERPModule, ERPSubscription, PlanAbonnement, SouscriptionClient, Paiement, CleActivation, ConfigurationBancaire, Candidature, Categorie, Produit, CommandeECommerce, CommandeECommerceItem, MouvementStock
+from .models import MenuItem, TableRestaurant, SoftCodeModule, StudioProject3D, PatisserieRecipe, PatisserieProduct, ERPClient, ERPModule, ERPSubscription, PlanAbonnement, SouscriptionClient, Paiement, CleActivation, ConfigurationBancaire, Candidature, Categorie, Produit, CommandeECommerce, CommandeECommerceItem, MouvementStock, NewsletterSubscriber, NewsletterCampaign
 
 class LandingPageTests(TestCase):
     def setUp(self):
@@ -791,3 +791,59 @@ class EmailNotificationsTests(TestCase):
         self.assertEqual(len(mail.outbox), 1)
         self.assertIn('expédiée', mail.outbox[0].body)
         self.assertEqual(mail.outbox[0].to, ['stat@test.com'])
+
+class NewsLetterTests(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.admin = User.objects.create_superuser(username='adminmail', email='a@x.com', password='adminpass')
+
+    def test_inscription_api_creer_abonne(self):
+        r = self.client.post('/api/newsletter/inscription/', json.dumps({'email': 'abonne@test.com'}), content_type='application/json')
+        self.assertEqual(r.status_code, 201)
+        self.assertTrue(NewsletterSubscriber.objects.filter(email='abonne@test.com', actif=True).exists())
+
+    def test_inscription_api_double(self):
+        self.client.post('/api/newsletter/inscription/', json.dumps({'email': 'abonne@test.com'}), content_type='application/json')
+        r = self.client.post('/api/newsletter/inscription/', json.dumps({'email': 'abonne@test.com'}), content_type='application/json')
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(NewsletterSubscriber.objects.count(), 1)
+        self.assertIn('déjà', r.json()['message'])
+
+    def test_inscription_api_email_vide(self):
+        r = self.client.post('/api/newsletter/inscription/', json.dumps({'email': ''}), content_type='application/json')
+        self.assertEqual(r.status_code, 400)
+
+    def test_desabonnement(self):
+        sub = NewsletterSubscriber.objects.create(email='abonne@test.com')
+        r = self.client.get('/newsletter/desabonnement/', {'token': sub.token})
+        self.assertEqual(r.status_code, 200)
+        sub.refresh_from_db()
+        self.assertFalse(sub.actif)
+
+    def test_desabonnement_token_invalide(self):
+        r = self.client.get('/newsletter/desabonnement/', {'token': 'inconnu'})
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'Lien invalide')
+
+    def test_campagne_envoi_admin(self):
+        from django.core import mail
+        NewsletterSubscriber.objects.create(email='abonne@test.com')
+        campagne = NewsletterCampaign.objects.create(
+            sujet='Nouveautés Pixel',
+            contenu_html='<h1>Nouveautés</h1><p>Decouvrez nos offres.</p>',
+        )
+        self.client.login(username='adminmail', password='adminpass')
+        r = self.client.get(f'/admin/studio/newslettercampaign/{campagne.id}/change/')
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'envoyer/')
+        r = self.client.post(f'/admin/studio/newslettercampaign/{campagne.id}/envoyer/', {
+            'sujet': 'Nouveautés Pixel',
+            'contenu_html': '<h1>Nouveautés</h1><p>Decouvrez nos offres.</p>',
+        }, follow=True)
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertIn('Se désabonner', mail.outbox[0].alternatives[0][0])
+        campagne.refresh_from_db()
+        self.assertTrue(campagne.envoye)
+        self.assertEqual(campagne.nb_destinataires, 1)
+        self.assertEqual(mail.outbox[0].to, ['abonne@test.com'])

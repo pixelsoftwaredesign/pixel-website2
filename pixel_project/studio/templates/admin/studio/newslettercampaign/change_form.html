@@ -1,0 +1,9 @@
+{% extends "admin/change_form.html" %}
+{% block object-tools-items %}
+{% if not original.envoye %}
+<li>
+  <a href="envoyer/" style="background:#1EB482;color:#05100D;font-weight:700">Envoyer la campagne</a>
+</li>
+{% endif %}
+{{ block.super }}
+{% endblock %}

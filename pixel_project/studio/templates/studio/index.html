@@ -389,10 +389,40 @@
     <svg width="24" height="24"><use href="#pxl"/></svg>
     <span class="fcopy">© 2026 Pixel Software Design · El Hamma, Gabès</span>
   </div>
+  <form id="newsletterForm" style="display:flex;align-items:center;gap:8px">
+    <input type="email" id="newsletterEmail" placeholder="Votre email pour la newsletter" required
+           style="background:var(--card);border:1px solid var(--border);color:var(--text);padding:.6rem .9rem;border-radius:8px;font-size:.82rem;font-family:'Space Grotesk',sans-serif;min-width:250px;outline:none">
+    <button type="submit" class="btn-p" style="padding:.6rem 1.2rem">S'abonner</button>
+  </form>
   <div class="flinks">
     <a href="#">LinkedIn</a><a href="#">Behance</a><a href="#">GitHub</a>
   </div>
 </footer>
+
+<script>
+document.getElementById('newsletterForm').addEventListener('submit', async function (e) {
+  e.preventDefault();
+  var input = document.getElementById('newsletterEmail');
+  var btn = this.querySelector('button');
+  var email = input.value.trim();
+  if (!email) return;
+  btn.disabled = true;
+  var prevText = btn.textContent;
+  try {
+    var r = await fetch('/api/newsletter/inscription/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+      body: JSON.stringify({ email: email })
+    });
+    var d = await r.json();
+    input.value = '';
+    btn.textContent = d.status === 'success' ? '✓ Abonné !' : (d.status === 'info' ? 'Déjà abonné !' : 'Erreur');
+  } catch (err) {
+    btn.textContent = 'Erreur';
+  }
+  setTimeout(function () { btn.textContent = prevText; btn.disabled = false; }, 3000);
+});
+</script>
 
 <script src="{% static 'js/main.js' %}"></script>
 </body>

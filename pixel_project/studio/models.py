@@ -1,3 +1,4 @@
+import uuid
 from django.db import models
 from django.contrib.auth.models import User
 
@@ -1378,3 +1379,36 @@ class KYCVerification(models.Model):
 
     def __str__(self):
         return f"KYC {self.user.username} — {self.get_doc_type_display()} ({self.get_status_display()})"
+
+
+# ─── Newsletter ───────────────────────────────────────────
+class NewsletterSubscriber(models.Model):
+    email = models.EmailField(unique=True, verbose_name="Email")
+    nom = models.CharField(max_length=150, blank=True, verbose_name="Nom")
+    token = models.CharField(max_length=40, unique=True, default=uuid.uuid4().hex, verbose_name="Token de désabonnement")
+    actif = models.BooleanField(default=True, verbose_name="Abonné actif")
+    date_inscription = models.DateTimeField(auto_now_add=True, verbose_name="Date d'inscription")
+
+    class Meta:
+        verbose_name = "Abonné newsletter"
+        verbose_name_plural = "Abonnés newsletter"
+        ordering = ['-date_inscription']
+
+    def __str__(self):
+        return f"{self.email} ({'actif' if self.actif else 'désabonné'})"
+
+class NewsletterCampaign(models.Model):
+    sujet = models.CharField(max_length=200, verbose_name="Sujet de l'email")
+    contenu_html = models.TextField(verbose_name="Contenu HTML")
+    date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Date de création")
+    date_envoi = models.DateTimeField(null=True, blank=True, verbose_name="Date d'envoi")
+    nb_destinataires = models.IntegerField(default=0, verbose_name="Nombre de destinataires")
+    envoye = models.BooleanField(default=False, verbose_name="Campagne envoyée")
+
+    class Meta:
+        verbose_name = "Campagne email"
+        verbose_name_plural = "Campagnes email"
+        ordering = ['-date_creation']
+
+    def __str__(self):
+        return self.sujet

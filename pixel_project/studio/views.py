@@ -10,7 +10,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.utils import timezone
-from .models import UserProfile, ProjetContact, AtelierProfile, PortfolioProject, CodeRepository, GraphismeResource, ERPModule, ERPSubscription, ERPDemoRecord, ERPClient, Moniteur, Candidat, Vehicule, Lecon, Examen, Medecin, Patient, Lit, RendezVous, FacturationSante, ClientHotel, Chambre, ReservationHotel, ServiceHotel, Categorie, Fournisseur, Produit, Vente, ClientJuridique, DossierJuridique, Audience, JournalComptable, EcritureComptable, Facture, DeclarationFiscale, Employe, Contrat, FichePaie, Conge, Formation, MenuItem, TableRestaurant, SoftCodeModule, StudioProject3D, PatisserieRecipe, PatisserieProduct, PlanAbonnement, SouscriptionClient, Paiement, CleActivation, ConfigurationBancaire, ConfigurationPaiementEnLigne, Candidature, MouvementStock, CommandeECommerce, CommandeECommerceItem, Temoignage, PixMailAccount, PixMailContact, PixMailMessage, PixMailAttachment, PixMailFolder, PixMailSignature, SocialProfile, Follow, Post, Like, Comment, Notification, Conversation, ConversationMember, EncryptedMessage, Wallet, Transaction, TwoFactorAuth, Referral, REFERRAL_BONUS_AMOUNT, REFERRAL_THRESHOLD, KYCVerification
+from .models import UserProfile, ProjetContact, AtelierProfile, PortfolioProject, CodeRepository, GraphismeResource, ERPModule, ERPSubscription, ERPDemoRecord, ERPClient, Moniteur, Candidat, Vehicule, Lecon, Examen, Medecin, Patient, Lit, RendezVous, FacturationSante, ClientHotel, Chambre, ReservationHotel, ServiceHotel, Categorie, Fournisseur, Produit, Vente, ClientJuridique, DossierJuridique, Audience, JournalComptable, EcritureComptable, Facture, DeclarationFiscale, Employe, Contrat, FichePaie, Conge, Formation, MenuItem, TableRestaurant, SoftCodeModule, StudioProject3D, PatisserieRecipe, PatisserieProduct, PlanAbonnement, SouscriptionClient, Paiement, CleActivation, ConfigurationBancaire, ConfigurationPaiementEnLigne, Candidature, MouvementStock, CommandeECommerce, CommandeECommerceItem, Temoignage, PixMailAccount, PixMailContact, PixMailMessage, PixMailAttachment, PixMailFolder, PixMailSignature, SocialProfile, Follow, Post, Like, Comment, Notification, Conversation, ConversationMember, EncryptedMessage, Wallet, Transaction, TwoFactorAuth, Referral, REFERRAL_BONUS_AMOUNT, REFERRAL_THRESHOLD, KYCVerification, NewsletterSubscriber, NewsletterCampaign
 from .services import notifier_activation_cle, notifier_confirmation_commande, notifier_statut_commande
 
 
@@ -877,6 +877,45 @@ def api_contact(request):
         except Exception:
             return JsonResponse({"status": "error", "message": "Erreur interne du serveur."}, status=500)
     return JsonResponse({"status": "error", "message": "Méthode non autorisée."}, status=405)
+
+# ─── Newsletter ────────────────────────────────────────────
+@csrf_exempt
+def api_newsletter_inscription(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+        except Exception:
+            data = request.POST
+        email = str(data.get('email', '')).strip().lower()
+        nom = str(data.get('nom', '')).strip()
+        if not email:
+            return JsonResponse({"status": "error", "message": "Adresse email requise."}, status=400)
+        sub, created = NewsletterSubscriber.objects.get_or_create(email=email, defaults={'nom': nom})
+        if not created and not sub.actif:
+            sub.actif = True
+            sub.nom = nom or sub.nom
+            sub.save(update_fields=['actif', 'nom'])
+            return JsonResponse({"status": "success", "message": "Vous êtes de nouveau abonné à notre newsletter !"}, status=200)
+        if not created:
+            return JsonResponse({"status": "info", "message": "Cet email est déjà abonné à la newsletter."}, status=200)
+        return JsonResponse({"status": "success", "message": "Merci ! Vous êtes abonné à la newsletter Pixel Software Design."}, status=201)
+    return JsonResponse({"status": "error", "message": "Méthode non autorisée."}, status=405)
+
+def newsletter_desabonnement(request):
+    token = request.GET.get('token', '')
+    statut = None
+    if token:
+        sub = NewsletterSubscriber.objects.filter(token=token).first()
+        if sub:
+            if sub.actif:
+                sub.actif = False
+                sub.save(update_fields=['actif'])
+                statut = 'desabonne'
+            else:
+                statut = 'deja_desabonne'
+        else:
+            statut = 'invalide'
+    return render(request, 'studio/newsletter_desabonnement.html', {'statut': statut})
 
 @csrf_exempt
 def api_inscription(request):
