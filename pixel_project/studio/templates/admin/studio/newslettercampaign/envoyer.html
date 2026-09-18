@@ -1,4 +1,5 @@
 {% extends "admin/base_site.html" %}
+{% load static %}
 {% block content %}
 <div id="content-main" style="max-width:44rem">
   <div style="background:#f6f8fa;border:1px solid #d0d7de;border-radius:8px;padding:1rem 1.25rem;margin-bottom:1.25rem">
@@ -7,6 +8,23 @@
       Seront envoyés à <strong>{{ nb_abonnes }}</strong> abonné(s) actif(s).
       Chaque email contiendra automatiquement un lien de désabonnement.
     </p>
+  </div>
+
+  <div style="background:#f0f7f4;border:1px solid #b8dccc;border-radius:8px;padding:1rem 1.25rem;margin-bottom:1.25rem">
+    <p style="margin:0"><strong>Pack Email Marketing</strong> — choisissez un template, il remplit le champ « Contenu HTML » (remplacez ensuite les <code>[CHAMPS]</code> et les liens <code>[[LIEN_CTA]]</code>).</p>
+    <div style="display:flex;gap:.5rem;margin-top:.75rem;align-items:center;flex-wrap:wrap">
+      <select id="id_template_pack" style="padding:.45rem .6rem;border:1px solid #c6d6cf;border-radius:6px;background:#fff">
+        <option value="">— Choisir un template —</option>
+        <option value="{% static 'email-templates/email-welcome.html' %}">Bienvenue / Onboarding</option>
+        <option value="{% static 'email-templates/email-annonce.html' %}">Annonce / Lancement produit</option>
+        <option value="{% static 'email-templates/email-promo.html' %}">Promotion / Offre spéciale</option>
+        <option value="{% static 'email-templates/email-newsletter.html' %}">Newsletter / Digest d'actualités</option>
+        <option value="{% static 'email-templates/email-relance.html' %}">Relance / Réengagement</option>
+        <option value="{% static 'email-templates/email-evenement.html' %}">Événement / Webinaire</option>
+      </select>
+      <button type="button" onclick="chargerTemplate()" style="padding:.5rem 1rem;background:#1EB482;color:#05100D;font-weight:700;border:none;border-radius:6px;cursor:pointer">Charger le template</button>
+      <button type="button" onclick="document.getElementById('id_contenu_html').value=''" style="padding:.5rem 1rem;background:#e9e9e9;color:#333;font-weight:600;border:none;border-radius:6px;cursor:pointer">Vider</button>
+    </div>
   </div>
 
   <form method="post" action="">
@@ -31,4 +49,20 @@
     </div>
   </form>
 </div>
+<script>
+async function chargerTemplate() {
+  var sel = document.getElementById('id_template_pack');
+  var url = sel.value;
+  var txt = document.getElementById('id_contenu_html');
+  if (!url) { alert('Choisissez d\u2019abord un template dans la liste.'); return; }
+  try {
+    var r = await fetch(url);
+    if (!r.ok) throw new Error(r.status);
+    txt.value = await r.text();
+    txt.focus();
+  } catch (err) {
+    alert('Impossible de charger le template (' + err.message + '). Collez le HTML manuellement depuis le fichier.');
+  }
+}
+</script>
 {% endblock %}
