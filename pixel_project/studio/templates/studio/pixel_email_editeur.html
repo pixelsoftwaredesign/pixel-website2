@@ -1,0 +1,434 @@
+<!DOCTYPE html>{% load static %}<html lang="fr">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Pixel Email Éditeur — Créez vos emails marketing | Pixel Software Design</title>
+<meta name="description" content="Pixel Email Éditeur : créez, personnalisez et exportez des emails marketing professionnels avec des blocs visuels — 100% gratuit, sans code.">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+<style>
+:root{--px-teal:#1EB482;--px-dark:#05100D;--px-card:#0F2A20;--px-line:#1EB48233;--px-text:#E6F2ED;--px-mut:#8FA89E;--px-gold:#E7C46A}
+.me-hero{background:linear-gradient(160deg,#05100D 0%,#0a1a15 45%,#0d2420 100%);position:relative;overflow:hidden;padding:7.5rem 1.5rem 3rem;text-align:center}
+.me-hero::before{content:'';position:absolute;width:640px;height:640px;border-radius:50%;background:radial-gradient(circle,rgba(30,180,130,.14) 0%,transparent 70%);top:-240px;right:-200px}
+.me-hero::after{content:'';position:absolute;width:420px;height:420px;border-radius:50%;background:radial-gradient(circle,rgba(231,196,106,.08) 0%,transparent 70%);bottom:-120px;left:-120px}
+.me-hero-inner{position:relative;z-index:1;max-width:760px;margin:0 auto}
+.me-hero .tag{display:inline-block;background:#0F2A20;border:1px solid var(--px-line);color:#4be0b0;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;padding:.4rem 1rem;border-radius:30px;margin-bottom:1.2rem}
+.me-hero h1{font-size:2.7rem;line-height:1.15;margin-bottom:1rem}
+.me-hero h1 span{background:linear-gradient(135deg,var(--px-teal),#1A9BAF);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.me-hero p{color:var(--muted);font-size:.98rem;max-width:540px;margin:0 auto 1.6rem}
+.me-editor{background:#06210f;padding:2rem 1.5rem 3.5rem;border-top:1px solid var(--px-line)}
+.me-wrap{max-width:1180px;margin:0 auto}
+.ed-top{display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;padding:.9rem 1.1rem;background:var(--px-dark);border:1px solid var(--px-line);border-radius:12px;margin-bottom:1rem;color:var(--px-text)}
+.ed-top .sujet{flex:1;min-width:200px}
+.ed-top .sujet input{width:100%;padding:.55rem .7rem;border:1px solid #22473a;background:#0F2A20;color:var(--px-text);border-radius:7px;font-size:.9rem}
+.ed-top select,.ed-top button{border-radius:7px;border:none;cursor:pointer;font-weight:600;font-size:.82rem;white-space:nowrap}
+.ed-top select{padding:.5rem .6rem;background:#0F2A20;color:var(--px-text);border:1px solid #22473a}
+.ed-top button{padding:.6rem 1rem}
+.btn-px{background:var(--px-teal);color:#05100D}
+.btn-gold{background:var(--px-gold);color:#05100D}
+.btn-out{background:#1d2b26;color:var(--px-text);border:1px solid #2c4b3f!important}
+.ed-body{display:flex;gap:1rem;align-items:flex-start}
+.ed-side{width:320px;flex:0 0 320px;display:flex;flex-direction:column;gap:.6rem}
+.ed-panel{background:#0A1A15;border:1px solid var(--px-line);border-radius:12px;padding:.9rem;color:var(--px-text)}
+.ed-panel h4{margin:0 0 .65rem;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:#8FA89E}
+.add-row{display:flex;flex-wrap:wrap;gap:.4rem}
+.add-row button{background:#0F6E8C;color:#fff;border:none;border-radius:6px;padding:.45rem .7rem;font-size:.78rem;cursor:pointer;font-weight:600}
+.add-row button:hover{opacity:.9}
+.blk{background:#0F2A20;border:1px solid #1c3d31;border-left:4px solid var(--px-teal);border-radius:8px;padding:.6rem .75rem;margin-bottom:.55rem;color:var(--px-text)}
+.blk-head{display:flex;align-items:center;justify-content:space-between;gap:.4rem;margin-bottom:.45rem}
+.blk-head b{font-size:.78rem;color:#E6F2ED}
+.blk-head .btns{display:flex;gap:.25rem}
+.blk-head .btns button{background:#1d2b26;border:1px solid #2c4b3f;border-radius:5px;cursor:pointer;padding:.15rem .4rem;font-size:.72rem;color:var(--px-text)}
+.blk-head .btns button.del{background:#3a1d1a;border-color:#7a372f;color:#ff9d92}
+.blk label{display:block;font-size:.72rem;color:#8FA89E;margin:.4rem 0 .15rem}
+.blk input,.blk textarea{width:100%;box-sizing:border-box;padding:.45rem .55rem;border:1px solid #1c3d31;background:#081A14;color:var(--px-text);border-radius:6px;font-size:.82rem;font-family:inherit}
+.blk textarea{resize:vertical}
+.ed-main{flex:1;min-width:0;background:#04130d;border:1px solid var(--px-line);border-radius:12px;overflow:hidden}
+.ed-main .vhead{display:flex;gap:.3rem;align-items:center;padding:.5rem .75rem;border-bottom:1px solid var(--px-line)}
+.ed-main .vhead button{background:#1d2b26;color:var(--px-text);border:1px solid #2c4b3f;border-radius:6px;padding:.35rem .7rem;font-size:.78rem;cursor:pointer;font-weight:600}
+.ed-main .vhead button.on{background:var(--px-teal);color:#05100D;border-color:var(--px-teal)}
+.ed-main .vhead span{flex:1}
+.ifrwrap{padding:18px;text-align:center}
+.ifrwrap iframe{background:#fff;border:1px solid var(--px-line);border-radius:10px;width:620px;max-width:100%;height:560px;transition:width .2s;box-sizing:border-box}
+.ed-panel .hint{font-size:.72rem;color:#8FA89E;margin-top:.5rem;line-height:1.5}
+.ed-side .ed-panel.sourcesrc textarea{width:100%;box-sizing:border-box;min-height:170px;font-family:ui-monospace,monospace;font-size:.72rem;background:#04130d;color:#9fd6c4;border:1px solid #1c3d31;border-radius:6px;padding:.5rem;resize:vertical}
+.mode-sw{display:flex;gap:.4rem;margin-bottom:.5rem}
+.mode-sw button{flex:1;padding:.45rem;border:1px solid #2c4b3f;background:#081A14;border-radius:6px;cursor:pointer;font-size:.76rem;font-weight:600;color:var(--px-text)}
+.mode-sw button.on{background:#0F6E8C;color:#fff;border-color:#0F6E8C}
+.me-cta{text-align:center;padding:2.4rem 1.5rem 3rem;background:#05100D}
+@media(max-width:900px){.ed-body{flex-direction:column}.ed-side{width:100%;flex:none}}
+</style>
+</head>
+<body class="page-dark">
+<svg style="display:none"><defs><symbol id="pxl" viewBox="0 0 100 100"><polygon points="50,2 93,26 93,74 50,98 7,74 7,26" fill="none"/><polygon points="50,2 93,26 70,14" fill="#2DBD6E"/><polygon points="50,2 70,14 50,30 30,14" fill="#3DC87A"/><polygon points="50,2 30,14 7,26" fill="#1EB482"/><polygon points="93,26 93,74 78,50" fill="#1A9BAF"/><polygon points="93,26 78,50 70,14" fill="#1CB89A"/><polygon points="70,14 78,50 50,30" fill="#22C490"/><polygon points="50,30 78,50 60,72 40,72 22,50" fill="#1A9BAF"/><polygon points="7,26 30,14 22,50" fill="#1565C0"/><polygon points="30,14 50,30 22,50" fill="#1878C8"/><polygon points="7,26 22,50 7,74" fill="#1565C0"/><polygon points="7,74 22,50 40,72 50,98 30,86" fill="#1A9BAF"/><polygon points="93,74 78,50 60,72 50,98 70,86" fill="#1565C0"/><polygon points="50,98 70,86 93,74" fill="#1878C8"/><polygon points="50,98 30,86 7,74" fill="#1A9BAF"/><polygon points="40,72 60,72 50,98 30,86" fill="#1CB89A"/><path d="M36,30 L36,70 L44,70 L44,56 L56,56 Q66,56 66,43 Q66,30 56,30 Z M44,38 L54,38 Q58,38 58,43 Q58,48 54,48 L44,48 Z" fill="white" opacity="0.92"/></symbol></defs></svg>
+<nav><a href="/" class="logo"><svg><use href="#pxl"/></svg><div class="logo-text"><strong>Pixel Software Design</strong><span>L'architecture de l'innovation</span></div></a><ul class="nav-menu" id="navMenu"><li><a href="/">Accueil</a></li><li><a href="/pixelemailediteur/" class="active">✉️ Email Éditeur</a></li><li><a href="/prix/">Prix</a></li><li><a href="/portfolio/">Portfolio</a></li><li><a href="/pixmail/">PixMail</a></li><li><a href="/contact/">Contact</a></li>      <li><a href="https://gamehub.pixelsoftwaredesign.xyz/" target="_blank">🎮 PixGameHub</a></li><li><a href="https://modawen.pixelsoftwaredesign.xyz/" target="_blank">📝 Blog</a></li>
+      <li><a href="https://maps.pixelsoftwaredesign.xyz/" target="_blank">🗺️ PixMaps</a></li>
+      <li><a href="/login/" class="nav-cta">Connexion</a></li></ul></nav>
+
+<header class="me-hero">
+  <div class="me-hero-inner">
+    <span class="tag">Gratuit · Sans code · Pixel Software Design</span>
+    <h1>Pixel <span>Email Éditeur</span></h1>
+    <p>Concevez des emails marketing élégants et ultra-compatibles (Gmail, Outlook, mobile). Constituez votre message avec des blocs visuels, prévisualisez-le en direct, puis copiez ou téléchargez le HTML prêt à envoyer.</p>
+  </div>
+</header>
+
+<section class="me-editor">
+  <div class="me-wrap">
+
+    <div class="ed-top">
+      <div class="sujet"><input id="ed_sujet" placeholder="Sujet de votre email…"></div>
+      <select id="ed_tpl">
+        <option value="">Démarrer d'un template…</option>
+        <option value="welcome">Bienvenue / Onboarding</option>
+        <option value="annonce">Annonce / Lancement</option>
+        <option value="promo">Promotion / Offre</option>
+        <option value="newsletter">Newsletter / Digest</option>
+        <option value="relance">Relance / Réengagement</option>
+        <option value="evenement">Événement / Webinaire</option>
+      </select>
+      <button class="btn-out" onclick="viderBlocs()">Vider</button>
+      <button class="btn-out" onclick="copierHtml()">📋 Copier le HTML</button>
+      <button class="btn-gold" onclick="telecharger()">⬇ Télécharger</button>
+    </div>
+
+    <div class="ed-body">
+      <div class="ed-side">
+        <div class="ed-panel">
+          <h4>Ajouter un bloc</h4>
+          <div class="add-row">
+            <button onclick="addBloc('hero')">Hero</button>
+            <button onclick="addBloc('text')">Texte</button>
+            <button onclick="addBloc('button')">Bouton</button>
+            <button onclick="addBloc('promo')">Promo</button>
+            <button onclick="addBloc('code')">Code</button>
+            <button onclick="addBloc('list')">Liste ✓</button>
+            <button onclick="addBloc('article')">Article</button>
+            <button onclick="addBloc('event')">Événement</button>
+            <button onclick="addBloc('divider')">Séparateur</button>
+            <button onclick="addBloc('spacer')">Espace</button>
+          </div>
+        </div>
+
+        <div class="ed-panel">
+          <h4>Mode</h4>
+          <div class="mode-sw">
+            <button id="md_blocs" class="on" onclick="mode('blocs')">Blocs</button>
+            <button id="md_source" onclick="mode('source')">Source HTML</button>
+          </div>
+          <div id="sourceZone" style="display:none">
+            <textarea id="src_txt" placeholder="Collez ici le HTML complet d'un email…"></textarea>
+            <p class="hint">En mode source, c'est ce HTML qui est utilisé pour l'aperçu, la copie et le téléchargement, tel quel.</p>
+          </div>
+        </div>
+
+        <div class="ed-panel" id="blocZone">
+          <h4>Blocs du contenu <button class="btn-out" style="float:right;padding:.2rem .6rem;font-size:.7rem" onclick="viderBlocs()">Tout vider</button></h4>
+          <div id="blocList"></div>
+        </div>
+      </div>
+
+      <div class="ed-main">
+        <div class="vhead">
+          <span></span>
+          <button id="vw_d" class="on" onclick="vue('d')">Desktop</button>
+          <button id="vw_m" onclick="vue('m')">Mobile</button>
+          <button id="vw_f" onclick="vue('f')">100%</button>
+        </div>
+        <div class="ifrwrap"><iframe id="preview" title="Aperçu de votre email"></iframe></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="me-cta">
+  <p style="color:#8FA89E;font-size:.9rem;margin-bottom:1.2rem">Votre travail est sauvegardé automatiquement dans ce navigateur. Exportez le HTML et importez-le dans votre campagne newsletter (admin) ou votre fournisseur d'envoi.</p>
+  <p style="font-family:monospace;font-size:.8rem;color:#4be0b0">info@pixelsoftwaredesign.xyz · +216 52 675 027 · El Hamma, Gabès, Tunisie</p>
+</section>
+
+<script>
+(function () {
+  var S = { mode: 'blocs', vue: 'd', blocks: [] };
+  var compteur = 0;
+
+  function hte(s) { return String(s == null ? '' : s); }
+
+  var TYPES = {
+    hero:    { n: 'Hero',        f: [['eyebrow','Sur-titre'],['title','Titre'],['subtitle','Sous-titre (HTML)']] },
+    text:    { n: 'Paragraphe',  f: [['html','Texte (HTML)']] },
+    button:  { n: 'Bouton',      f: [['label','Libellé'],['url','URL']] },
+    promo:   { n: 'Offre',       f: [['discount','Remise (ex : -20%)'],['name','Produit'],['note','Note (HTML)']] },
+    code:    { n: 'Code promo',  f: [['label','Libellé'],['code','Code']] },
+    list:    { n: 'Liste',       f: [['title','Titre'],['items','Éléments (un par ligne, préfixez ✓)']] },
+    article: { n: 'Article',     f: [['kicker','Catégorie'],['title','Titre'],['text','Résumé'],['url','Lien']] },
+    event:   { n: 'Événement',   f: [['kicker','Label'],['title','Titre'],['desc','Description'],['date','Date'],['heure','Heure / fuseau'],['note','Note']] },
+    divider: { n: 'Séparateur',  f: [] },
+    spacer:  { n: 'Espace',      f: [['height','Hauteur px']] }
+  };
+
+  var H = {
+    wrap: function (rowsHtml) {
+      return '<!doctype html><html lang="fr"><head><meta charset="utf-8">' +
+        '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+        '<title>Email — Pixel Software Design</title></head>' +
+        '<body style="margin:0;padding:0;background-color:#081A14;font-family:Arial,Helvetica,sans-serif;color:#E6F2ED">' +
+        '<span style="display:none;max-height:0;overflow:hidden;opacity:0">Pixel Software Design — ' + hte(S.blocks[0] ? S.blocks[0].d.title || '' : '') + '</span>' +
+        '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#081A14">' +
+        '<tr><td align="center" style="padding:24px 16px">' +
+        '<table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:600px;max-width:100%;background-color:#0D241C;border:1px solid #1EB48233;border-radius:14px">' +
+        H.header() + rowsHtml + H.footer() +
+        '</table></td></tr></table></bo' + 'dy></html>';
+    },
+    header: function () {
+      return '<tr><td style="padding:28px 40px 20px;border-bottom:1px solid #1EB48233">' +
+        '<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>' +
+        '<td style="padding:8px"><span style="display:inline-block;width:36px;height:36px;border:2px solid #1EB482;transform:rotate(45deg);border-radius:8px"></span></td>' +
+        '<td><span style="font-size:17px;font-weight:bold;letter-spacing:.5px;color:#FFFFFF">PIXEL SOFTWARE DESIGN</span><br>' +
+        '<span style="font-size:11px;color:#8FA89E;letter-spacing:2px">L\'ARCHITECTURE DE L\'INNOVATION</span></td></tr></table></td></tr>';
+    },
+    footer: function () {
+      return '<tr><td style="padding:34px 40px 26px;border-top:1px solid #1EB48226">' +
+        '<p style="margin:0;font-size:13px;line-height:1.7;color:#8FA89E;text-align:center">' +
+        '<strong style="color:#C4D6CD">Pixel Software Design</strong><br>El Hamma, Gabès, Tunisie · ' +
+        '<a href="tel:+21652675027" style="color:#1EB482;text-decoration:none">+216 52 675 027</a><br>' +
+        '<a href="mailto:info@pixelsoftwaredesign.xyz" style="color:#1EB482;text-decoration:none">info@pixelsoftwaredesign.xyz</a> · ' +
+        '<a href="#" style="color:#1EB482;text-decoration:none">pixelsoftwaredesign.xyz</a></p></td></tr>';
+    },
+    cta: function (label, url) {
+      return '<tr><td align="center" style="padding:16px 40px 8px">' +
+        '<table role="presentation" cellpadding="0" cellspacing="0"><tr>' +
+        '<td style="border-radius:8px;background-color:#1EB482;padding:14px 34px">' +
+        '<a href="' + hte(url) + '" style="color:#05100D;font-size:15px;font-weight:bold;text-decoration:none;display:inline-block">' + hte(label) + ' →</a>' +
+        '</td></tr></table></td></tr>';
+    },
+    card: function (inner) {
+      return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#0F2A20;border:1px solid #1EB48226;border-radius:10px">' +
+        '<tr><td style="padding:20px 22px;font-size:14px;line-height:1.8;color:#C4D6CD">' + inner + '</td></tr></table>';
+    }
+  };
+
+  function blocHtml(b) {
+    var d = b.d;
+    switch (b.t) {
+      case 'hero':
+        return '<tr><td align="center" style="padding:40px 40px 8px">' +
+          '<p style="margin:0 0 16px;text-transform:uppercase;font-size:12px;letter-spacing:3px;color:#1EB482">' + hte(d.eyebrow) + '</p>' +
+          '<h1 style="margin:0;font-size:30px;line-height:1.15;color:#FFFFFF">' + hte(d.title) + '</h1>' +
+          '<p style="margin:16px 0 0;font-size:15px;line-height:1.7;color:#C4D6CD">' + hte(d.subtitle) + '</p></td></tr>';
+      case 'text':
+        return '<tr><td style="padding:20px 40px 4px"><p style="margin:0;font-size:15px;line-height:1.7;color:#C4D6CD">' + hte(d.html) + '</p></td></tr>';
+      case 'button':
+        return H.cta(d.label || 'Cliquez ici', d.url || '#');
+      case 'promo':
+        return '<tr><td align="center" style="padding:26px 40px 0">' +
+          '<p style="margin:0;text-transform:uppercase;font-size:12px;letter-spacing:3px;color:#E7C46A">OFFRE EXCLUSIVE ABONNÉS</p>' +
+          '<h1 style="margin:8px 0 0;font-size:52px;color:#1EB482">' + hte(d.discount) + '</h1>' +
+          '<p style="margin:6px 0 0;font-size:20px;font-weight:bold;color:#FFFFFF">' + hte(d.name) + '</p>' +
+          '<p style="margin:12px 0 0;font-size:14px;line-height:1.7;color:#C4D6CD">' + hte(d.note) + '</p></td></tr>';
+      case 'code':
+        return '<tr><td align="center" style="padding:20px 40px 0">' +
+          '<table role="presentation" cellpadding="0" cellspacing="0" style="background-color:#0F2A20;border:1px dashed #1EB482;border-radius:10px"><tr><td style="padding:18px 40px;text-align:center">' +
+          '<p style="margin:0;font-size:11px;color:#8FA89E;text-transform:uppercase;letter-spacing:2px">' + hte(d.label) + '</p>' +
+          '<p style="margin:8px 0 0;font-size:26px;font-weight:bold;letter-spacing:4px;color:#1EB482">' + hte(d.code) + '</p>' +
+          '</td></tr></table></td></tr>';
+      case 'list':
+        return '<tr><td style="padding:24px 40px 4px">' + H.card(
+          '<p style="margin:0;color:#FFFFFF;font-weight:bold;font-size:15px;padding-bottom:10px">' + hte(d.title) + '</p>' +
+          d.items.split('\n').map(function (l) { return l.trim() ? l + '<br>' : ''; }).join('')) + '</td></tr>';
+      case 'article':
+        return '<tr><td style="padding:0 40px 16px">' + H.card(
+          '<p style="margin:0;font-size:12px;text-transform:uppercase;letter-spacing:2px;color:#E7C46A">' + hte(d.kicker) + '</p>' +
+          '<h2 style="margin:8px 0;font-size:18px;color:#FFFFFF">' + hte(d.title) + '</h2>' +
+          '<p style="margin:8px 0 0;font-size:14px;line-height:1.65;color:#C4D6CD">' + hte(d.text) + '</p>' +
+          '<p style="margin:14px 0 0"><a href="' + hte(d.url || '#') + '" style="color:#1EB482;font-size:14px;font-weight:bold;text-decoration:none">Lire l\'article →</a></p>') + '</td></tr>';
+      case 'event':
+        return '<tr><td align="center" style="padding:24px 40px 0">' +
+          '<table role="presentation" cellpadding="0" cellspacing="0" style="background-color:#0F2A20;border:1px solid #1EB48226;border-radius:10px"><tr><td style="padding:20px 44px;text-align:center">' +
+          '<p style="margin:0;font-size:13px;color:#8FA89E;text-transform:uppercase;letter-spacing:2px">' + hte(d.kicker) + '</p>' +
+          '<p style="margin:10px 0 0;font-size:26px;font-weight:bold;color:#FFFFFF">' + hte(d.title) + '</p>' +
+          '<p style="margin:10px 0 0;font-size:15px;color:#1EB482;font-weight:bold">📅 ' + hte(d.date) + ' · ⏰ ' + hte(d.heure) + '</p>' +
+          '<p style="margin:6px 0 0;font-size:13px;color:#8FA89E">' + hte(d.note) + '</p>' +
+          '</td></tr></table></td></tr>';
+      case 'divider':
+        return '<tr><td style="padding:22px 40px 0"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="border-top:1px solid #1EB48226;height:1px;line-height:1px;font-size:0">&nbsp;</td></tr></table></td></tr>';
+      case 'spacer':
+        var h = Math.max(4, parseInt(d.height, 10) || 24);
+        return '<tr><td style="height:' + h + 'px;line-height:' + h + 'px;font-size:0">&nbsp;</td></tr>';
+    }
+    return '<tr><td style="padding:16px 40px">---</td></tr>';
+  }
+
+  function assembler() {
+    var rows = S.blocks.map(blocHtml).join('');
+    return H.wrap(rows);
+  }
+
+  function preset(nom) {
+    function b(t, d) { return { t: t, d: d }; }
+    switch (nom) {
+      case 'welcome':
+        return [b('hero', { eyebrow: 'BIENVENUE DANS L\'ÉCOSYSTÈME PIXEL', title: 'Merci de nous rejoindre !', subtitle: 'Vous faites désormais partie de la communauté Pixel Software Design. Chaque mois, nous partageons nouveautés, réussites et offres exclusives.' }), b('list', { title: 'Ce que vous pouvez attendre :', items: '✓ Nouveautés produits & mises à jour\r\n✓ Conseils, offres et événements exclusifs\r\n✓ Accès prioritaire aux bêta et démos' }), b('button', { label: 'Découvrir nos solutions', url: '#' })];
+      case 'annonce':
+        return [b('hero', { eyebrow: 'NOUVEAU LANCEMENT', title: '[NOM DU PRODUIT]', subtitle: '[Une phrase percutante décrivant le produit et le problème qu\'il résout.]' }), b('list', { title: 'Fonctionnalités clés :', items: '✓ [Fonctionnalité 1]\r\n✓ [Fonctionnalité 2]\r\n✓ [Fonctionnalité 3]\r\n✓ [Fonctionnalité 4]' }), b('button', { label: 'Essayer maintenant', url: '#' }), b('text', { html: '<span style="font-size:12px;color:#8FA89E">Offre de lancement valable jusqu\'au [DATE]</span>' })];
+      case 'promo':
+        return [b('hero', { eyebrow: 'OFFRE EXCLUSIVE ABONNÉS', title: 'Profitez de cette réduction', subtitle: 'Cette offre n\'est disponible que pour nos abonnés, avant le <strong style="color:#E7C46A">[DATE]</strong>.' }), b('promo', { discount: '-[REMISE]%', name: '[PRODUIT]', note: 'Sans minimum d\'achat.' }), b('code', { label: 'Votre code', code: '[CODE]' }), b('button', { label: 'En profiter maintenant', url: '#' })];
+      case 'newsletter':
+        return [b('hero', { eyebrow: 'LA SEMAINE PIXEL', title: 'Résumé de la semaine du [DATE_DEBUT] au [DATE_FIN]', subtitle: '' }), b('article', { kicker: '01 — [CATÉGORIE]', title: '[Titre de l\'article 1]', text: '[Résumé court en 1-2 phrases.]', url: '#' }), b('article', { kicker: '02 — [CATÉGORIE]', title: '[Titre de l\'article 2]', text: '[Résumé court.]', url: '#' }), b('article', { kicker: '03 — [CATÉGORIE]', title: '[Titre de l\'article 3]', text: '[Résumé court.]', url: '#' }), b('button', { label: 'Voir toutes nos actus', url: '#' })];
+      case 'relance':
+        return [b('hero', { eyebrow: '', title: '🎁 Vous nous manquez !', subtitle: 'Il y a un moment que nous n\'avons pas de nouvelles. Voici un cadeau pour vous souhaiter la bienvenue : <strong style="color:#E7C46A">-[REMISE]% sur votre prochaine commande</strong>.' }), b('code', { label: 'Votre code exclusif — 7 jours', code: '[CODE]' }), b('button', { label: 'Utiliser mon code', url: '#' })];
+      case 'evenement':
+        return [b('hero', { eyebrow: 'ÉVÉNEMENT EN LIGNE · GRATUIT', title: '[NOM DE L\'ÉVÉNEMENT]', subtitle: '[Description : à qui il s\'adresse, ce qu\'on y apprendra, le format.]' }), b('event', { kicker: 'RENDEZ-VOUS', title: '[NOM DE L\'ÉVÉNEMENT]', date: '[DATE]', heure: '[HEURE] · [FUSEAU]', note: 'En ligne — lien envoyé après inscription' }), b('button', { label: 'Réserver ma place', url: '#' })];
+    }
+    return [];
+  }
+
+  function addBloc(t) {
+    var d = {}; var tpl = TYPES[t];
+    if (!tpl) return;
+    (tpl.f).forEach(function (f) { d[f[0]] = ''; });
+    if (t === 'button') { d.label = 'En savoir plus'; d.url = '#'; }
+    if (t === 'hero') { d.eyebrow = 'SUR-TITRE'; d.title = 'Titre de la section'; d.subtitle = 'Sous-titre.'; }
+    if (t === 'text') { d.html = 'Votre texte ici.'; }
+    if (t === 'code') { d.label = 'Votre code'; d.code = 'PIXEL'; }
+    if (t === 'promo') { d.discount = '-20%'; d.name = '[PRODUIT]'; d.note = 'Note.'; }
+    if (t === 'list') { d.title = 'Liste :'; d.items = '✓ Élément 1\r\n✓ Élément 2'; }
+    if (t === 'article') { d.kicker = 'CATÉGORIE'; d.title = 'Titre de l\'article'; d.text = 'Résumé.'; d.url = '#'; }
+    if (t === 'event') { d.kicker = 'LABEL'; d.title = 'Titre'; d.desc = ''; d.date = '[DATE]'; d.heure = '[HEURE]'; d.note = 'Note'; }
+    if (t === 'spacer') { d.height = '24'; }
+    S.blocks.push({ id: ++compteur, t: t, d: d });
+    rendre();
+  }
+  function move(i, dir) {
+    var j = i + dir;
+    if (j < 0 || j >= S.blocks.length) return;
+    var a = S.blocks[i]; S.blocks[i] = S.blocks[j]; S.blocks[j] = a;
+    rendre();
+  }
+  function del(i) { S.blocks.splice(i, 1); rendre(); }
+  function viderBlocs() { S.blocks = []; rendre(); }
+
+  function champ(b, i, key) {
+    var tpl = TYPES[b.t];
+    var f = tpl.f.filter(function (x) { return x[0] === key; })[0];
+    var esc = bdata_esc(b.d[key]);
+    if (key === 'height') return '<label>' + f[1] + '</label><input type="number" min="4" value="' + esc + '" oninput="bdata(' + i + ',\'' + key + '\',this.value)">';
+    if (key === 'items') return '<label>' + f[1] + '</label><textarea rows="4" oninput="bdata(' + i + ',\'' + key + '\',this.value)">' + esc + '</textarea>';
+    if (key === 'html' || key === 'desc' || key === 'note' || key === 'text' || key === 'subtitle') return '<label>' + f[1] + '</label><textarea rows="2" oninput="bdata(' + i + ',\'' + key + '\',this.value)">' + esc + '</textarea>';
+    return '<label>' + f[1] + '</label><input value="' + esc + '" oninput="bdata(' + i + ',\'' + key + '\',this.value)">';
+  }
+  function bdata_esc(v) {
+    return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  window.bdata = function (i, key, val) {
+    if (S.blocks[i]) { S.blocks[i].d[key] = val; }
+    miseAJour();
+  };
+
+  function rendre() {
+    var el = document.getElementById('blocList');
+    el.innerHTML = S.blocks.map(function (b, i) {
+      var tpl = TYPES[b.t];
+      var champs = tpl.f.map(function (f) { return champ(b, i, f[0]); }).join('');
+      return '<div class="blk"><div class="blk-head"><b>#' + (i + 1) + ' ' + tpl.n + '</b>' +
+        '<span class="btns"><button onclick="move(' + i + ',-1)" title="Monter">↑</button>' +
+        '<button onclick="move(' + i + ',1)" title="Descendre">↓</button>' +
+        '<button class="del" onclick="del(' + i + ')" title="Supprimer">✕</button></span></div>' + champs + '</div>';
+    }).join('');
+    if (!S.blocks.length) el.innerHTML = '<p class="hint" style="margin:0">Aucun bloc. Ajoutez un bloc ou chargez un template ci-dessus.</p>';
+    miseAJour();
+  }
+
+  function miseAJour() {
+    if (S.mode === 'blocs') {
+      document.getElementById('preview').srcdoc = assembler();
+    } else {
+      document.getElementById('preview').srcdoc = document.getElementById('src_txt').value;
+    }
+    sauver();
+  }
+
+  function sauver() {
+    try {
+      localStorage.setItem('pxle_editeur', JSON.stringify({
+        blocks: S.blocks, mode: S.mode, sujet: document.getElementById('ed_sujet').value,
+        src: document.getElementById('src_txt').value
+      }));
+    } catch (e) {}
+  }
+
+  window.copierHtml = function () {
+    var html = document.getElementById('src_txt').value || assembler();
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = html;
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch (e) {}
+      ta.remove();
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(html).then(function () {}, fallback);
+    } else { fallback(); }
+    alert('HTML copié dans le presse-papier ✓');
+  };
+  window.telecharger = function () {
+    var html = document.getElementById('src_txt').value || assembler();
+    var blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    var a = document.createElement('a');
+    var nom = (document.getElementById('ed_sujet').value || 'email').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'email';
+    a.href = URL.createObjectURL(blob);
+    a.download = 'email-' + nom.slice(0, 40) + '.html';
+    document.body.appendChild(a); a.click(); a.remove();
+  };
+  window.mode = function (m) {
+    S.mode = m;
+    document.getElementById('md_blocs').classList.toggle('on', m === 'blocs');
+    document.getElementById('md_source').classList.toggle('on', m === 'source');
+    document.getElementById('blocZone').style.display = m === 'blocs' ? '' : 'none';
+    document.getElementById('sourceZone').style.display = m === 'source' ? '' : 'none';
+    if (m === 'source' && !document.getElementById('src_txt').value) {
+      document.getElementById('src_txt').value = assembler();
+    }
+    miseAJour();
+  };
+  window.vue = function (v) {
+    S.vue = v;
+    document.getElementById('vw_d').classList.toggle('on', v === 'd');
+    document.getElementById('vw_m').classList.toggle('on', v === 'm');
+    document.getElementById('vw_f').classList.toggle('on', v === 'f');
+    var ifr = document.getElementById('preview');
+    ifr.style.width = v === 'd' ? '620px' : v === 'm' ? '320px' : '100%';
+  };
+
+  document.getElementById('ed_tpl').addEventListener('change', function () {
+    var v = this.value;
+    if (!v) return;
+    S.blocks = preset(v);
+    this.value = '';
+    rendre();
+  });
+  document.getElementById('ed_sujet').addEventListener('input', sauver);
+  document.getElementById('src_txt').addEventListener('input', function () {
+    if (S.mode === 'source') { miseAJour(); } else { sauver(); }
+  });
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var saved = null;
+    try { saved = JSON.parse(localStorage.getItem('pxle_editeur') || 'null'); } catch (e) {}
+    if (saved && saved.blocks && saved.blocks.length) {
+      S.blocks = saved.blocks;
+      compteur = saved.blocks.reduce(function (m, b) { return Math.max(m, b.id || 0); }, 0);
+      if (saved.mode) { mode(saved.mode); }
+      document.getElementById('ed_sujet').value = saved.sujet || '';
+      document.getElementById('src_txt').value = saved.src || '';
+      rendre();
+    } else {
+      S.blocks = preset('welcome');
+      rendre();
+    }
+  });
+}());
+</script>
+</body>
+</html>

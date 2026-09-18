@@ -23,6 +23,12 @@ class LandingPageTests(TestCase):
         r = self.client.get('/innerstudio/')
         self.assertEqual(r.status_code, 200)
 
+    def test_pixel_email_editeur_200(self):
+        r = self.client.get('/pixelemailediteur/')
+        self.assertEqual(r.status_code, 200)
+        self.assertIn(b'addBloc', r.content)
+        self.assertIn(b'pxle_editeur', r.content)
+
     def test_patisserie_landing_200(self):
         r = self.client.get('/patisserie/')
         self.assertEqual(r.status_code, 200)

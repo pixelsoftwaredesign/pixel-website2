@@ -1773,6 +1773,9 @@ PIXMAIL_DOMAIN = getattr(settings, 'PIXMAIL_DOMAIN', 'pixelsoftwaredesign.com')
 def pixmail_landing(request):
     return render(request, 'studio/pixmail_landing.html')
 
+def pixel_email_editeur(request):
+    return render(request, 'studio/pixel_email_editeur.html')
+
 def pixmail_register(request):
     if request.method == 'POST':
         username = request.POST.get('username', '').strip().lower()
