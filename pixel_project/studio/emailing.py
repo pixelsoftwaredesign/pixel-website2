@@ -1,4 +1,5 @@
 import json
+import urllib.error
 import urllib.request
 
 from django.conf import settings
@@ -28,10 +29,12 @@ def envoyer_email(sujet, texte, html, destinataires):
             },
             method='POST',
         )
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            status = resp.getcode()
-        if status < 200 or status >= 300:
-            raise RuntimeError('Resend HTTP %s' % status)
+        try:
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                status = resp.getcode()
+        except urllib.error.HTTPError as exc:
+            body = exc.read().decode('utf-8', errors='replace')[:500]
+            raise RuntimeError('Resend HTTP %s: %s' % (exc.code, body)) from exc
         return
     send_mail(
         sujet,
