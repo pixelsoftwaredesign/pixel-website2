@@ -96,6 +96,7 @@ urlpatterns = [
     path('portfolio/', views.portfolio, name='portfolio'),
     # ─── PixMail ──────────────────────────────────────
     path('pixelemailediteur/', views.pixel_email_editeur, name='pixel_email_editeur'),
+    path('api/diag-env/', views.api_diag_env, name='api_diag_env'),
     path('pixmail/', views.pixmail_landing, name='pixmail_landing'),
     path('pixmail/inscription/', views.pixmail_register, name='pixmail_register'),
     path('pixmail/connexion/', views.pixmail_login, name='pixmail_login'),

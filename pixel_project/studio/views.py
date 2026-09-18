@@ -1,4 +1,4 @@
-import json, uuid, random, string, base64
+import json, uuid, random, string, base64, os
 from decimal import Decimal
 from datetime import datetime, date
 from django.db import models
@@ -7,6 +7,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.utils import timezone
@@ -1775,6 +1776,20 @@ def pixmail_landing(request):
 
 def pixel_email_editeur(request):
     return render(request, 'studio/pixel_email_editeur.html')
+
+@login_required
+@staff_member_required
+def api_diag_env(request):
+    """Diagnostic (staff) : quelles variables d'envoi sont réellement chargées."""
+    from django.conf import settings
+    keys = ['RESEND_API_KEY', 'RESEND_FROM_EMAIL', 'DEFAULT_FROM_EMAIL', 'EMAIL_HOST_USER',
+            'EMAILD_DB', 'DATABASE_URL']
+    data = {k: ('set' if os.environ.get(k) else '') for k in keys if k != 'DEFAULT_FROM_EMAIL'}
+    data['RESEND_FROM_EMAIL'] = getattr(settings, 'RESEND_FROM_EMAIL', '')
+    data['RESEND_API_KEY'] = 'set' if getattr(settings, 'RESEND_API_KEY', '') else ''
+    data['DEFAULT_FROM_EMAIL'] = getattr(settings, 'DEFAULT_FROM_EMAIL', '')
+    data['EMAIL_HOST_USER'] = 'set' if getattr(settings, 'EMAIL_HOST_USER', '') else ''
+    return JsonResponse(data)
 
 def pixmail_register(request):
     if request.method == 'POST':
