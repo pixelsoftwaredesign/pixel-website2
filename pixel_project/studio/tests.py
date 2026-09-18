@@ -847,3 +847,23 @@ class NewsLetterTests(TestCase):
         self.assertTrue(campagne.envoye)
         self.assertEqual(campagne.nb_destinataires, 1)
         self.assertEqual(mail.outbox[0].to, ['abonne@test.com'])
+
+    def test_editeur_page_admin(self):
+        campagne = NewsletterCampaign.objects.create(sujet='Nouveautés Pixel', contenu_html='')
+        self.client.login(username='adminmail', password='adminpass')
+        r = self.client.get(f'/admin/studio/newslettercampaign/{campagne.id}/editeur/')
+        self.assertEqual(r.status_code, 200)
+        self.assertContains(r, 'saveForm')
+        self.assertContains(r, 'Enregistrer')
+
+    def test_editeur_enregistre_contenu(self):
+        campagne = NewsletterCampaign.objects.create(sujet='Ancien sujet', contenu_html='<p>Ancien</p>')
+        self.client.login(username='adminmail', password='adminpass')
+        r = self.client.post(f'/admin/studio/newslettercampaign/{campagne.id}/editeur/', {
+            'sujet': 'Nouveau sujet',
+            'contenu_html': '<table><tr><td>Nouveau contenu</td></tr></table>',
+        }, follow=True)
+        self.assertEqual(r.status_code, 200)
+        campagne.refresh_from_db()
+        self.assertEqual(campagne.sujet, 'Nouveau sujet')
+        self.assertEqual(campagne.contenu_html, '<table><tr><td>Nouveau contenu</td></tr></table>')

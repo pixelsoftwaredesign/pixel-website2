@@ -136,6 +136,7 @@ class NewsletterCampaignAdmin(admin.ModelAdmin):
         urls = super().get_urls()
         custom = [
             path('<int:pk>/envoyer/', self.admin_site.admin_view(self.envoyer_campagne_view), name='studio_newslettercampaign_envoyer'),
+            path('<int:pk>/editeur/', self.admin_site.admin_view(self.newsletter_editeur_view), name='studio_newslettercampaign_editeur'),
         ]
         return custom + urls
 
@@ -191,6 +192,33 @@ class NewsletterCampaignAdmin(admin.ModelAdmin):
             'has_change_permission': self.has_change_permission(request, campagne),
         }
         return render(request, 'admin/studio/newslettercampaign/envoyer.html', contexte)
+
+    def newsletter_editeur_view(self, request, pk):
+        campagne = get_object_or_404(NewsletterCampaign, pk=pk)
+        if request.method == 'POST':
+            contenu = request.POST.get('contenu_html', '').strip()
+            sujet = request.POST.get('sujet', '').strip()
+            if not contenu:
+                messages.error(request, "Aucun contenu reçu de l'éditeur.")
+            else:
+                updates = {'contenu_html': contenu}
+                if sujet:
+                    updates['sujet'] = sujet
+                for champ, valeur in updates.items():
+                    setattr(campagne, champ, valeur)
+                campagne.save(update_fields=list(updates))
+                messages.success(request, "Contenu enregistré depuis l'éditeur.")
+            return HttpResponseRedirect(reverse('admin:studio_newslettercampaign_change', args=[campagne.pk]))
+        contexte = {
+            'campagne': campagne,
+            'title': f"Éditeur email — {campagne.sujet}",
+            'sujet': campagne.sujet,
+            'contenu_html': campagne.contenu_html,
+            'opts': self.model._meta,
+            'has_view_permission': self.has_view_permission(request, campagne),
+            'has_change_permission': self.has_change_permission(request, campagne),
+        }
+        return render(request, 'admin/studio/newslettercampaign/editeur.html', contexte)
 
 @admin.register(AtelierProfile)
 class AtelierProfileAdmin(admin.ModelAdmin):
