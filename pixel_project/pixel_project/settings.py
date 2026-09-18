@@ -157,6 +157,7 @@ EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'Pixel Software Design <info@pixelsoftwaredesign.xyz>')
 PIXMAIL_DOMAIN = os.getenv('PIXMAIL_DOMAIN', 'pxelsoftware-64fcd.web.app')
 PIXMAIL_FROM_EMAIL = os.getenv('PIXMAIL_FROM_EMAIL', 'Pixel Software Design <info@pixelsoftwaredesign.xyz>')
+RESEND_API_KEY = os.getenv('RESEND_API_KEY', '')
 SITE_URL = os.getenv('SITE_URL', 'http://localhost:8000')
 
 if not EMAIL_HOST_USER:

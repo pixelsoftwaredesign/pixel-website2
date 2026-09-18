@@ -6,6 +6,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render, get_object_or_404
 from django.urls import path, reverse
 from django.utils import timezone
+from .emailing import envoyer_email
 import csv, re
 from .models import UserProfile, ProjetContact, AtelierProfile, PortfolioProject, CodeRepository, GraphismeResource, ERPClient, ERPModule, ERPSubscription, ERPDemoRecord, Moniteur, Candidat, Vehicule, Lecon, Examen, Medecin, Patient, Lit, RendezVous, FacturationSante, ClientHotel, Chambre, ReservationHotel, ServiceHotel, Categorie, Fournisseur, Produit, Vente, ClientJuridique, DossierJuridique, Audience, JournalComptable, EcritureComptable, Facture, DeclarationFiscale, Employe, Contrat, FichePaie, Conge, Formation, MenuItem, TableRestaurant, SoftCodeModule, StudioProject3D, PatisserieRecipe, PatisserieProduct, PlanAbonnement, SouscriptionClient, Paiement, CleActivation, ConfigurationBancaire, ConfigurationPaiementEnLigne, Candidature, MouvementStock, CommandeECommerce, CommandeECommerceItem, Temoignage, PixMailAccount, PixMailContact, PixMailMessage, PixMailAttachment, PixMailFolder, PixMailSignature, SocialProfile, Follow, Post, Like, Comment, Notification, Conversation, ConversationMember, EncryptedMessage, Wallet, Transaction, TwoFactorAuth, Referral, KYCVerification, NewsletterSubscriber, NewsletterCampaign
 
@@ -66,7 +67,9 @@ class ProjetContactAdmin(admin.ModelAdmin):
 
 # ─── Newsletter ────────────────────────────────────────────
 def _smtp_config_ok():
-    """Vrai si le backend SMTP réel a des identifiants (les backends console/locmem passent)."""
+    """Vrai si Resend (clé API) est configuré, ou si le backend SMTP réel a des identifiants."""
+    if getattr(settings, 'RESEND_API_KEY', ''):
+        return True
     if getattr(settings, 'EMAIL_BACKEND', '') != 'django.core.mail.backends.smtp.EmailBackend':
         return True
     return bool(getattr(settings, 'EMAIL_HOST_USER', ''))
@@ -90,13 +93,11 @@ def _envoi_campagne(request, campagne, sujet=None, contenu=None):
                 f'Vous recevez cet email car vous êtes abonné à la newsletter Pixel Software Design. '
                 f'<a href="{desabonnement_url}" style="color:#1EB482">Se désabonner</a></p>'
             )
-            send_mail(
+            envoyer_email(
                 sujet,
                 re.sub(r'<[^>]+>', ' ', contenu),
-                settings.DEFAULT_FROM_EMAIL,
+                html,
                 [sub.email],
-                html_message=html,
-                fail_silently=False,
             )
             nb += 1
         except Exception as exc:
