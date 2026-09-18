@@ -13,7 +13,7 @@ def envoyer_email(sujet, texte, html, destinataires):
         if not isinstance(destinataires, list):
             destinataires = [destinataires]
         payload = {
-            'from': settings.DEFAULT_FROM_EMAIL,
+            'from': getattr(settings, 'RESEND_FROM_EMAIL', '') or settings.DEFAULT_FROM_EMAIL,
             'to': destinataires,
             'subject': sujet,
             'html': html,
