@@ -104,6 +104,8 @@ def _envoi_campagne(request, campagne, sujet=None, contenu=None):
             erreurs.append(f"{sub.email} : {exc}")
     if erreurs:
         messages.warning(request, f"Échec pour {len(erreurs)} adresse(s) (ex : {erreurs[0]}).")
+    if not nb and erreurs:
+        raise RuntimeError('Aucun email envoyé : ' + erreurs[0])
     return nb
 
 @admin.register(NewsletterSubscriber)
