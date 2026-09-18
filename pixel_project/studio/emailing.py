@@ -26,6 +26,7 @@ def envoyer_email(sujet, texte, html, destinataires):
             headers={
                 'Authorization': 'Bearer ' + api_key,
                 'Content-Type': 'application/json',
+                'User-Agent': 'PixelSoftwareDesign/1.0',
             },
             method='POST',
         )
