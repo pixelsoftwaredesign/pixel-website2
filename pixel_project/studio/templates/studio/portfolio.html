@@ -155,6 +155,11 @@ footer{padding:2rem 5rem;border-top:1px solid var(--border);display:flex;align-i
 <div class="info"><span class="cat">Graphisme · Branding</span><h3>Pixel Graphisme — Plateforme de Ressources</h3><p>Bibliothèque de ressources graphiques : logos, flyers, mockups, templates. Marketplace créative.</p><div class="tags"><span>Figma</span><span>Photoshop</span><span>Illustrator</span><span>UI</span></div></div>
 </div>
 
+<div class="pf-card" data-cat="interne logiciel" onclick="openDetail(9)">
+<div class="thumb"><img src="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=600&h=400&fit=crop" alt="Atlas Cabinet — IoT & Robotic" loading="lazy"><div class="overlay"><span class="btn-view">Voir le projet →</span></div></div>
+<div class="info"><span class="cat">IoT · Robotique</span><h3>Atlas Cabinet / MyCabine — IoT &amp; Robotique</h3><p>Cabine connectée autonome : contrôle robotique, capteurs IoT, supervision et pilotage en temps réel.</p><div class="tags"><span>IoT</span><span>Robotique</span><span>ESP32</span><span>MQTT</span><span>Web</span></div></div>
+</div>
+
 </div>
 
 <div class="pf-detail-overlay" id="detailOverlay">
@@ -183,7 +188,8 @@ var projects=[
 {cat:'IA · Chatbot · NLP',title:'Noor AI — Assistant Intelligent',img:'https://images.unsplash.com/photo-1677442136019-21780ecad995?w=900&h=500&fit=crop',desc:'Chatbot IA multilingue (FR/AR/EN) pour le service client. NLP avancé avec compréhension contextuelle, intégration CRM, analytics en temps réel. Réduit le temps de réponse de 60%.',client:'Noor Analytics',annee:'2024',duree:'4 mois',technologies:['Python','GPT','NLP','FastAPI','Redis','React']},
 {cat:'Design d\'Intérieur · Bureau',title:'Bureau Noor Analytics — Espace de Travail',img:'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?w=900&h=500&fit=crop',desc:'Aménagement complet d\'un espace de travail moderne de 200m². Ergonomie avancée, éclairage intelligent adaptatif, acoustic design, zones de collaboration et espaces de concentration.',client:'Noor Analytics',annee:'2025',duree:'2 mois',technologies:['SketchUp','AutoCAD','KNX','Revit']},
 {cat:'ERP · SaaS · Cloud',title:'GestiActiv — Suite ERP Modulaire',img:'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=900&h=500&fit=crop',desc:'ERP complet et modulaire pour PME tunisiennes. 12 modules : RH, comptabilité, commerce, santé, hôtellerie, restaurant, auto-école, juridique. Architecture microservices, déploiement cloud.',client:'Pixel Software Design',annee:'2024–2026',duree:'Continu',technologies:['Django','React','PostgreSQL','Docker','Firebase']},
-{cat:'Graphisme · Branding',title:'Pixel Graphisme — Plateforme de Ressources',img:'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=900&h=500&fit=crop',desc:'Bibliothèque et marketplace de ressources graphiques professionnelles. Logos, cartes de visite, flyers, mockups, templates, polices. Système de téléchargement, favoris et recommandations IA.',client:'Pixel Software Design',annee:'2025',duree:'4 mois',technologies:['Django','React','Figma API','S3','PostgreSQL']}
+{cat:'Graphisme · Branding',title:'Pixel Graphisme — Plateforme de Ressources',img:'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=900&h=500&fit=crop',desc:'Bibliothèque et marketplace de ressources graphiques professionnelles. Logos, cartes de visite, flyers, mockups, templates, polices. Système de téléchargement, favoris et recommandations IA.',client:'Pixel Software Design',annee:'2025',duree:'4 mois',technologies:['Django','React','Figma API','S3','PostgreSQL']},
+{cat:'IoT · Robotique',title:'Atlas Cabinet / MyCabine — IoT & Robotic',img:'https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=900&h=500&fit=crop',desc:'Cabine connectée autonome développée par Pixel : contrôle robotique, réseau de capteurs IoT, supervision temps réel et pilotage à distance. Projet industriel IoT + robotique de bout en bout (firmware embarqué, backend, dashboard web).',client:'Pixel Software Design',annee:'2026',duree:'Continu',technologies:['IoT','Robotique','ESP32','MQTT','Django','Web'],urls:['https://atlascabine.pages.dev','https://mycabine.pages.dev']}
 ];
 
 function openDetail(i){
@@ -196,7 +202,9 @@ h+='<div class="item"><div class="label">Durée</div><div class="val">'+p.duree+
 h+='<div class="item"><div class="label">Technologies</div><div class="val">'+p.technologies.length+' outils</div></div></div>';
 h+='<div class="tech-tags">';
 p.technologies.forEach(function(t){h+='<span>'+t+'</span>'});
-h+='</div></div>';
+h+='</div>';
+if(p.urls&&p.urls.length){h+='<div style="margin-top:22px;display:flex;gap:12px;flex-wrap:wrap">';p.urls.forEach(function(u){h+='<a class="btn-p" href="'+(u.indexOf('http')===0?u:'https://'+u)+'" target="_blank" rel="noopener" style="text-decoration:none">Accéder au projet →</a>'});h+='</div>'}
+h+='</div>';
 document.getElementById('detailBox').innerHTML=h;
 document.getElementById('detailOverlay').classList.add('open');
 document.body.style.overflow='hidden';
