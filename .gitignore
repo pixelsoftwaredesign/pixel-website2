@@ -13,3 +13,13 @@ node_modules/
 .wrangler/
 staticfiles/
 .transwork/
+
+# OS / local
+.DS_Store
+**/.DS_Store
+
+# Agents / local notes
+AGENTS.md
+
+# Firebase export local
+firebase-export/.DS_Store
