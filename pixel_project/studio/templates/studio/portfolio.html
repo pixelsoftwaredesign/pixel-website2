@@ -27,7 +27,7 @@
 .pf-card{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:transform .25s,border-color .25s;cursor:pointer}
 .pf-card:hover{transform:translateY(-6px);border-color:var(--accent)}
 .pf-card .thumb{height:220px;overflow:hidden;position:relative}
-.pf-card .thumb img{width:100%;height:100%;object-fit:cover;transition:transform .4s}
+.pf-card .thumb img{width:100%;height:100%;object-fit:contain;object-position:center;background:radial-gradient(circle at 50% 50%, #0f1f17, #06130d);transition:transform .4s}
 .pf-card:hover .thumb img{transform:scale(1.06)}
 .pf-card .thumb .overlay{position:absolute;inset:0;background:linear-gradient(180deg,transparent 50%,rgba(5,16,13,.85) 100%);opacity:0;transition:opacity .3s;display:flex;align-items:flex-end;padding:1rem}
 .pf-card:hover .thumb .overlay{opacity:1}
