@@ -3310,3 +3310,43 @@ def admin_dashboard_comptable(request):
         'payees': CommandeECommerce.objects.filter(statut='paye').count(),
         'livrees': CommandeECommerce.objects.filter(statut='livre').count(),
     })
+
+@login_required
+@staff_member_required
+def admin_dashboard_editeur(request):
+    from .models import NewsletterCampaign, NewsletterSubscriber, Temoignage
+    campagnes = NewsletterCampaign.objects.all().order_by('-date_creation')[:10]
+    temoignages = Temoignage.objects.all().order_by('-created_at')[:10]
+    return render(request, 'studio/admin_dashboard_editeur.html', {
+        'campagnes': campagnes,
+        'temoignages': temoignages,
+        'total_campagnes': NewsletterCampaign.objects.count(),
+        'total_abonnes': NewsletterSubscriber.objects.filter(actif=True).count(),
+        'total_temoignages': Temoignage.objects.count(),
+    })
+
+@login_required
+@staff_member_required
+def admin_dashboard_superadmin(request):
+    from django.contrib.auth.models import User, Group
+    from .models import CommandeECommerce, ProjetContact, Produit
+    commandes = CommandeECommerce.objects.all().order_by('-date_commande')[:10]
+    return render(request, 'studio/admin_dashboard_superadmin.html', {
+        'commandes': commandes,
+        'total_users': User.objects.count(),
+        'total_commandes': CommandeECommerce.objects.count(),
+        'total_contacts': ProjetContact.objects.count(),
+        'total_produits': Produit.objects.count(),
+    })
+
+@login_required
+@staff_member_required
+def admin_dashboard_admin(request):
+    from django.contrib.auth.models import User, Group
+    from .models import CommandeECommerce, ProjetContact
+    return render(request, 'studio/admin_dashboard_admin.html', {
+        'total_users': User.objects.count(),
+        'total_groups': Group.objects.count(),
+        'total_commandes': CommandeECommerce.objects.count(),
+        'total_contacts': ProjetContact.objects.count(),
+    })

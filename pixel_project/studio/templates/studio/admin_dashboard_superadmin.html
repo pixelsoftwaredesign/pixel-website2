@@ -1,0 +1,18 @@
+{% extends 'studio/base.html' %}
+{% load static %}
+{% block title %}Dashboard SuperAdmin{% endblock %}
+{% block content %}
+<div class="container py-5" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; color: #e2e8f0;">
+  <div class="row mb-4"><div class="col-12"><h1 class="h3 mb-1">🔐 Dashboard SuperAdmin</h1><p class="text-muted mb-0">Vue globale & administration</p></div></div>
+  <div class="row g-3 mb-4">
+    <div class="col-md-3"><div class="card bg-dark text-light border border-secondary"><div class="card-body"><h6 class="text-muted">Utilisateurs</h6><h2>{{ total_users }}</h2></div></div></div>
+    <div class="col-md-3"><div class="card bg-dark text-light border border-secondary"><div class="card-body"><h6 class="text-muted">Commandes</h6><h2>{{ total_commandes }}</h2></div></div></div>
+    <div class="col-md-3"><div class="card bg-dark text-light border border-secondary"><div class="card-body"><h6 class="text-muted">Demandes</h6><h2>{{ total_contacts }}</h2></div></div></div>
+    <div class="col-md-3"><div class="card bg-dark text-light border border-secondary"><div class="card-body"><h6 class="text-muted">Produits</h6><h2>{{ total_produits }}</h2></div></div></div>
+  </div>
+  <div class="row g-3">
+    <div class="col-md-6"><div class="card bg-dark text-light border border-secondary"><div class="card-header bg-dark border-bottom border-secondary"><h5 class="mb-0">Liens rapides</h5></div><div class="list-group list-group-flush bg-dark"><a href="/admin/" class="list-group-item list-group-item-action bg-dark text-light">Administration Django</a><a href="/admin/receptions/" class="list-group-item list-group-item-action bg-dark text-light">Réceptions globales</a><a href="/admin/dash/commercial/" class="list-group-item list-group-item-action bg-dark text-light">Commercial</a><a href="/admin/dash/comptable/" class="list-group-item list-group-item-action bg-dark text-light">Comptable</a><a href="/admin/dash/editeur/" class="list-group-item list-group-item-action bg-dark text-light">Éditeur</a></div></div></div>
+    <div class="col-md-6"><div class="card bg-dark text-light border border-secondary"><div class="card-header bg-dark border-bottom border-secondary"><h5 class="mb-0">Dernières commandes</h5></div><div class="card-body p-0"><div class="table-responsive"><table class="table table-dark table-hover mb-0"><thead><tr><th>Réf</th><th>Statut</th><th>Date</th></tr></thead><tbody>{% for cmd in commandes %}<tr><td>{{ cmd.reference }}</td><td>{{ cmd.statut }}</td><td>{{ cmd.date_commande|date:"d/m H:i" }}</td></tr>{% empty %}<tr><td colspan="3" class="text-center text-muted py-2">Aucune</td></tr>{% endfor %}</tbody></table></div></div></div></div>
+  </div>
+</div>
+{% endblock %}

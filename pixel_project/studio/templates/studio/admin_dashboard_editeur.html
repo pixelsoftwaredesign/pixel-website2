@@ -1,0 +1,21 @@
+{% extends 'studio/base.html' %}
+{% load static %}
+{% block title %}Dashboard Éditeur{% endblock %}
+{% block content %}
+<div class="container py-5" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; color: #e2e8f0;">
+  <div class="row mb-4"><div class="col-12"><h1 class="h3 mb-1">✍️ Dashboard Éditeur</h1><p class="text-muted mb-0">Gestion contenu & newsletter</p></div></div>
+  <div class="row g-3 mb-4">
+    <div class="col-md-4"><div class="card bg-dark text-light border border-secondary"><div class="card-body"><h6 class="text-muted">Campagnes newsletter</h6><h2>{{ total_campagnes }}</h2></div></div></div>
+    <div class="col-md-4"><div class="card bg-dark text-light border border-secondary"><div class="card-body"><h6 class="text-muted">Abonnés actifs</h6><h2>{{ total_abonnes }}</h2></div></div></div>
+    <div class="col-md-4"><div class="card bg-dark text-light border border-secondary"><div class="card-body"><h6 class="text-muted">Témoignages</h6><h2>{{ total_temoignages }}</h2></div></div></div>
+  </div>
+  <div class="card bg-dark text-light border border-secondary mb-4">
+    <div class="card-header bg-dark border-bottom border-secondary d-flex justify-content-between align-items-center"><h5 class="mb-0">📧 Dernières campagnes</h5><a href="/admin/studio/newslettercampaign/" class="btn btn-sm btn-outline-light">Gérer</a></div>
+    <div class="card-body p-0"><div class="table-responsive"><table class="table table-dark table-hover mb-0"><thead><tr><th>Sujet</th><th>Envoyée</th><th>Destinataires</th><th>Date</th></tr></thead><tbody>{% for c in campagnes %}<tr><td>{{ c.sujet }}</td><td>{% if c.envoye %}<span class="badge bg-success">Oui</span>{% else %}<span class="badge bg-warning text-dark">Non</span>{% endif %}</td><td>{{ c.nb_destinataires }}</td><td>{{ c.date_creation|date:"d/m/Y H:i" }}</td></tr>{% empty %}<tr><td colspan="4" class="text-center text-muted py-3">Aucune</td></tr>{% endfor %}</tbody></table></div></div>
+  </div>
+  <div class="card bg-dark text-light border border-secondary">
+    <div class="card-header bg-dark border-bottom border-secondary d-flex justify-content-between align-items-center"><h5 class="mb-0">⭐ Témoignages</h5><a href="/admin/studio/temoignage/" class="btn btn-sm btn-outline-light">Gérer</a></div>
+    <div class="card-body p-0"><div class="table-responsive"><table class="table table-dark table-hover mb-0"><thead><tr><th>Nom</th><th>Entreprise</th><th>Note</th><th>Actif</th></tr></thead><tbody>{% for t in temoignages %}<tr><td>{{ t.nom }}</td><td>{{ t.entreprise }}</td><td>{{ t.note }}/5</td><td>{% if t.actif %}<span class="badge bg-success">Oui</span>{% else %}<span class="badge bg-secondary">Non</span>{% endif %}</td></tr>{% empty %}<tr><td colspan="4" class="text-center text-muted py-3">Aucun</td></tr>{% endfor %}</tbody></table></div></div>
+  </div>
+</div>
+{% endblock %}

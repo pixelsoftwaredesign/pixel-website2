@@ -176,3 +176,7 @@ urlpatterns = [
 
     path('admin/dash/commercial/', views.admin_dashboard_commercial, name='admin_dashboard_commercial'),
     path('admin/dash/comptable/', views.admin_dashboard_comptable, name='admin_dashboard_comptable'),
+
+    path('admin/dash/editeur/', views.admin_dashboard_editeur, name='admin_dashboard_editeur'),
+    path('admin/dash/superadmin/', views.admin_dashboard_superadmin, name='admin_dashboard_superadmin'),
+    path('admin/dash/admin/', views.admin_dashboard_admin, name='admin_dashboard_admin'),

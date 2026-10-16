@@ -1,0 +1,17 @@
+{% extends 'studio/base.html' %}
+{% load static %}
+{% block title %}Dashboard Admin{% endblock %}
+{% block content %}
+<div class="container py-5" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; color: #e2e8f0;">
+  <div class="row mb-4"><div class="col-12"><h1 class="h3 mb-1">🛠️ Dashboard Admin</h1><p class="text-muted mb-0">Gestion technique & système</p></div></div>
+  <div class="row g-3 mb-4">
+    <div class="col-md-3"><div class="card bg-dark text-light border border-secondary"><div class="card-body"><h6 class="text-muted">Utilisateurs</h6><h2>{{ total_users }}</h2></div></div></div>
+    <div class="col-md-3"><div class="card bg-dark text-light border border-secondary"><div class="card-body"><h6 class="text-muted">Groupes</h6><h2>{{ total_groups }}</h2></div></div></div>
+    <div class="col-md-3"><div class="card bg-dark text-light border border-secondary"><div class="card-body"><h6 class="text-muted">Commandes</h6><h2>{{ total_commandes }}</h2></div></div></div>
+    <div class="col-md-3"><div class="card bg-dark text-light border border-secondary"><div class="card-body"><h6 class="text-muted">Demandes</h6><h2>{{ total_contacts }}</h2></div></div></div>
+  </div>
+  <div class="row g-3">
+    <div class="col-md-6"><div class="card bg-dark text-light border border-secondary"><div class="card-header bg-dark border-bottom border-secondary"><h5 class="mb-0">Administration</h5></div><div class="list-group list-group-flush bg-dark"><a href="/admin/" class="list-group-item list-group-item-action bg-dark text-light">Admin Django</a><a href="/admin/auth/user/" class="list-group-item list-group-item-action bg-dark text-light">Utilisateurs</a><a href="/admin/auth/group/" class="list-group-item list-group-item-action bg-dark text-light">Groupes & Rôles</a><a href="/admin/studio/commandecommerce/" class="list-group-item list-group-item-action bg-dark text-light">Commandes</a><a href="/admin/studio/projetcontact/" class="list-group-item list-group-item-action bg-dark text-light">Demandes de projet</a></div></div></div>
+  </div>
+</div>
+{% endblock %}
