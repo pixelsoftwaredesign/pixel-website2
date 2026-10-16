@@ -3285,3 +3285,28 @@ def admin_receptions_dashboard(request):
         'stats': stats,
     }
     return render(request, 'studio/admin_receptions_dashboard.html', context)
+
+@login_required
+@staff_member_required
+def admin_dashboard_commercial(request):
+    from .models import ProjetContact, Candidature
+    contacts = ProjetContact.objects.all().order_by('-date_reception')[:10]
+    return render(request, 'studio/admin_dashboard_commercial.html', {
+        'contacts': contacts,
+        'total_contacts': ProjetContact.objects.count(),
+        'contacts_non_repondus': ProjetContact.objects.filter(a_repondu=False).count(),
+        'total_candidatures': Candidature.objects.count() if 'Candidature' in globals() or True else 0,
+    })
+
+@login_required
+@staff_member_required
+def admin_dashboard_comptable(request):
+    from .models import CommandeECommerce
+    commandes = CommandeECommerce.objects.all().order_by('-date_commande')[:10]
+    return render(request, 'studio/admin_dashboard_comptable.html', {
+        'commandes': commandes,
+        'total_commandes': CommandeECommerce.objects.count(),
+        'nouvelles_commandes': CommandeECommerce.objects.filter(statut='en_attente').count(),
+        'payees': CommandeECommerce.objects.filter(statut='paye').count(),
+        'livrees': CommandeECommerce.objects.filter(statut='livre').count(),
+    })

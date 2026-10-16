@@ -173,3 +173,6 @@ urlpatterns = [
     path('i18n.js', views.i18n_js, name='i18n_js'),
     path('admin/receptions/', views.admin_receptions_dashboard, name='admin_receptions_dashboard'),
 ]
+
+    path('admin/dash/commercial/', views.admin_dashboard_commercial, name='admin_dashboard_commercial'),
+    path('admin/dash/comptable/', views.admin_dashboard_comptable, name='admin_dashboard_comptable'),
