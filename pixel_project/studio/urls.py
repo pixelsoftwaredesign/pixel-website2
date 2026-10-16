@@ -171,4 +171,5 @@ urlpatterns = [
     # ─── Langue ─────────────────────────────────────────────
     path('set-language/', views.set_language, name='set_language'),
     path('i18n.js', views.i18n_js, name='i18n_js'),
+    path('admin/receptions/', views.admin_receptions_dashboard, name='admin_receptions_dashboard'),
 ]

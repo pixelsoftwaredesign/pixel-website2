@@ -3263,3 +3263,25 @@ def api_pixsoftpay_profile_photo(request):
     profile.photo = photo
     profile.save()
     return JsonResponse({'status': 'success', 'url': profile.photo.url if profile.photo else ''})
+
+@login_required
+@staff_member_required
+def admin_receptions_dashboard(request):
+    from .models import CommandeECommerce, ProjetContact, Candidature
+    commandes = CommandeECommerce.objects.all().order_by('-date_commande')[:10]
+    contacts = ProjetContact.objects.all().order_by('-date_reception')[:10]
+    candidatures = Candidature.objects.all().order_by('-created_at')[:10] if hasattr(Candidature, 'created_at') else []
+    stats = {
+        'total_commandes': CommandeECommerce.objects.count(),
+        'nouvelles_commandes': CommandeECommerce.objects.filter(statut='en_attente').count(),
+        'total_contacts': ProjetContact.objects.count(),
+        'contacts_non_repondus': ProjetContact.objects.filter(a_repondu=False).count(),
+        'total_candidatures': Candidature.objects.count() if Candidature else 0,
+    }
+    context = {
+        'commandes': commandes,
+        'contacts': contacts,
+        'candidatures': candidatures,
+        'stats': stats,
+    }
+    return render(request, 'studio/admin_receptions_dashboard.html', context)
