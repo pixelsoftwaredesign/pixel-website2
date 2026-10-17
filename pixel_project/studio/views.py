@@ -15,6 +15,31 @@ from .models import UserProfile, ProjetContact, AtelierProfile, PortfolioProject
 from .services import notifier_activation_cle, notifier_confirmation_commande, notifier_statut_commande
 
 
+def role_required(*roles):
+    """Restreint une vue aux membres des groupes `roles` (ou superuser).
+
+    Renvoie 403 si l'utilisateur est connecté mais hors rôle,
+    redirige vers la connexion admin sinon.
+    """
+    from functools import wraps
+    from django.core.exceptions import PermissionDenied
+    from django.contrib.auth.views import redirect_to_login
+
+    def decorator(view_func):
+        @wraps(view_func)
+        def _wrapped(request, *args, **kwargs):
+            user = request.user
+            if not user.is_authenticated:
+                return redirect_to_login(request.get_full_path())
+            if user.is_superuser or user.groups.filter(name__in=roles).exists():
+                return view_func(request, *args, **kwargs)
+            raise PermissionDenied(
+                "Accès réservé au(x) rôle(s) : " + ", ".join(roles)
+            )
+        return _wrapped
+    return decorator
+
+
 def set_language(request):
     """Change la langue active (session + cookie) puis redirige."""
     from django.conf import settings
@@ -3293,8 +3318,7 @@ def admin_receptions_dashboard(request):
     }
     return render(request, 'studio/admin_receptions_dashboard.html', context)
 
-@login_required
-@staff_member_required
+@role_required('Commercial', 'SuperAdmin', 'Admin')
 def admin_dashboard_commercial(request):
     from .models import ProjetContact, Candidature
     contacts = ProjetContact.objects.all().order_by('-date_reception')[:10]
@@ -3309,8 +3333,7 @@ def admin_dashboard_commercial(request):
         'total_candidatures': total_candidatures,
     })
 
-@login_required
-@staff_member_required
+@role_required('Comptable', 'SuperAdmin', 'Admin')
 def admin_dashboard_comptable(request):
     from .models import CommandeECommerce
     commandes = CommandeECommerce.objects.all().order_by('-date_commande')[:10]
@@ -3322,8 +3345,7 @@ def admin_dashboard_comptable(request):
         'livrees': CommandeECommerce.objects.filter(statut='livre').count(),
     })
 
-@login_required
-@staff_member_required
+@role_required('Editeur', 'SuperAdmin', 'Admin')
 def admin_dashboard_editeur(request):
     from .models import NewsletterCampaign, NewsletterSubscriber, Temoignage
     campagnes = NewsletterCampaign.objects.all().order_by('-date_creation')[:10]
@@ -3336,10 +3358,8 @@ def admin_dashboard_editeur(request):
         'total_temoignages': Temoignage.objects.count(),
     })
 
-@login_required
-@staff_member_required
+@role_required('SuperAdmin')
 def admin_dashboard_superadmin(request):
-    from django.contrib.auth.models import User, Group
     from .models import CommandeECommerce, ProjetContact, Produit
     commandes = CommandeECommerce.objects.all().order_by('-date_commande')[:10]
     return render(request, 'studio/admin_dashboard_superadmin.html', {
@@ -3350,8 +3370,7 @@ def admin_dashboard_superadmin(request):
         'total_produits': Produit.objects.count(),
     })
 
-@login_required
-@staff_member_required
+@role_required('Admin', 'SuperAdmin')
 def admin_dashboard_admin(request):
     from django.contrib.auth.models import User, Group
     from .models import CommandeECommerce, ProjetContact
