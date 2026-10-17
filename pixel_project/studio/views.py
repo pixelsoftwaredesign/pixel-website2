@@ -3270,13 +3270,20 @@ def admin_receptions_dashboard(request):
     from .models import CommandeECommerce, ProjetContact, Candidature
     commandes = CommandeECommerce.objects.all().order_by('-date_commande')[:10]
     contacts = ProjetContact.objects.all().order_by('-date_reception')[:10]
-    candidatures = Candidature.objects.all().order_by('-created_at')[:10] if hasattr(Candidature, 'created_at') else []
+    try:
+        candidatures = Candidature.objects.all().order_by('-created_at')[:10]
+    except Exception:
+        candidatures = []
+    try:
+        total_candidatures = Candidature.objects.count()
+    except Exception:
+        total_candidatures = 0
     stats = {
         'total_commandes': CommandeECommerce.objects.count(),
         'nouvelles_commandes': CommandeECommerce.objects.filter(statut='en_attente').count(),
         'total_contacts': ProjetContact.objects.count(),
         'contacts_non_repondus': ProjetContact.objects.filter(a_repondu=False).count(),
-        'total_candidatures': Candidature.objects.count() if Candidature else 0,
+        'total_candidatures': total_candidatures,
     }
     context = {
         'commandes': commandes,
@@ -3291,11 +3298,15 @@ def admin_receptions_dashboard(request):
 def admin_dashboard_commercial(request):
     from .models import ProjetContact, Candidature
     contacts = ProjetContact.objects.all().order_by('-date_reception')[:10]
+    try:
+        total_candidatures = Candidature.objects.count()
+    except Exception:
+        total_candidatures = 0
     return render(request, 'studio/admin_dashboard_commercial.html', {
         'contacts': contacts,
         'total_contacts': ProjetContact.objects.count(),
         'contacts_non_repondus': ProjetContact.objects.filter(a_repondu=False).count(),
-        'total_candidatures': Candidature.objects.count() if 'Candidature' in globals() or True else 0,
+        'total_candidatures': total_candidatures,
     })
 
 @login_required
