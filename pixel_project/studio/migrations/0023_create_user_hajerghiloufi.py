@@ -1,5 +1,12 @@
+import os
+
 from django.db import migrations
 from django.contrib.auth.hashers import make_password
+
+
+# Aucun mot de passe en clair dans le dépôt (repo public).
+# En prod : définir DJANGO_HAJER_PASSWORD. Sinon => mot de passe inutilisable.
+HAJER_PASSWORD = os.getenv('DJANGO_HAJER_PASSWORD')
 
 
 def create_user_hajerghiloufi(apps, schema_editor):
@@ -12,11 +19,11 @@ def create_user_hajerghiloufi(apps, schema_editor):
             'email': 'hajer@pixelsoftwaredesign.xyz',
             'is_staff': False,
             'is_superuser': False,
-            'password': make_password('pixelsoftwaredesign'),
+            'password': make_password(HAJER_PASSWORD),
         },
     )
     if not created:
-        user.password = make_password('pixelsoftwaredesign')
+        user.password = make_password(HAJER_PASSWORD)
         user.save()
 
     import secrets

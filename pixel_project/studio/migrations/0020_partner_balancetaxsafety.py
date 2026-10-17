@@ -1,5 +1,12 @@
+import os
+
 from django.db import migrations
 from django.contrib.auth.hashers import make_password
+
+
+# Jamais de mot de passe en clair dans le dépôt (repo public).
+# En prod, définir DJANGO_PARTNER_PASSWORD. Sinon => mot de passe inutilisable.
+PARTNER_PASSWORD = os.getenv('DJANGO_PARTNER_PASSWORD')
 
 
 def create_partner(apps, schema_editor):
@@ -13,11 +20,11 @@ def create_partner(apps, schema_editor):
             'email': 'partner@balancetaxsafety.com',
             'is_staff': False,
             'is_superuser': False,
-            'password': make_password('BalanceTax2023@'),
+            'password': make_password(PARTNER_PASSWORD),
         },
     )
     if not created and not user.has_usable_password():
-        user.password = make_password('BalanceTax2023@')
+        user.password = make_password(PARTNER_PASSWORD)
         user.save()
 
     try:

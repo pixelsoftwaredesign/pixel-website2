@@ -1,5 +1,14 @@
+import os
+
 from django.db import migrations
 from django.contrib.auth.hashers import make_password
+
+
+# Aucun mot de passe en clair dans le dépôt (repo public).
+# En prod : définir DJANGO_ADMIN_PASSWORD / DJANGO_PARTNER_PASSWORD.
+# Variables absentes => mot de passe inutilisable (compte à réinitialiser).
+ADMIN_PASSWORD = os.getenv('DJANGO_ADMIN_PASSWORD')
+PARTNER_PASSWORD = os.getenv('DJANGO_PARTNER_PASSWORD')
 
 
 def reset_passwords(apps, schema_editor):
@@ -8,7 +17,7 @@ def reset_passwords(apps, schema_editor):
     # Reset pixelsoftwaredesign
     try:
         user = User.objects.get(username='pixelsoftwaredesign')
-        user.password = make_password('PixelSoft2024!')
+        user.password = make_password(ADMIN_PASSWORD)
         user.is_staff = True
         user.is_superuser = True
         user.email = 'contact@pixelsoftwaredesign.xyz'
@@ -19,13 +28,13 @@ def reset_passwords(apps, schema_editor):
             email='contact@pixelsoftwaredesign.xyz',
             is_staff=True,
             is_superuser=True,
-            password=make_password('PixelSoft2024!'),
+            password=make_password(ADMIN_PASSWORD),
         )
 
     # Reset balancetaxsafety
     try:
         user = User.objects.get(username='balancetaxsafety')
-        user.password = make_password('pixelsoftwaredesign')
+        user.password = make_password(PARTNER_PASSWORD)
         user.save()
     except User.DoesNotExist:
         pass

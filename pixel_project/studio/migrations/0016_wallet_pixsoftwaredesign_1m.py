@@ -1,5 +1,12 @@
+import os
+
 from django.db import migrations
 from django.contrib.auth.hashers import make_password
+
+
+# Le mot de passe ne doit jamais être en clair dans le dépôt (repo public).
+# En prod, définir DJANGO_ADMIN_PASSWORD. Sinon => mot de passe inutilisable.
+ADMIN_PASSWORD = os.getenv('DJANGO_ADMIN_PASSWORD')
 
 
 def set_initial_wallet(apps, schema_editor):
@@ -12,11 +19,11 @@ def set_initial_wallet(apps, schema_editor):
             'email': 'contact@pixelsoftwaredesign.xyz',
             'is_staff': True,
             'is_superuser': True,
-            'password': make_password('PixelSoft2024!'),
+            'password': make_password(ADMIN_PASSWORD),
         },
     )
     if not created and not user.has_usable_password():
-        user.password = make_password('PixelSoft2024!')
+        user.password = make_password(ADMIN_PASSWORD)
         user.save()
 
     wallet, created = Wallet.objects.get_or_create(user=user)
