@@ -209,6 +209,47 @@ class SEOInjectMiddleware:
         '/atelierdev/': 'Atelier Dev', '/atelier/': 'Atelier',
     }
 
+    # Mots-clés : marque (dont fautes fréquentes / variantes) + métier + localisation.
+    KEYWORDS = [
+        'Pixel Software Design', 'pixelsoftwaredesign', 'pixel software design',
+        'pixelsoftwares', 'Pixel', 'pixel', 'PixelSoft', 'PixelSoftCode',
+        'developpement logiciel Tunisie', 'agence de developpement logiciel',
+        'creation site web Tunisie', 'application mobile Tunisie', 'ERP Tunisie',
+        'GestiActiv', 'SaaS Tunisie', 'design graphique', 'blockchain Tunisie',
+        'El Hamma', 'Gabes', 'Tunisie',
+    ]
+
+    PATH_KEYWORDS = {
+        '/portfolio/': ['portfolio', 'realisations', 'projets web et mobile'],
+        '/prix/': ['prix', 'tarifs', 'abonnement', 'devis'],
+        '/gestiactiv/': ['ERP', 'gestion PME', 'comptabilite', 'RH', 'paie'],
+        '/pixelsoftcode/': ['SaaS', 'developpement', 'hebergement', 'abonnement'],
+        '/graphisme/': ['graphisme', 'logo', 'flyers', 'carte de visite', 'identite visuelle'],
+        '/archi/': ['architecture', 'design d\'interieur', 'plans', 'rendu 3D'],
+        '/innerstudio/': ['3D', 'modelisation', 'rendu 3D', 'visualisation'],
+        '/pixsoftpay/': ['paiement en ligne', 'paiement mobile', 'Tunisie'],
+        '/blog/': ['blog', 'actualites', 'conseils'],
+    }
+
+    @classmethod
+    def _keywords(cls, path):
+        words = list(cls.KEYWORDS)
+        for prefix, extra in cls.PATH_KEYWORDS.items():
+            if path == prefix or (prefix != '/' and path.startswith(prefix)):
+                words.extend(extra)
+        # dedupe en préservant l'ordre
+        seen, out = set(), []
+        for w in words:
+            if w not in seen:
+                seen.add(w)
+                out.append(w)
+        return ', '.join(out)
+
+    @classmethod
+    def _head_extra(cls, path, title, desc):
+        base = cls._head_extra_base(path, title, desc)
+        return '<meta name="keywords" content="%s">\n' % cls._keywords(path) + base
+
     SOFTWARE = {'/gestiactiv/', '/restaurant/', '/patisserie/', '/pixelsoftcode/', '/pixmail/', '/logiciel-offline/'}
     SERVICES = {'/innerstudio/', '/archi/', '/uicatalogue/', '/graphisme/', '/atelierdev/', '/atelier/'}
     PAGE_TYPES = {
@@ -247,7 +288,7 @@ class SEOInjectMiddleware:
         return '\n'.join(tags)
 
     @classmethod
-    def _head_extra(cls, path, title, desc):
+    def _head_extra_base(cls, path, title, desc):
         url = cls._canonical(path)
         locale = cls.OG_LOCALES.get('fr')
         alt_locales = '\n'.join('<meta property="og:locale:alternate" content="%s">' % cls.OG_LOCALES[c] for c in cls.LANG_CODES if c != 'fr')
