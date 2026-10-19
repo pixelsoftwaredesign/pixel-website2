@@ -38,6 +38,26 @@ if RAILWAY_PUBLIC_DOMAIN:
     CSRF_TRUSTED_ORIGINS.append(f'http://{RAILWAY_PUBLIC_DOMAIN}')
     ALLOWED_HOSTS.append(RAILWAY_PUBLIC_DOMAIN)
 
+# ─── GestiActiv : sous-domaine + SSO (session partagée) ─────
+# L'application GestiActiv vit sur gestiactiv.pixelsoftwaredesign.xyz et
+# partage la session avec le site principal (cookie sur le domaine parent)
+# pour que la connexion soit unique (SSO).
+GESTIACTIV_HOST = os.getenv('GESTIACTIV_HOST', 'gestiactiv.pixelsoftwaredesign.xyz')
+COOKIE_DOMAIN = os.getenv('DJANGO_COOKIE_DOMAIN', '' if DEBUG else '.pixelsoftwaredesign.xyz')
+if COOKIE_DOMAIN:
+    SESSION_COOKIE_DOMAIN = COOKIE_DOMAIN
+    CSRF_COOKIE_DOMAIN = COOKIE_DOMAIN
+    LANGUAGE_COOKIE_DOMAIN = COOKIE_DOMAIN
+if ALLOWED_HOSTS != ['*']:
+    for _host in (GESTIACTIV_HOST, f'www.{GESTIACTIV_HOST}'):
+        if _host not in ALLOWED_HOSTS:
+            ALLOWED_HOSTS.append(_host)
+CSRF_TRUSTED_ORIGINS += [
+    f'https://{GESTIACTIV_HOST}',
+    f'http://{GESTIACTIV_HOST}',
+    'https://*.pixelsoftwaredesign.xyz',
+]
+
 if not DEBUG:
     SECURE_SSL_REDIRECT = False
     SECURE_HSTS_SECONDS = 0
@@ -59,6 +79,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
+    'studio.middleware.GestiActivHostMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

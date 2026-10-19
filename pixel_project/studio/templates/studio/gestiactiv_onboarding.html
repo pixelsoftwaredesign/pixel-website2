@@ -1,0 +1,37 @@
+{% extends 'studio/gestiactiv_base.html' %}
+{% block title %}Configurer mon activité — GestiActiv{% endblock %}
+
+{% block content %}
+<div class="gx-panel">
+  <h1>Configurer mon activité</h1>
+  <p class="gx-sub">Votre compte existe déjà. Indiquez votre entreprise et votre métier pour activer votre espace.</p>
+
+  {% if error %}<div class="gx-alert gx-alert-error">{{ error }}</div>{% endif %}
+
+  <form method="post" action="{% url 'gestiactiv_onboarding' %}">
+    {% csrf_token %}
+    <div class="gx-field">
+      <label for="company">Nom de l'entreprise</label>
+      <input id="company" name="company" type="text" placeholder="Ex. Pâtisserie Le Délice" required>
+    </div>
+    <div class="gx-field">
+      <label for="phone">Téléphone (optionnel)</label>
+      <input id="phone" name="phone" type="tel" placeholder="+216 …">
+    </div>
+    <div class="gx-field">
+      <label for="activity">Votre activité</label>
+      <select id="activity" name="activity" required>
+        <option value="">— Choisir —</option>
+        {% for m in modules %}
+          <option value="{{ m.slug }}">{{ m.icon }} {{ m.label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button class="gx-btn gx-btn-primary gx-btn-block" type="submit">Activer mon espace</button>
+  </form>
+
+  <div class="gx-form-foot">
+    <a href="{% url 'gestiactiv_logout' %}">Se déconnecter</a>
+  </div>
+</div>
+{% endblock %}

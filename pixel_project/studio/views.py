@@ -11,7 +11,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.utils import timezone
-from .models import UserProfile, ProjetContact, AtelierProfile, PortfolioProject, CodeRepository, GraphismeResource, ERPModule, ERPSubscription, ERPDemoRecord, ERPClient, Moniteur, Candidat, Vehicule, Lecon, Examen, Medecin, Patient, Lit, RendezVous, FacturationSante, ClientHotel, Chambre, ReservationHotel, ServiceHotel, Categorie, Fournisseur, Produit, Vente, ClientJuridique, DossierJuridique, Audience, JournalComptable, EcritureComptable, Facture, DeclarationFiscale, Employe, Contrat, FichePaie, Conge, Formation, MenuItem, TableRestaurant, SoftCodeModule, StudioProject3D, PatisserieRecipe, PatisserieProduct, PlanAbonnement, SouscriptionClient, Paiement, CleActivation, ConfigurationBancaire, ConfigurationPaiementEnLigne, Candidature, MouvementStock, CommandeECommerce, CommandeECommerceItem, Temoignage, PixMailAccount, PixMailContact, PixMailMessage, PixMailAttachment, PixMailFolder, PixMailSignature, SocialProfile, Follow, Post, Like, Comment, Notification, Conversation, ConversationMember, EncryptedMessage, Wallet, Transaction, TwoFactorAuth, Referral, REFERRAL_BONUS_AMOUNT, REFERRAL_THRESHOLD, KYCVerification, NewsletterSubscriber, NewsletterCampaign
+from .models import UserProfile, ProjetContact, AtelierProfile, PortfolioProject, CodeRepository, GraphismeResource, ERPModule, ERPSubscription, ERPDemoRecord, ERPClient, ERPMembership, Moniteur, Candidat, Vehicule, Lecon, Examen, Medecin, Patient, Lit, RendezVous, FacturationSante, ClientHotel, Chambre, ReservationHotel, ServiceHotel, Categorie, Fournisseur, Produit, Vente, ClientJuridique, DossierJuridique, Audience, JournalComptable, EcritureComptable, Facture, DeclarationFiscale, Employe, Contrat, FichePaie, Conge, Formation, MenuItem, TableRestaurant, SoftCodeModule, StudioProject3D, PatisserieRecipe, PatisserieProduct, PlanAbonnement, SouscriptionClient, Paiement, CleActivation, ConfigurationBancaire, ConfigurationPaiementEnLigne, Candidature, MouvementStock, CommandeECommerce, CommandeECommerceItem, Temoignage, PixMailAccount, PixMailContact, PixMailMessage, PixMailAttachment, PixMailFolder, PixMailSignature, SocialProfile, Follow, Post, Like, Comment, Notification, Conversation, ConversationMember, EncryptedMessage, Wallet, Transaction, TwoFactorAuth, Referral, REFERRAL_BONUS_AMOUNT, REFERRAL_THRESHOLD, KYCVerification, NewsletterSubscriber, NewsletterCampaign
 from .services import notifier_activation_cle, notifier_confirmation_commande, notifier_statut_commande
 
 
@@ -186,7 +186,165 @@ def gestiactiv_module(request, module_slug):
         'all_modules': all_modules,
     })
 
+
+# ─── GestiActiv — SSO & espace client (multi-tenant) ────────
+# Chaque entrée : slug (aligné sur ERPModule.slug), libellé, icône et chemin
+# du backend métier sur le sous-domaine GestiActiv (None = à venir).
+GESTIACTIV_MODULES = [
+    {'slug': 'auto-ecole', 'label': 'Auto-École', 'icon': '🚗', 'path': 'auto-ecole'},
+    {'slug': 'sante', 'label': 'Santé / Clinique', 'icon': '🏥', 'path': 'sante'},
+    {'slug': 'hotellerie', 'label': 'Hôtellerie / Tourisme', 'icon': '🏨', 'path': 'hotel'},
+    {'slug': 'commerce', 'label': 'Commerce / Retail', 'icon': '🛒', 'path': 'commerce'},
+    {'slug': 'juridique', 'label': 'Juridique', 'icon': '⚖️', 'path': 'juridique'},
+    {'slug': 'comptabilite', 'label': 'Comptabilité', 'icon': '📊', 'path': 'comptabilite'},
+    {'slug': 'rh-paie', 'label': 'RH & Paie', 'icon': '👥', 'path': 'rh'},
+    {'slug': 'restaurant', 'label': 'Restaurant & Café', 'icon': '🍽️', 'path': None},
+    {'slug': 'patisserie', 'label': 'Pâtisserie & Boulangerie', 'icon': '🧁', 'path': None},
+]
+GESTIACTIV_SLUGS = {m['slug'] for m in GESTIACTIV_MODULES}
+GESTIACTIV_LABELS = {m['slug']: m['label'] for m in GESTIACTIV_MODULES}
+GESTIACTIV_ICONS = {m['slug']: m['icon'] for m in GESTIACTIV_MODULES}
+
+
+def _erp_membership(user):
+    """Rattachement ERP actif de l'utilisateur (ou None)."""
+    if not user or not user.is_authenticated:
+        return None
+    return (ERPMembership.objects
+            .select_related('client')
+            .filter(user=user, client__is_active=True)
+            .order_by('id')
+            .first())
+
+
+def gestiactiv_home(request):
+    """Accueil du sous-domaine GestiActiv."""
+    if not request.user.is_authenticated:
+        return render(request, 'studio/gestiactiv_accueil.html', {
+            'modules': GESTIACTIV_MODULES,
+        })
+    return redirect('gestiactiv_espace')
+
+
+def gestiactiv_login(request):
+    from django.utils.http import url_has_allowed_host_and_scheme
+
+    if request.user.is_authenticated:
+        return redirect('gestiactiv_espace')
+    error = None
+    nxt = request.POST.get('next') or request.GET.get('next') or ''
+    if request.method == 'POST':
+        username = (request.POST.get('username') or '').strip()
+        password = request.POST.get('password') or ''
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            if nxt and url_has_allowed_host_and_scheme(
+                    nxt, {request.get_host()}, require_https=request.is_secure()):
+                return redirect(nxt)
+            return redirect('gestiactiv_espace')
+        error = "Identifiants invalides."
+    return render(request, 'studio/gestiactiv_login.html', {'error': error, 'next': nxt})
+
+
+def gestiactiv_register(request):
+    if request.user.is_authenticated and _erp_membership(request.user):
+        return redirect('gestiactiv_espace')
+    error = None
+    if request.method == 'POST':
+        username = (request.POST.get('username') or '').strip()
+        email = (request.POST.get('email') or '').strip()
+        password = request.POST.get('password') or ''
+        company = (request.POST.get('company') or '').strip()
+        activity = (request.POST.get('activity') or '').strip()
+        if not username or not email or len(password) < 6:
+            error = "Identifiant, email et mot de passe (6 caractères min.) sont obligatoires."
+        elif activity not in GESTIACTIV_SLUGS:
+            error = "Choisissez votre activité."
+        elif User.objects.filter(username=username).exists():
+            error = "Cet identifiant existe déjà."
+        elif User.objects.filter(email=email).exists():
+            error = "Cet email est déjà utilisé."
+        else:
+            user = User.objects.create_user(username=username, email=email, password=password)
+            UserProfile.objects.get_or_create(user=user, defaults={'entreprise': company})
+            client = ERPClient.objects.create(
+                company_name=company or username, contact_name=username,
+                email=email, activity=activity, owner=user)
+            ERPMembership.objects.create(user=user, client=client, role='owner')
+            module = ERPModule.objects.filter(slug=activity).first()
+            if module:
+                ERPSubscription.objects.get_or_create(client=client, module=module)
+            login(request, user)
+            return redirect('gestiactiv_espace')
+    return render(request, 'studio/gestiactiv_register.html', {
+        'error': error, 'modules': GESTIACTIV_MODULES, 'form': request.POST,
+    })
+
+
+def gestiactiv_logout(request):
+    logout(request)
+    return redirect('gestiactiv_home')
+
+
+@login_required
+def gestiactiv_onboarding(request):
+    membership = _erp_membership(request.user)
+    if membership is not None:
+        return redirect('gestiactiv_espace')
+    error = None
+    if request.method == 'POST':
+        company = (request.POST.get('company') or '').strip()
+        activity = (request.POST.get('activity') or '').strip()
+        phone = (request.POST.get('phone') or '').strip()
+        if not company:
+            error = "Le nom de l'entreprise est obligatoire."
+        elif activity not in GESTIACTIV_SLUGS:
+            error = "Choisissez votre activité."
+        else:
+            client = ERPClient.objects.create(
+                company_name=company, contact_name=request.user.username,
+                email=request.user.email or '', phone=phone,
+                activity=activity, owner=request.user)
+            ERPMembership.objects.create(user=request.user, client=client, role='owner')
+            module = ERPModule.objects.filter(slug=activity).first()
+            if module:
+                ERPSubscription.objects.get_or_create(client=client, module=module)
+            return redirect('gestiactiv_espace')
+    return render(request, 'studio/gestiactiv_onboarding.html', {
+        'error': error, 'modules': GESTIACTIV_MODULES,
+    })
+
+
+@login_required
+def gestiactiv_espace(request):
+    membership = _erp_membership(request.user)
+    if membership is None:
+        return redirect('gestiactiv_onboarding')
+    client = membership.client
+    subscribed = set(
+        ERPSubscription.objects.filter(client=client, is_active=True)
+        .values_list('module__slug', flat=True))
+    modules = []
+    for m in GESTIACTIV_MODULES:
+        modules.append({
+            **m,
+            'active': m['slug'] == client.activity,
+            'subscribed': m['slug'] in subscribed,
+            'available': m['path'] is not None,
+        })
+    return render(request, 'studio/gestiactiv_espace.html', {
+        'client': client,
+        'membership': membership,
+        'modules': modules,
+        'members': client.memberships.select_related('user'),
+        'activity_label': GESTIACTIV_LABELS.get(client.activity, '—'),
+        'activity_icon': GESTIACTIV_ICONS.get(client.activity, '📦'),
+    })
+
+
 # ─── Auto-École ─────────────────────────────────────────────
+
 @login_required
 def gestion_auto_ecole(request):
     if request.method == 'POST':

@@ -1,0 +1,25 @@
+{% extends 'studio/gestiactiv_base.html' %}
+{% block title %}GestiActiv — La gestion de votre activité, par Pixel{% endblock %}
+
+{% block content %}
+<section class="gx-hero">
+  <span class="gx-kicker">ERP · Gestion d'activité</span>
+  <h1>Pilotez toute votre activité<br>depuis un seul espace</h1>
+  <p>GestiActiv s'adapte à votre métier : santé, restaurant, pâtisserie, auto-école, hôtel, commerce, juridique, comptabilité ou RH. Un compte Pixel suffit — la connexion est unique.</p>
+  <div class="gx-actions">
+    <a class="gx-btn gx-btn-primary" href="{% url 'gestiactiv_register' %}">Créer mon espace gratuitement</a>
+    <a class="gx-btn gx-btn-ghost" href="{% url 'gestiactiv_login' %}">J'ai déjà un compte</a>
+  </div>
+</section>
+
+<h2 class="gx-section-title">Choisissez votre activité</h2>
+<div class="gx-grid">
+  {% for m in modules %}
+    <div class="gx-card">
+      <div class="gx-ico">{{ m.icon }}</div>
+      <h3>{{ m.label }}</h3>
+      <p>{% if m.path %}Module prêt à l'emploi.{% else %}Bientôt disponible.{% endif %}</p>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,50 @@
+{% extends 'studio/gestiactiv_base.html' %}
+{% block title %}{{ client.company_name }} — GestiActiv{% endblock %}
+
+{% block content %}
+<div class="gx-space-head">
+  <div>
+    <h1>{{ client.company_name }}</h1>
+    <div class="gx-meta">
+      {{ client.contact_name }}{% if client.phone %} · {{ client.phone }}{% endif %} · {{ client.email }}
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <span class="gx-badge gx-badge-accent">{{ activity_label }}</span>
+    <span class="gx-badge gx-badge-muted">{{ membership.get_role_display }}</span>
+  </div>
+</div>
+
+<h2 class="gx-section-title">Modules de votre espace</h2>
+<div class="gx-grid">
+  {% for m in modules %}
+    <div class="gx-card{% if m.active %} is-active{% endif %}{% if not m.available %} gx-locked{% endif %}">
+      <div class="gx-ico">{{ m.icon }}</div>
+      <h3>{{ m.label }}</h3>
+      {% if m.available %}
+        <p><a class="gx-btn gx-btn-ghost" style="padding:8px 14px;font-size:13.5px;margin-top:8px" href="/{{ m.path }}/">Ouvrir le module</a></p>
+      {% else %}
+        <p>Bientôt disponible.</p>
+      {% endif %}
+    </div>
+  {% endfor %}
+</div>
+
+<h2 class="gx-section-title">Équipe ({{ members|length }})</h2>
+<div class="gx-card" style="padding:6px 10px">
+  <table class="gx-table">
+    <thead><tr><th>Utilisateur</th><th>Email</th><th>Rôle</th></tr></thead>
+    <tbody>
+      {% for m in members %}
+        <tr>
+          <td>{{ m.user.username }}</td>
+          <td>{{ m.user.email|default:"—" }}</td>
+          <td>{{ m.get_role_display }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="3">Aucun membre.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

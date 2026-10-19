@@ -1,0 +1,59 @@
+{% load static %}<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}GestiActiv — ERP par activité{% endblock %}</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/svg+xml" href="{% static 'favicon.svg' %}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'css/gestiactiv.css' %}">
+{% block head %}{% endblock %}
+</head>
+<body class="gx">
+<nav class="gx-nav">
+  <div class="gx-wrap">
+    <a class="gx-logo" href="{% url 'gestiactiv_home' %}">
+      <span class="gx-mark">G</span>
+      <span>GestiActiv<small>by Pixel</small></span>
+    </a>
+    <div class="gx-navlinks">
+      {% block navlinks %}
+      {% if user.is_authenticated %}
+        <a href="{% url 'gestiactiv_espace' %}">Mon espace</a>
+        <a href="{% url 'gestiactiv_logout' %}">Déconnexion</a>
+      {% else %}
+        <a href="https://pixelsoftwaredesign.xyz/">← Pixel Software Design</a>
+        <a href="{% url 'gestiactiv_login' %}">Connexion</a>
+        <a class="gx-cta" href="{% url 'gestiactiv_register' %}">Créer mon espace</a>
+      {% endif %}
+      {% endblock %}
+    </div>
+  </div>
+</nav>
+
+<main class="gx-main">
+  <div class="gx-wrap">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="gx-alert {% if message.tags == 'error' %}gx-alert-error{% else %}gx-alert-ok{% endif %}">{{ message }}</div>
+      {% endfor %}
+    {% endif %}
+    {% block content %}{% endblock %}
+  </div>
+</main>
+
+<footer class="gx-foot">
+  <div class="gx-wrap">
+    <span>© {% now "Y" %} GestiActiv · Pixel Software Design</span>
+    <span>
+      <a href="https://pixelsoftwaredesign.xyz/">Pixel Software Design</a>
+      · <a href="https://pixelsoftwaredesign.xyz/contact/">Contact</a>
+    </span>
+  </div>
+</footer>
+{% block scripts %}{% endblock %}
+</body>
+</html>

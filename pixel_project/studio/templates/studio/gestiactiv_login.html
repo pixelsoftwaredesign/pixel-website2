@@ -1,0 +1,29 @@
+{% extends 'studio/gestiactiv_base.html' %}
+{% block title %}Connexion — GestiActiv{% endblock %}
+
+{% block content %}
+<div class="gx-panel">
+  <h1>Connexion</h1>
+  <p class="gx-sub">Utilisez votre compte Pixel Software Design.</p>
+
+  {% if error %}<div class="gx-alert gx-alert-error">{{ error }}</div>{% endif %}
+
+  <form method="post" action="{% url 'gestiactiv_login' %}">
+    {% csrf_token %}
+    {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+    <div class="gx-field">
+      <label for="username">Identifiant</label>
+      <input id="username" name="username" type="text" autocomplete="username" required autofocus>
+    </div>
+    <div class="gx-field">
+      <label for="password">Mot de passe</label>
+      <input id="password" name="password" type="password" autocomplete="current-password" required>
+    </div>
+    <button class="gx-btn gx-btn-primary gx-btn-block" type="submit">Se connecter</button>
+  </form>
+
+  <div class="gx-form-foot">
+    Pas encore de compte ? <a href="{% url 'gestiactiv_register' %}">Créer mon espace</a>
+  </div>
+</div>
+{% endblock %}

@@ -2,6 +2,11 @@ import uuid
 from django.db import models
 from django.contrib.auth.models import User
 
+
+def token_desabonnement_default():
+    """Token aléatoire stable (référencé par les migrations)."""
+    return uuid.uuid4().hex
+
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     entreprise = models.CharField(max_length=100, blank=True, null=True, verbose_name="Entreprise")
@@ -121,6 +126,19 @@ class GraphismeResource(models.Model):
     def __str__(self):
         return self.title
 
+ERP_ACTIVITY_CHOICES = [
+    ('auto-ecole', 'Auto-École'),
+    ('sante', 'Santé / Clinique'),
+    ('hotellerie', 'Hôtellerie / Tourisme'),
+    ('commerce', 'Commerce / Retail'),
+    ('juridique', 'Juridique'),
+    ('comptabilite', 'Comptabilité'),
+    ('rh-paie', 'RH & Paie'),
+    ('restaurant', 'Restaurant & Café'),
+    ('patisserie', 'Pâtisserie & Boulangerie'),
+]
+
+
 class ERPClient(models.Model):
     company_name = models.CharField(max_length=200, verbose_name="Entreprise")
     contact_name = models.CharField(max_length=150, verbose_name="Contact")
@@ -128,6 +146,12 @@ class ERPClient(models.Model):
     phone = models.CharField(max_length=20, blank=True, verbose_name="Téléphone")
     matricule = models.CharField(max_length=50, blank=True, verbose_name="Matricule fiscal")
     address = models.TextField(blank=True, verbose_name="Adresse")
+    activity = models.CharField(
+        max_length=50, blank=True, choices=ERP_ACTIVITY_CHOICES,
+        verbose_name="Activité")
+    owner = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='erp_clients', verbose_name="Propriétaire")
     is_active = models.BooleanField(default=True, verbose_name="Actif")
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -139,15 +163,7 @@ class ERPClient(models.Model):
         return self.company_name
 
 class ERPModule(models.Model):
-    MODULE_SLUGS = [
-        ('auto-ecole', 'Auto-École'),
-        ('sante', 'Santé / Clinique'),
-        ('hotellerie', 'Hôtellerie / Tourisme'),
-        ('commerce', 'Commerce / Retail'),
-        ('juridique', 'Juridique'),
-        ('comptabilite', 'Comptabilité'),
-        ('rh-paie', 'RH & Paie'),
-    ]
+    MODULE_SLUGS = ERP_ACTIVITY_CHOICES
     slug = models.CharField(max_length=50, unique=True, choices=MODULE_SLUGS)
     name = models.CharField(max_length=100)
     icon = models.CharField(max_length=10, default='📦')
@@ -193,6 +209,29 @@ class ERPDemoRecord(models.Model):
 
     def __str__(self):
         return f"[{self.module.name}] {self.label}"
+
+
+class ERPMembership(models.Model):
+    """Rattachement d'un utilisateur Pixel à une entreprise GestiActiv."""
+    ROLES = [
+        ('owner', 'Propriétaire'),
+        ('manager', 'Gestionnaire'),
+        ('employee', 'Employé'),
+    ]
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='erp_memberships')
+    client = models.ForeignKey(
+        ERPClient, on_delete=models.CASCADE, related_name='memberships')
+    role = models.CharField(max_length=20, choices=ROLES, default='employee')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Membre ERP"
+        verbose_name_plural = "Membres ERP"
+        unique_together = ('user', 'client')
+
+    def __str__(self):
+        return f"{self.user.username} @ {self.client.company_name} ({self.get_role_display()})"
 
 
 # ─── Auto-École ─────────────────────────────────────────────
@@ -1385,7 +1424,7 @@ class KYCVerification(models.Model):
 class NewsletterSubscriber(models.Model):
     email = models.EmailField(unique=True, verbose_name="Email")
     nom = models.CharField(max_length=150, blank=True, verbose_name="Nom")
-    token = models.CharField(max_length=40, unique=True, default=uuid.uuid4().hex, verbose_name="Token de désabonnement")
+    token = models.CharField(max_length=40, unique=True, default=token_desabonnement_default, verbose_name="Token de désabonnement")
     actif = models.BooleanField(default=True, verbose_name="Abonné actif")
     date_inscription = models.DateTimeField(auto_now_add=True, verbose_name="Date d'inscription")
 

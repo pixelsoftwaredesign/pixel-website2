@@ -3,6 +3,44 @@ from .i18n import set_lang, get_lang, DEFAULT_LANG
 import json
 import re
 
+from django.conf import settings
+
+
+GESTIACTIV_HOST_PREFIX = 'gestiactiv.'
+
+
+def is_gestiactiv(request):
+    """Vrai si la requête cible l'espace GestiActiv."""
+    return getattr(request, 'is_gestiactiv', False)
+
+
+class GestiActivHostMiddleware:
+    """Route les requêtes du sous-domaine GestiActiv vers son URLconf dédié.
+
+    Permet d'avoir une application GestiActiv autonome (accueil, connexion,
+    inscription, espace client) sur `gestiactiv.pixelsoftwaredesign.xyz`,
+    tout en partageant la session (SSO) avec le site principal.
+
+    Le sous-domaine est exposé via un Worker Cloudflare qui réécrit le Host
+    vers l'hôte Render et pose l'en-tête `X-GestiActiv: 1` (Render n'accepte
+    que ses hôtes déclarés).
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        try:
+            host = (request.get_host() or '').split(':')[0].lower()
+        except Exception:
+            host = ''
+        if (host.startswith(GESTIACTIV_HOST_PREFIX)
+                or request.headers.get('X-GestiActiv') == '1'
+                or (settings.DEBUG and request.GET.get('__gestiactiv') == '1')):
+            request.urlconf = 'studio.gestiactiv_urls'
+            request.is_gestiactiv = True
+        return self.get_response(request)
+
 
 class LanguageMiddleware:
     """Met la langue courante à disposition (depuis session ou cookie)."""
@@ -135,8 +173,8 @@ class LanguageInjectMiddleware:
 
     def __call__(self, request):
         response = self.get_response(request)
-        # L'espace d'administration n'utilise pas le traducteur DOM.
-        if request.path.startswith('/admin/'):
+        # L'espace d'administration et GestiActiv n'utilisent pas le traducteur DOM.
+        if request.path.startswith('/admin/') or is_gestiactiv(request):
             return response
         try:
             content_type = response.get('Content-Type', '')
@@ -429,6 +467,10 @@ class SEOInjectMiddleware:
         # Pas de métadonnées SEO publiques sur l'administration ; on demande
         # simplement aux moteurs de ne pas indexer ces pages.
         if request.path.startswith('/admin/'):
+            response['X-Robots-Tag'] = 'noindex, nofollow'
+            return response
+        # L'espace GestiActiv a son propre SEO et reste privé (non indexé).
+        if is_gestiactiv(request):
             response['X-Robots-Tag'] = 'noindex, nofollow'
             return response
         try:

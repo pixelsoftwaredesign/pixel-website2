@@ -1,0 +1,47 @@
+{% extends 'studio/gestiactiv_base.html' %}
+{% block title %}Créer mon espace — GestiActiv{% endblock %}
+
+{% block content %}
+<div class="gx-panel">
+  <h1>Créer mon espace</h1>
+  <p class="gx-sub">Un compte Pixel, un espace adapté à votre activité.</p>
+
+  {% if error %}<div class="gx-alert gx-alert-error">{{ error }}</div>{% endif %}
+
+  <form method="post" action="{% url 'gestiactiv_register' %}">
+    {% csrf_token %}
+    <div class="gx-field">
+      <label for="company">Nom de l'entreprise</label>
+      <input id="company" name="company" type="text" value="{{ form.company|default:'' }}" placeholder="Ex. Clinique El Amal" required>
+    </div>
+    <div class="gx-field">
+      <label for="activity">Votre activité</label>
+      <select id="activity" name="activity" required>
+        <option value="">— Choisir —</option>
+        {% for m in modules %}
+          <option value="{{ m.slug }}" {% if form.activity == m.slug %}selected{% endif %}>{{ m.icon }} {{ m.label }}</option>
+        {% endfor %}
+      </select>
+      <div class="gx-hint">Vous pourrez ajouter d'autres modules plus tard.</div>
+    </div>
+    <div class="gx-field">
+      <label for="username">Identifiant de connexion</label>
+      <input id="username" name="username" type="text" value="{{ form.username|default:'' }}" autocomplete="username" required>
+    </div>
+    <div class="gx-field">
+      <label for="email">Email</label>
+      <input id="email" name="email" type="email" value="{{ form.email|default:'' }}" autocomplete="email" required>
+    </div>
+    <div class="gx-field">
+      <label for="password">Mot de passe</label>
+      <input id="password" name="password" type="password" autocomplete="new-password" minlength="6" required>
+      <div class="gx-hint">6 caractères minimum.</div>
+    </div>
+    <button class="gx-btn gx-btn-primary gx-btn-block" type="submit">Créer mon espace</button>
+  </form>
+
+  <div class="gx-form-foot">
+    Déjà inscrit ? <a href="{% url 'gestiactiv_login' %}">Se connecter</a>
+  </div>
+</div>
+{% endblock %}
