@@ -3431,7 +3431,7 @@ def admin_roles(request):
     from django.contrib import messages
     from django.contrib.auth.models import Group
 
-    is_super = request.user.is_superuser
+    is_super = request.user.is_superuser or request.user.groups.filter(name='SuperAdmin').exists()
 
     if request.method == 'POST':
         target = User.objects.filter(pk=request.POST.get('user_id')).first()
