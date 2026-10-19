@@ -71,7 +71,7 @@
       {% if messages %}
       <div class="pxadmin-flashes">
         {% for message in messages %}
-        <div class="pxadmin-flash pxadmin-flash--{{ m.tags }}" role="status">{{ message }}</div>
+        <div class="pxadmin-flash pxadmin-flash--{{ message.tags }}" role="status">{{ message }}</div>
         {% endfor %}
       </div>
       {% endif %}
