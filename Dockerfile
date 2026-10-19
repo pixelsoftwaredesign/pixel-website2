@@ -19,4 +19,5 @@ RUN python manage.py collectstatic --noinput 2>/dev/null || true
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "python manage.py migrate --noinput && gunicorn pixel_project.wsgi:application --bind 0.0.0.0:${PORT:-8000} --workers 3 --timeout 120"]
+# Migrations avec réessais + garde sur DJANGO_SECRET_KEY (voir entrypoint.sh).
+CMD ["sh", "entrypoint.sh"]

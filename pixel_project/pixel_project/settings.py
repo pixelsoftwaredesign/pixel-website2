@@ -1,3 +1,4 @@
+import logging
 import os
 from pathlib import Path
 from dotenv import load_dotenv
@@ -6,8 +7,18 @@ load_dotenv(override=False)
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-mc%!un5&jnq4jm4=l_el!2x)id2u3no#f39mcjmfevqg$-dp=z')
+# Valeur de repli publique (présente dans le dépôt) : à ne jamais utiliser en
+# production, sinon sessions et jetons signés sont forgeables.
+INSECURE_SECRET_KEY = 'django-insecure-mc%!un5&jnq4jm4=l_el!2x)id2u3no#f39mcjmfevqg$-dp=z'
+
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY') or INSECURE_SECRET_KEY
 DEBUG = os.getenv('DJANGO_DEBUG', 'True').lower() in ('true', '1', 'yes')
+
+if not DEBUG and SECRET_KEY == INSECURE_SECRET_KEY:
+    logging.getLogger('django.security').critical(
+        'DJANGO_SECRET_KEY non défini : la clé publique du dépôt est utilisée en '
+        'production (cf. entrypoint.sh). Définir la variable DJANGO_SECRET_KEY.'
+    )
 
 SESSION_COOKIE_SAMESITE = 'Lax'
 CSRF_COOKIE_SAMESITE = 'Lax'
