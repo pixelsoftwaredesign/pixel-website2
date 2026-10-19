@@ -16,29 +16,58 @@ from django.urls import NoReverseMatch, reverse
 from .services import notifier_activation_cle, notifier_confirmation_commande, notifier_statut_commande
 
 
-def role_required(*roles):
-    """Restreint une vue aux membres des groupes `roles` (ou superuser).
+def _admin_login_redirect(request):
+    from django.contrib.auth.views import redirect_to_login
+    return redirect_to_login(request.get_full_path())
 
-    Renvoie 403 si l'utilisateur est connecté mais hors rôle,
-    redirige vers la connexion admin sinon.
+
+def role_required(*roles):
+    """Restreint une vue aux membres du personnel ayant l'un des `roles`.
+
+    L'espace d'administration est réservé au personnel : les vues par rôle
+    exigent `is_staff` (cohérent avec `staff_member_required`, la barre de
+    navigation `admin_ui` et l'administration Django, vers laquelle ces pages
+    renvoient). Renvoie 403 si l'utilisateur est connecté mais hors rôle,
+    redirige vers la connexion sinon.
     """
     from functools import wraps
     from django.core.exceptions import PermissionDenied
-    from django.contrib.auth.views import redirect_to_login
 
     def decorator(view_func):
         @wraps(view_func)
         def _wrapped(request, *args, **kwargs):
             user = request.user
             if not user.is_authenticated:
-                return redirect_to_login(request.get_full_path())
-            if user.is_superuser or user.groups.filter(name__in=roles).exists():
+                return _admin_login_redirect(request)
+            if user.is_superuser or (
+                    user.is_staff and user.groups.filter(name__in=roles).exists()):
                 return view_func(request, *args, **kwargs)
             raise PermissionDenied(
                 "Accès réservé au(x) rôle(s) : " + ", ".join(roles)
             )
         return _wrapped
     return decorator
+
+
+def staff_required(view_func):
+    """Restreint une vue au personnel (`is_staff`).
+
+    Redirige vers la connexion si anonyme (302), renvoie 403 sinon. Sert de
+    garde aux pages d'administration héritées (tableau de bord d'activité,
+    configuration bancaire) restées accessibles à tout utilisateur connecté.
+    """
+    from functools import wraps
+    from django.core.exceptions import PermissionDenied
+
+    @wraps(view_func)
+    def _wrapped(request, *args, **kwargs):
+        user = request.user
+        if not user.is_authenticated:
+            return _admin_login_redirect(request)
+        if user.is_staff or user.is_superuser:
+            return view_func(request, *args, **kwargs)
+        raise PermissionDenied("Accès réservé au personnel.")
+    return _wrapped
 
 
 def set_language(request):
@@ -85,8 +114,8 @@ def robots_txt(request):
     from django.http import HttpResponse
     SITE = 'https://pixelsoftwaredesign.xyz'
     PRIVATE = [
-        '/api/', '/admin/', '/login/', '/pixsoftpay/',
-        '/ecommerce/panier/', '/social/messagerie/',
+        '/api/', '/admin/', '/login/', '/pixsoftpay/', '/dashboard/',
+        '/admin-bancaire/', '/ecommerce/panier/', '/social/messagerie/',
     ]
     BLOCK = ''.join('Disallow: %s\n' % p for p in PRIVATE)
     agents = [
@@ -1715,7 +1744,7 @@ def portail(request):
     })
 
 # ─── Administration bancaire ─────────────────────────────────
-@login_required
+@staff_required
 def admin_bancaire(request):
     banques = ConfigurationBancaire.objects.all()
     configs_enligne = ConfigurationPaiementEnLigne.objects.all()
@@ -1785,7 +1814,8 @@ def api_me(request):
         })
     return JsonResponse({"status": "success", "user": None})
 
-# ─── Dashboard central ──────────────────────────────────────
+# ─── Dashboard central (activité — réservé au personnel) ────
+@staff_required
 def dashboard(request):
     from django.db.models import Sum, Count
     stats = {
@@ -3541,8 +3571,7 @@ def api_pixsoftpay_profile_photo(request):
     profile.save()
     return JsonResponse({'status': 'success', 'url': profile.photo.url if profile.photo else ''})
 
-@login_required
-@staff_member_required
+@staff_required
 def admin_receptions_dashboard(request):
     from .models import CommandeECommerce, ProjetContact, Candidature
     commandes = CommandeECommerce.objects.all().order_by('-date_commande')[:10]
@@ -3700,6 +3729,19 @@ def admin_roles(request):
             if role:
                 group = Group.objects.filter(name=role).first() or Group.objects.create(name=role)
                 target.groups.set([group])
+                # Attribuer un rôle suppose l'accès à l'espace d'administration :
+                # on accorde `is_staff` (et réactive le compte) pour que la
+                # personne puisse réellement ouvrir les tableaux de bord et
+                # l'administration Django vers lesquels ils renvoient.
+                changed = []
+                if not target.is_staff:
+                    target.is_staff = True
+                    changed.append('is_staff')
+                if not target.is_active:
+                    target.is_active = True
+                    changed.append('is_active')
+                if changed:
+                    target.save(update_fields=changed)
             else:
                 target.groups.clear()
             messages.success(

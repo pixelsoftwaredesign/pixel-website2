@@ -90,8 +90,15 @@ def _user_roles(user):
 
 
 def user_can(user, dashboard):
-    """Vrai si l'utilisateur peut accéder au dashboard donné."""
+    """Vrai si l'utilisateur peut accéder au dashboard donné.
+
+    L'espace d'administration est réservé au personnel : un utilisateur
+    connecté mais non-`is_staff` ne voit aucune entrée (cohérent avec
+    `staff_member_required` et le décorateur `role_required`).
+    """
     if not user or not user.is_authenticated:
+        return False
+    if not (user.is_staff or user.is_superuser):
         return False
     if user.is_superuser:
         return True
