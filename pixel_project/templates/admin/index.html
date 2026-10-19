@@ -1,7 +1,18 @@
 {% extends "admin/base_site.html" %}
-{% load i18n static %}
+{% load i18n static admin_ui %}
 
-{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static "admin/css/dashboard.css" %}">{% endblock %}
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static "admin/css/dashboard.css" %}">
+<style>
+  .px-dash-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+  .px-roles{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+  .px-role{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--hairline-color,#e0e0e0);border-radius:12px;background:var(--body-bg,#fff);text-decoration:none;transition:box-shadow .15s,border-color .15s,transform .15s}
+  .px-role:hover{border-color:var(--primary,#417690);box-shadow:0 8px 20px -14px rgba(0,0,0,.5);transform:translateY(-2px)}
+  .px-role .px-role-ic{width:42px;height:42px;flex:0 0 auto;display:grid;place-items:center;border-radius:10px;font-size:1.2rem;background:rgba(65,118,144,.12)}
+  .px-role .px-role-tx{display:flex;flex-direction:column;line-height:1.25;min-width:0}
+  .px-role .px-role-tx strong{font-size:.95rem}
+  .px-role .px-role-tx small{color:var(--body-quiet-color,#666);font-size:.76rem}
+  .module.px-module{border-radius:12px;overflow:hidden}
+</style>{% endblock %}
 
 {% block coltype %}colMS{% endblock %}
 
@@ -13,16 +24,22 @@
 
 {% block content %}
 <div id="content-main">
-  <div class="module">
-    <h2>Tableaux de bord par rôle</h2>
-    <ul class="dashboard-apps">
-      <li class="app-"><a href="{% url 'admin_receptions_dashboard' %}">📋 Réceptions (Commandes + Devis)</a></li>
-      <li class="app-"><a href="{% url 'admin_dashboard_commercial' %}">💼 Commercial</a></li>
-      <li class="app-"><a href="{% url 'admin_dashboard_comptable' %}">💳 Comptable</a></li>
-      <li class="app-"><a href="{% url 'admin_dashboard_editeur' %}">✍️ Éditeur</a></li>
-      <li class="app-"><a href="{% url 'admin_dashboard_superadmin' %}">🔐 SuperAdmin</a></li>
-      <li class="app-"><a href="{% url 'admin_dashboard_admin' %}">🛠️ Admin</a></li>
-    </ul>
+  {% load admin_ui %}
+  {% admin_nav user request.path as nav_groups %}
+  <div class="module" style="padding:16px 18px">
+    <div class="px-roles">
+      {% for group in nav_groups %}
+        {% for item in group.items %}
+        <a class="px-role" href="{{ item.url }}">
+          <span class="px-role-ic" aria-hidden="true">{{ item.icon }}</span>
+          <span class="px-role-tx">
+            <strong>{{ item.label }}</strong>
+            <small>{{ item.desc }}</small>
+          </span>
+        </a>
+        {% endfor %}
+      {% endfor %}
+    </div>
   </div>
   {% include "admin/app_list.html" with app_list=app_list show_changelinks=True %}
 </div>

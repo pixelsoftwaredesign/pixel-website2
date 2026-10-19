@@ -1,0 +1,98 @@
+{% extends 'studio/base.html' %}
+{% load static admin_ui %}
+{% block extrahead %}
+<link rel="stylesheet" href="{% static 'css/admin-ui.css' %}">
+{% block admin_extrahead %}{% endblock %}
+{% endblock %}
+
+{% block body %}
+{% admin_role user as role_label %}
+{% admin_nav user request.path as nav_groups %}
+<div class="pxadmin" id="pxadmin">
+  <div class="pxadmin-overlay" data-pxadmin-close></div>
+
+  <aside class="pxadmin-sidebar" id="pxadminSidebar">
+    <div class="pxadmin-brand">
+      <span class="pxadmin-brand-mark">P</span>
+      <span class="pxadmin-brand-text">
+        <strong>Pixel</strong>
+        <small>Espace admin</small>
+      </span>
+      <button class="pxadmin-close" type="button" data-pxadmin-close aria-label="Fermer le menu">&times;</button>
+    </div>
+
+    <nav class="pxadmin-nav" aria-label="Navigation administration">
+      {% for group in nav_groups %}
+      <div class="pxadmin-nav-group">
+        <p class="pxadmin-nav-title">{{ group.name }}</p>
+        {% for item in group.items %}
+        <a class="pxadmin-nav-link{% if item.active %} active{% endif %}" href="{{ item.url }}"{% if item.active %} aria-current="page"{% endif %}>
+          <span class="pxadmin-nav-icon" aria-hidden="true">{{ item.icon }}</span>
+          <span class="pxadmin-nav-text">
+            <strong>{{ item.label }}</strong>
+            <small>{{ item.desc }}</small>
+          </span>
+        </a>
+        {% endfor %}
+      </div>
+      {% endfor %}
+    </nav>
+
+    <div class="pxadmin-sidebar-foot">
+      <p class="pxadmin-foot-label">Raccourcis</p>
+      <a class="pxadmin-btn pxadmin-btn--ghost" href="/" target="_blank" rel="noopener">↗ Voir le site</a>
+      <a class="pxadmin-btn pxadmin-btn--ghost" href="/admin/">⚙ Administration Django</a>
+    </div>
+  </aside>
+
+  <div class="pxadmin-main">
+    <header class="pxadmin-topbar">
+      <button class="pxadmin-burger" type="button" data-pxadmin-open aria-label="Ouvrir le menu">☰</button>
+      <div class="pxadmin-page-title">
+        <h1>{% block admin_title %}Administration{% endblock %}</h1>
+        <p>{% block admin_subtitle %}Espace de gestion Pixel Software Design{% endblock %}</p>
+      </div>
+      <div class="pxadmin-topbar-actions">
+        <span class="pxadmin-user">
+          <span class="pxadmin-avatar" aria-hidden="true">{{ user.username|first|upper }}</span>
+          <span class="pxadmin-user-meta">
+            <strong>{{ user.get_full_name|default:user.username }}</strong>
+            <small>{{ role_label }}</small>
+          </span>
+        </span>
+        <form class="pxadmin-inline" method="post" action="/admin/logout/">
+          {% csrf_token %}
+          <button class="pxadmin-btn pxadmin-btn--danger" type="submit">Déconnexion</button>
+        </form>
+      </div>
+    </header>
+
+    <main class="pxadmin-content">
+      {% block admin_content %}{% endblock %}
+    </main>
+
+    <footer class="pxadmin-footer">
+      <span>© {% now "Y" %} Pixel Software Design — Espace administration</span>
+      <span>{% now "d/m/Y H:i" %}</span>
+    </footer>
+  </div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+<script>
+(function () {
+  var root = document.getElementById('pxadmin');
+  if (!root) return;
+  document.querySelectorAll('[data-pxadmin-open]').forEach(function (b) {
+    b.addEventListener('click', function () { root.classList.add('is-open'); });
+  });
+  document.querySelectorAll('[data-pxadmin-close]').forEach(function (b) {
+    b.addEventListener('click', function () { root.classList.remove('is-open'); });
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') root.classList.remove('is-open');
+  });
+})();
+</script>
+{% endblock %}

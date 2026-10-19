@@ -1,0 +1,8 @@
+{% if statut == 'panier' %}<span class="px-badge px-badge--neutral">Panier</span>
+{% elif statut == 'en_attente' %}<span class="px-badge px-badge--warn">En attente</span>
+{% elif statut == 'confirmee' %}<span class="px-badge px-badge--success">Confirmée</span>
+{% elif statut == 'preparation' %}<span class="px-badge px-badge--violet">En préparation</span>
+{% elif statut == 'expediee' %}<span class="px-badge px-badge--info">Expédiée</span>
+{% elif statut == 'livree' %}<span class="px-badge px-badge--success">Livrée</span>
+{% elif statut == 'annulee' %}<span class="px-badge px-badge--danger">Annulée</span>
+{% else %}<span class="px-badge px-badge--neutral">{{ statut|default:"—" }}</span>{% endif %}

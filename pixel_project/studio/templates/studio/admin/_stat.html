@@ -1,0 +1,8 @@
+{% if href %}<a class="stat-card{% if accent %} stat-card--{{ accent }}{% endif %}" href="{{ href }}">{% else %}<div class="stat-card{% if accent %} stat-card--{{ accent }}{% endif %}">{% endif %}
+  <span class="stat-icon" aria-hidden="true">{{ icon }}</span>
+  <span class="stat-body">
+    <span class="stat-value">{{ value }}</span>
+    <span class="stat-label">{{ label }}</span>
+    {% if hint %}<span class="stat-hint">{{ hint }}</span>{% endif %}
+  </span>
+{% if href %}</a>{% else %}</div>{% endif %}

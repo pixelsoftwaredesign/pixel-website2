@@ -3322,27 +3322,52 @@ def admin_receptions_dashboard(request):
 def admin_dashboard_commercial(request):
     from .models import ProjetContact, Candidature
     contacts = ProjetContact.objects.all().order_by('-date_reception')[:10]
+    total_contacts = ProjetContact.objects.count()
+    contacts_non_repondus = ProjetContact.objects.filter(a_repondu=False).count()
+    contacts_repondus = ProjetContact.objects.filter(a_repondu=True).count()
     try:
         total_candidatures = Candidature.objects.count()
     except Exception:
         total_candidatures = 0
+    if total_contacts:
+        taux_reponse_label = "%d%% de réponse" % round(contacts_repondus * 100 / total_contacts)
+    else:
+        taux_reponse_label = ""
     return render(request, 'studio/admin_dashboard_commercial.html', {
         'contacts': contacts,
-        'total_contacts': ProjetContact.objects.count(),
-        'contacts_non_repondus': ProjetContact.objects.filter(a_repondu=False).count(),
+        'total_contacts': total_contacts,
+        'contacts_non_repondus': contacts_non_repondus,
+        'contacts_repondus': contacts_repondus,
+        'taux_reponse_label': taux_reponse_label,
         'total_candidatures': total_candidatures,
     })
 
 @role_required('Comptable', 'SuperAdmin', 'Admin')
 def admin_dashboard_comptable(request):
+    from django.db.models import Sum
     from .models import CommandeECommerce
+    # Statuts considérés comme « confirmés » (au-delà du panier / de l'attente).
+    STATUTS_CONFIRMES = ['confirmee', 'preparation', 'expediee', 'livree']
     commandes = CommandeECommerce.objects.all().order_by('-date_commande')[:10]
+    total_commandes = CommandeECommerce.objects.count()
+    payees = CommandeECommerce.objects.filter(statut__in=STATUTS_CONFIRMES).count()
+    try:
+        montant = CommandeECommerce.objects.filter(
+            statut__in=STATUTS_CONFIRMES).aggregate(s=Sum('total_ttc'))['s'] or 0
+    except Exception:
+        montant = 0
+    if total_commandes:
+        taux_paiement_label = "%d%% confirmées" % round(payees * 100 / total_commandes)
+    else:
+        taux_paiement_label = ""
     return render(request, 'studio/admin_dashboard_comptable.html', {
         'commandes': commandes,
-        'total_commandes': CommandeECommerce.objects.count(),
+        'total_commandes': total_commandes,
         'nouvelles_commandes': CommandeECommerce.objects.filter(statut='en_attente').count(),
-        'payees': CommandeECommerce.objects.filter(statut='paye').count(),
-        'livrees': CommandeECommerce.objects.filter(statut='livre').count(),
+        'payees': payees,
+        'livrees': CommandeECommerce.objects.filter(statut='livree').count(),
+        'montant_encaisse': "{:,.2f}".format(montant).replace(',', ' '),
+        'taux_paiement_label': taux_paiement_label,
     })
 
 @role_required('Editeur', 'SuperAdmin', 'Admin')
@@ -3360,21 +3385,28 @@ def admin_dashboard_editeur(request):
 
 @role_required('SuperAdmin')
 def admin_dashboard_superadmin(request):
-    from .models import CommandeECommerce, ProjetContact, Produit
+    from .models import CommandeECommerce, ProjetContact, Produit, Candidature
     commandes = CommandeECommerce.objects.all().order_by('-date_commande')[:10]
+    try:
+        total_candidatures = Candidature.objects.count()
+    except Exception:
+        total_candidatures = 0
     return render(request, 'studio/admin_dashboard_superadmin.html', {
         'commandes': commandes,
         'total_users': User.objects.count(),
         'total_commandes': CommandeECommerce.objects.count(),
         'total_contacts': ProjetContact.objects.count(),
         'total_produits': Produit.objects.count(),
+        'total_candidatures': total_candidatures,
     })
 
 @role_required('Admin', 'SuperAdmin')
 def admin_dashboard_admin(request):
-    from django.contrib.auth.models import User, Group
+    from django.contrib.auth.models import Group
     from .models import CommandeECommerce, ProjetContact
+    commandes = CommandeECommerce.objects.all().order_by('-date_commande')[:10]
     return render(request, 'studio/admin_dashboard_admin.html', {
+        'commandes': commandes,
         'total_users': User.objects.count(),
         'total_groups': Group.objects.count(),
         'total_commandes': CommandeECommerce.objects.count(),

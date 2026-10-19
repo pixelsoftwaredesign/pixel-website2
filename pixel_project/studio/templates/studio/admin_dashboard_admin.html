@@ -1,17 +1,77 @@
-{% extends 'studio/base.html' %}
-{% load static %}
-{% block title %}Dashboard Admin{% endblock %}
-{% block content %}
-<div class="container py-5" style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); min-height: 100vh; color: #e2e8f0;">
-  <div class="row mb-4"><div class="col-12"><h1 class="h3 mb-1">🛠️ Dashboard Admin</h1><p class="text-muted mb-0">Gestion technique & système</p></div></div>
-  <div class="row g-3 mb-4">
-    <div class="col-md-3"><div class="card bg-dark text-light border border-secondary"><div class="card-body"><h6 class="text-muted">Utilisateurs</h6><h2>{{ total_users }}</h2></div></div></div>
-    <div class="col-md-3"><div class="card bg-dark text-light border border-secondary"><div class="card-body"><h6 class="text-muted">Groupes</h6><h2>{{ total_groups }}</h2></div></div></div>
-    <div class="col-md-3"><div class="card bg-dark text-light border border-secondary"><div class="card-body"><h6 class="text-muted">Commandes</h6><h2>{{ total_commandes }}</h2></div></div></div>
-    <div class="col-md-3"><div class="card bg-dark text-light border border-secondary"><div class="card-body"><h6 class="text-muted">Demandes</h6><h2>{{ total_contacts }}</h2></div></div></div>
-  </div>
-  <div class="row g-3">
-    <div class="col-md-6"><div class="card bg-dark text-light border border-secondary"><div class="card-header bg-dark border-bottom border-secondary"><h5 class="mb-0">Administration</h5></div><div class="list-group list-group-flush bg-dark"><a href="/admin/" class="list-group-item list-group-item-action bg-dark text-light">Admin Django</a><a href="/admin/auth/user/" class="list-group-item list-group-item-action bg-dark text-light">Utilisateurs</a><a href="/admin/auth/group/" class="list-group-item list-group-item-action bg-dark text-light">Groupes & Rôles</a><a href="/admin/studio/commandecommerce/" class="list-group-item list-group-item-action bg-dark text-light">Commandes</a><a href="/admin/studio/projetcontact/" class="list-group-item list-group-item-action bg-dark text-light">Demandes de projet</a></div></div></div>
-  </div>
+{% extends 'studio/admin_base.html' %}
+{% block title %}Admin — Espace admin{% endblock %}
+{% block admin_title %}🛠️ Admin{% endblock %}
+{% block admin_subtitle %}Système, utilisateurs, rôles et supervision des modèles{% endblock %}
+
+{% block admin_content %}
+
+<div class="pxadmin-stats">
+  {% include "studio/admin/_stat.html" with label="Utilisateurs" value=total_users icon="👥" accent="sky" %}
+  {% include "studio/admin/_stat.html" with label="Groupes" value=total_groups icon="🛡️" accent="violet" %}
+  {% include "studio/admin/_stat.html" with label="Commandes" value=total_commandes icon="🛒" accent="emerald" %}
+  {% include "studio/admin/_stat.html" with label="Demandes" value=total_contacts icon="📄" accent="amber" %}
 </div>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>⚡ Accès rapides</h2>
+  </div>
+  <div class="panel-body">
+    <div class="pxadmin-links">
+      <a class="pxadmin-link" href="/admin/auth/user/">
+        <span class="pxadmin-link-icon">👥</span>
+        <span class="pxadmin-link-text"><strong>Utilisateurs</strong><small>Comptes</small></span>
+      </a>
+      <a class="pxadmin-link" href="/admin/auth/group/">
+        <span class="pxadmin-link-icon">🛡️</span>
+        <span class="pxadmin-link-text"><strong>Groupes</strong><small>Rôles & droits</small></span>
+      </a>
+      <a class="pxadmin-link" href="/admin/studio/userprofile/">
+        <span class="pxadmin-link-icon">🪪</span>
+        <span class="pxadmin-link-text"><strong>Profils</strong><small>UserProfile</small></span>
+      </a>
+      <a class="pxadmin-link" href="/admin/studio/">
+        <span class="pxadmin-link-icon">🧩</span>
+        <span class="pxadmin-link-text"><strong>Studio</strong><small>Tous les modèles</small></span>
+      </a>
+      <a class="pxadmin-link" href="/admin/blockchain/">
+        <span class="pxadmin-link-icon">⛓️</span>
+        <span class="pxadmin-link-text"><strong>Blockchain</strong><small>Chaîne & wallets</small></span>
+      </a>
+      <a class="pxadmin-link" href="/admin/">
+        <span class="pxadmin-link-icon">⚙️</span>
+        <span class="pxadmin-link-text"><strong>Admin Django</strong><small>Tableau de bord</small></span>
+      </a>
+    </div>
+  </div>
+</section>
+
+{% if commandes %}
+<section class="panel">
+  <div class="panel-head">
+    <h2>🛒 Dernières commandes</h2>
+    <a class="pxadmin-btn pxadmin-btn--sm" href="/admin/studio/commandecommerce/">Voir tout ↗</a>
+  </div>
+  <div class="panel-body panel-body--flush">
+    <div class="table-responsive">
+      <table class="pxadmin-table">
+        <thead>
+          <tr><th>Référence</th><th>Client</th><th>Statut</th><th>Date</th></tr>
+        </thead>
+        <tbody>
+          {% for cmd in commandes %}
+          <tr>
+            <td class="cell-strong">{{ cmd.reference }}</td>
+            <td>{{ cmd.client_nom }}</td>
+            <td>{% include "studio/admin/_statut.html" with statut=cmd.statut %}</td>
+            <td class="cell-nowrap cell-muted">{{ cmd.date_commande|date:"d/m/Y H:i" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+{% endif %}
+
 {% endblock %}

@@ -1,0 +1,14 @@
+{% extends "admin/base.html" %}
+{% load i18n static %}
+
+{% block title %}{{ title|default:_("Administration") }} | Pixel Software Design{% endblock %}
+
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'css/admin-django.css' %}">{% endblock %}
+
+{% block branding %}
+<div id="site-name">
+  <a href="{% url 'admin:index' %}">Pixel Software Design <span class="px-admin-tag">Administration</span></a>
+</div>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}

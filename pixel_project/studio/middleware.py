@@ -135,6 +135,9 @@ class LanguageInjectMiddleware:
 
     def __call__(self, request):
         response = self.get_response(request)
+        # L'espace d'administration n'utilise pas le traducteur DOM.
+        if request.path.startswith('/admin/'):
+            return response
         try:
             content_type = response.get('Content-Type', '')
             if 'text/html' not in content_type:
@@ -423,6 +426,11 @@ class SEOInjectMiddleware:
     def __call__(self, request):
         lang = getattr(request, 'LANGUAGE_CODE', 'fr') or 'fr'
         response = self.get_response(request)
+        # Pas de métadonnées SEO publiques sur l'administration ; on demande
+        # simplement aux moteurs de ne pas indexer ces pages.
+        if request.path.startswith('/admin/'):
+            response['X-Robots-Tag'] = 'noindex, nofollow'
+            return response
         try:
             content_type = response.get('Content-Type', '')
             if 'text/html' not in content_type:
