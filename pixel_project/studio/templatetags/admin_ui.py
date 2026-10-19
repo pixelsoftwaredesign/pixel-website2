@@ -67,6 +67,15 @@ DASHBOARDS = [
         'roles': ['Admin', 'SuperAdmin'],
         'group': 'Système',
     },
+    {
+        'key': 'roles',
+        'label': 'Rôles & accès',
+        'desc': 'Groupes & membres',
+        'icon': '🛡️',
+        'url': '/admin/roles/',
+        'roles': ['Admin', 'SuperAdmin'],
+        'group': 'Système',
+    },
 ]
 
 # Ordre de priorité pour l'étiquette de rôle affichée.

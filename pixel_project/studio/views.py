@@ -3412,3 +3412,95 @@ def admin_dashboard_admin(request):
         'total_commandes': CommandeECommerce.objects.count(),
         'total_contacts': ProjetContact.objects.count(),
     })
+
+
+# Rôles gérés par l'espace d'administration (groupes créés par la migration 0026).
+ROLE_GROUPS = ['SuperAdmin', 'Admin', 'Commercial', 'Comptable', 'Editeur']
+ROLE_ICONS = {
+    'SuperAdmin': '🔐',
+    'Admin': '🛠️',
+    'Commercial': '💼',
+    'Comptable': '💳',
+    'Editeur': '✍️',
+}
+
+
+@role_required('Admin', 'SuperAdmin')
+def admin_roles(request):
+    """Écran de gestion des rôles & accès (membres des groupes)."""
+    from django.contrib import messages
+    from django.contrib.auth.models import Group
+
+    is_super = request.user.is_superuser
+
+    if request.method == 'POST':
+        target = User.objects.filter(pk=request.POST.get('user_id')).first()
+        role = (request.POST.get('role') or '').strip()
+        target_is_super = bool(target and (
+            target.is_superuser or target.groups.filter(name='SuperAdmin').exists()))
+        if target is None:
+            messages.error(request, "Utilisateur introuvable.")
+        elif role and role not in ROLE_GROUPS:
+            messages.error(request, "Rôle inconnu.")
+        elif not is_super and (role == 'SuperAdmin' or target_is_super):
+            messages.error(request, "Seul un superutilisateur peut gérer le rôle SuperAdmin.")
+        else:
+            if role:
+                group = Group.objects.filter(name=role).first() or Group.objects.create(name=role)
+                target.groups.set([group])
+            else:
+                target.groups.clear()
+            messages.success(
+                request,
+                "%s → %s" % (target.username, role or "aucun rôle"),
+            )
+        return redirect('admin_roles')
+
+    role_cards = []
+    roles_used = 0
+    members_total = 0
+    for name in ROLE_GROUPS:
+        group = Group.objects.filter(name=name).first()
+        members = list(group.user_set.order_by('username')) if group else []
+        if members:
+            roles_used += 1
+            members_total += len(members)
+        role_cards.append({
+            'name': name,
+            'icon': ROLE_ICONS.get(name, '👤'),
+            'members': members,
+            'count': len(members),
+            'perms': group.permissions.count() if group else 0,
+            'id': group.id if group else None,
+        })
+
+    role_choices = list(ROLE_GROUPS) if is_super else [r for r in ROLE_GROUPS if r != 'SuperAdmin']
+
+    users = []
+    users_with_role = 0
+    for u in User.objects.prefetch_related('groups').order_by('username'):
+        names = {g.name for g in u.groups.all()}
+        current = next((n for n in ROLE_GROUPS if n in names), '')
+        protected = u.is_superuser or 'SuperAdmin' in names
+        if current:
+            users_with_role += 1
+        users.append({
+            'obj': u,
+            'role': current,
+            'protected': protected,
+            'editable': is_super or not protected,
+        })
+
+    total_roles = len(role_cards)
+    return render(request, 'studio/admin_roles.html', {
+        'role_cards': role_cards,
+        'users': users,
+        'role_choices': role_choices,
+        'can_manage_super': is_super,
+        'total_users': len(users),
+        'total_roles': total_roles,
+        'users_with_role': users_with_role,
+        'users_without_role': len(users) - users_with_role,
+        'roles_used': roles_used,
+        'members_total': members_total,
+    })

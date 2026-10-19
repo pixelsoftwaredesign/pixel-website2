@@ -68,6 +68,13 @@
     </header>
 
     <main class="pxadmin-content">
+      {% if messages %}
+      <div class="pxadmin-flashes">
+        {% for message in messages %}
+        <div class="pxadmin-flash pxadmin-flash--{{ m.tags }}" role="status">{{ message }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
       {% block admin_content %}{% endblock %}
     </main>
 

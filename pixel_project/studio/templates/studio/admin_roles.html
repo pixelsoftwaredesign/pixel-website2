@@ -1,0 +1,103 @@
+{% extends 'studio/admin_base.html' %}
+{% block title %}Rôles & accès — Espace admin{% endblock %}
+{% block admin_title %}🛡️ Rôles & accès{% endblock %}
+{% block admin_subtitle %}Répartition des rôles, membres des groupes et permissions{% endblock %}
+
+{% block admin_content %}
+
+<div class="pxadmin-stats">
+  {% include "studio/admin/_stat.html" with label="Rôles" value=total_roles icon="🛡️" accent="violet" %}
+  {% include "studio/admin/_stat.html" with label="Utilisés" value=roles_used icon="✅" accent="emerald" %}
+  {% include "studio/admin/_stat.html" with label="Utilisateurs" value=total_users icon="👥" accent="sky" %}
+  {% include "studio/admin/_stat.html" with label="Sans rôle" value=users_without_role icon="➖" accent="amber" %}
+</div>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>🛡️ Rôles</h2>
+    <span class="panel-sub">{{ roles_used }} rôle(s) attribué(s) · {{ members_total }} affectation(s)</span>
+  </div>
+  <div class="panel-body">
+    <div class="px-roles">
+      {% for r in role_cards %}
+      <article class="px-role-card{% if r.count %} is-active{% endif %}">
+        <header class="px-role-head">
+          <span class="px-role-icon" aria-hidden="true">{{ r.icon }}</span>
+          <div class="px-role-title">
+            <strong>{{ r.name }}</strong>
+            <small>{{ r.count }} membre{{ r.count|pluralize }} · {{ r.perms }} permission{{ r.perms|pluralize }}</small>
+          </div>
+        </header>
+        <div class="px-role-members">
+          {% for m in r.members %}
+          <span class="px-chip" title="{{ m.email }}">{{ m.username }}</span>
+          {% empty %}
+          <span class="px-chip px-chip--muted">Aucun membre</span>
+          {% endfor %}
+        </div>
+        {% if r.id and perms.auth.view_group %}
+        <a class="pxadmin-btn pxadmin-btn--sm pxadmin-btn--ghost" href="/admin/auth/group/{{ r.id }}/change/">Permissions ↗</a>
+        {% endif %}
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>👥 Utilisateurs & rôles</h2>
+    <span class="panel-sub">{{ users_with_role }} affecté(s) · {{ users_without_role }} sans rôle</span>
+  </div>
+  <div class="panel-body panel-body--flush">
+    <div class="table-responsive">
+      <table class="pxadmin-table">
+        <thead>
+          <tr><th>Utilisateur</th><th>Email</th><th>Statut</th><th>Rôle</th><th>Attribuer</th></tr>
+        </thead>
+        <tbody>
+          {% for row in users %}
+          <tr>
+            <td class="cell-strong">
+              {{ row.obj.username }}
+              {% if row.obj.is_superuser %}<span class="px-badge px-badge--violet">superuser</span>{% endif %}
+            </td>
+            <td class="cell-muted">{{ row.obj.email|default:"—" }}</td>
+            <td class="cell-nowrap">
+              {% if row.obj.is_active %}<span class="px-badge px-badge--success">actif</span>{% else %}<span class="px-badge px-badge--danger">inactif</span>{% endif %}
+              {% if row.obj.is_staff %} <span class="px-badge px-badge--neutral">staff</span>{% endif %}
+            </td>
+            <td>
+              {% if row.role %}<span class="px-badge px-badge--info">{{ row.role }}</span>
+              {% else %}<span class="px-badge px-badge--neutral">aucun</span>{% endif %}
+            </td>
+            <td>
+              {% if row.editable %}
+              <form class="pxadmin-inline" method="post" action="">
+                {% csrf_token %}
+                <input type="hidden" name="user_id" value="{{ row.obj.id }}">
+                <select name="role" class="pxadmin-select" aria-label="Rôle de {{ row.obj.username }}">
+                  <option value="">— aucun —</option>
+                  {% for choice in role_choices %}
+                  <option value="{{ choice }}"{% if choice == row.role %} selected{% endif %}>{{ choice }}</option>
+                  {% endfor %}
+                </select>
+                <button class="pxadmin-btn pxadmin-btn--sm pxadmin-btn--accent" type="submit">OK</button>
+              </form>
+              {% else %}
+              <span class="pxadmin-hint">🔒 non modifiable</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+{% if not can_manage_super %}
+<p class="pxadmin-note">Seul un superutilisateur peut attribuer ou retirer le rôle <strong>SuperAdmin</strong>.</p>
+{% endif %}
+
+{% endblock %}

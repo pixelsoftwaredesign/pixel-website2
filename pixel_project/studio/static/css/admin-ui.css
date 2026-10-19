@@ -371,6 +371,48 @@ form.pxadmin-inline { display: inline; margin: 0; }
   color: var(--px-muted); font-size: .83rem;
 }
 
+/* ── Rôles & accès ───────────────────────────────────────── */
+.pxadmin-flashes { display: flex; flex-direction: column; gap: 8px; }
+.pxadmin-flash {
+  padding: 11px 15px; border-radius: 12px; font-size: .86rem;
+  border: 1px solid var(--px-border); background: rgba(255, 255, 255, .04);
+  color: var(--px-text);
+}
+.pxadmin-flash--success, .pxadmin-flash--debug { border-color: rgba(52, 211, 153, .35); background: rgba(52, 211, 153, .1); color: #6ee7b7; }
+.pxadmin-flash--error, .pxadmin-flash--danger { border-color: rgba(251, 113, 133, .35); background: rgba(251, 113, 133, .1); color: #fda4af; }
+.pxadmin-flash--warning { border-color: rgba(251, 191, 36, .35); background: rgba(251, 191, 36, .1); color: #fcd34d; }
+.pxadmin-flash--info { border-color: rgba(56, 189, 248, .35); background: rgba(56, 189, 248, .1); color: #7dd3fc; }
+
+.px-roles { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
+.px-role-card {
+  display: flex; flex-direction: column; gap: 12px;
+  padding: 16px; border-radius: 14px;
+  border: 1px solid var(--px-border); background: rgba(255, 255, 255, .035);
+}
+.px-role-card.is-active { border-color: rgba(56, 189, 248, .35); background: rgba(56, 189, 248, .06); }
+.px-role-head { display: flex; align-items: center; gap: 11px; }
+.px-role-icon {
+  width: 42px; height: 42px; flex: 0 0 auto; display: grid; place-items: center;
+  font-size: 1.3rem; border-radius: 12px;
+  background: rgba(255, 255, 255, .06); border: 1px solid var(--px-border);
+}
+.px-role-title { display: flex; flex-direction: column; min-width: 0; }
+.px-role-title strong { font-size: .96rem; }
+.px-role-title small { color: var(--px-muted); font-size: .74rem; }
+.px-role-members { display: flex; flex-wrap: wrap; gap: 6px; }
+.px-chip {
+  padding: 3px 10px; border-radius: 999px; font-size: .76rem;
+  border: 1px solid var(--px-border); background: rgba(255, 255, 255, .05); color: var(--px-text);
+}
+.px-chip--muted { color: var(--px-muted); font-style: italic; }
+.pxadmin-select {
+  padding: 7px 10px; border-radius: 8px; font-size: .82rem;
+  background: rgba(255, 255, 255, .05); color: var(--px-text);
+  border: 1px solid var(--px-border); cursor: pointer;
+}
+.pxadmin-hint { color: var(--px-muted); font-size: .8rem; }
+.pxadmin-note { margin: 0; color: var(--px-muted); font-size: .82rem; }
+
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 1024px) {
   .pxadmin-sidebar {

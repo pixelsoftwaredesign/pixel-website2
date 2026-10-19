@@ -177,4 +177,5 @@ urlpatterns = [
     path('admin/dash/editeur/', views.admin_dashboard_editeur, name='admin_dashboard_editeur'),
     path('admin/dash/superadmin/', views.admin_dashboard_superadmin, name='admin_dashboard_superadmin'),
     path('admin/dash/admin/', views.admin_dashboard_admin, name='admin_dashboard_admin'),
+    path('admin/roles/', views.admin_roles, name='admin_roles'),
 ]
