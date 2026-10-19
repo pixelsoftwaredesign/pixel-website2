@@ -12,6 +12,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.utils import timezone
 from .models import UserProfile, ProjetContact, AtelierProfile, PortfolioProject, CodeRepository, GraphismeResource, ERPModule, ERPSubscription, ERPDemoRecord, ERPClient, ERPMembership, Moniteur, Candidat, Vehicule, Lecon, Examen, Medecin, Patient, Lit, RendezVous, FacturationSante, ClientHotel, Chambre, ReservationHotel, ServiceHotel, Categorie, Fournisseur, Produit, Vente, ClientJuridique, DossierJuridique, Audience, JournalComptable, EcritureComptable, Facture, DeclarationFiscale, Employe, Contrat, FichePaie, Conge, Formation, MenuItem, TableRestaurant, SoftCodeModule, StudioProject3D, PatisserieRecipe, PatisserieProduct, PlanAbonnement, SouscriptionClient, Paiement, CleActivation, ConfigurationBancaire, ConfigurationPaiementEnLigne, Candidature, MouvementStock, CommandeECommerce, CommandeECommerceItem, Temoignage, PixMailAccount, PixMailContact, PixMailMessage, PixMailAttachment, PixMailFolder, PixMailSignature, SocialProfile, Follow, Post, Like, Comment, Notification, Conversation, ConversationMember, EncryptedMessage, Wallet, Transaction, TwoFactorAuth, Referral, REFERRAL_BONUS_AMOUNT, REFERRAL_THRESHOLD, KYCVerification, NewsletterSubscriber, NewsletterCampaign
+from django.urls import NoReverseMatch, reverse
 from .services import notifier_activation_cle, notifier_confirmation_commande, notifier_statut_commande
 
 
@@ -198,8 +199,8 @@ GESTIACTIV_MODULES = [
     {'slug': 'juridique', 'label': 'Juridique', 'icon': '⚖️', 'path': 'juridique'},
     {'slug': 'comptabilite', 'label': 'Comptabilité', 'icon': '📊', 'path': 'comptabilite'},
     {'slug': 'rh-paie', 'label': 'RH & Paie', 'icon': '👥', 'path': 'rh'},
-    {'slug': 'restaurant', 'label': 'Restaurant & Café', 'icon': '🍽️', 'path': None},
-    {'slug': 'patisserie', 'label': 'Pâtisserie & Boulangerie', 'icon': '🧁', 'path': None},
+    {'slug': 'restaurant', 'label': 'Restaurant & Café', 'icon': '🍽️', 'path': 'restaurant'},
+    {'slug': 'patisserie', 'label': 'Pâtisserie & Boulangerie', 'icon': '🧁', 'path': 'patisserie'},
 ]
 GESTIACTIV_SLUGS = {m['slug'] for m in GESTIACTIV_MODULES}
 GESTIACTIV_LABELS = {m['slug']: m['label'] for m in GESTIACTIV_MODULES}
@@ -215,6 +216,60 @@ def _erp_membership(user):
             .filter(user=user, client__is_active=True)
             .order_by('id')
             .first())
+
+
+def _erp_scope(request):
+    """Contexte multi-tenant d'un backend métier.
+
+    Retourne (client, unrestricted) :
+      - client       : entreprise de rattachement de l'utilisateur (None si absent) ;
+      - unrestricted : True => accès à toutes les données (staff Pixel sans
+        rattachement : panneaux de démonstration du site principal).
+    """
+    membership = _erp_membership(request.user)
+    if membership is not None:
+        return membership.client, False
+    if request.user.is_staff or request.user.is_superuser:
+        return None, True
+    return None, False
+
+
+def _tenant_ctx(request):
+    """(client, unrestricted, qs) : isolation des données par entreprise.
+
+    `qs(model)` renvoie le queryset des objets de l'entreprise courante
+    (ou l'ensemble des objets pour un staff Pixel non rattaché).
+    """
+    client, unrestricted = _erp_scope(request)
+    if unrestricted:
+        def qs(model):
+            return model.objects.all()
+    else:
+        def qs(model):
+            return model.objects.filter(erp_client=client)
+    return client, unrestricted, qs
+
+
+def _tenant_home():
+    """URL de repli pour un utilisateur sans entreprise rattachée."""
+    for name in ('gestiactiv_onboarding', 'gestiactiv_espace', 'gestiactiv', 'index'):
+        try:
+            return reverse(name)
+        except NoReverseMatch:
+            continue
+    return '/'
+
+
+def _tenant_or_redirect(request):
+    """(client, qs, None) ou (None, None, réponse de redirection).
+
+    Un utilisateur authentifié sans rattachement ERP et sans statut staff
+    est renvoyé vers l'onboarding GestiActiv plutôt que de voir des données.
+    """
+    client, unrestricted, qs = _tenant_ctx(request)
+    if client is None and not unrestricted:
+        return None, None, redirect(_tenant_home())
+    return client, qs, None
 
 
 def gestiactiv_home(request):
@@ -347,90 +402,98 @@ def gestiactiv_espace(request):
 
 @login_required
 def gestion_auto_ecole(request):
+    client, qs, redirect_response = _tenant_or_redirect(request)
+    if redirect_response is not None:
+        return redirect_response
     if request.method == 'POST':
         action = request.POST.get('action')
         eid = request.POST.get('edit_id')
         if action == 'add_candidat':
             if eid:
-                o = Candidat.objects.get(id=eid); o.nom=request.POST['nom']; o.telephone=request.POST.get('telephone',''); o.type_permis=request.POST.get('type_permis','B'); o.save()
+                o = get_object_or_404(qs(Candidat), id=eid); o.nom=request.POST['nom']; o.telephone=request.POST.get('telephone',''); o.type_permis=request.POST.get('type_permis','B'); o.save()
             else:
-                Candidat.objects.create(nom=request.POST['nom'], telephone=request.POST.get('telephone',''), type_permis=request.POST.get('type_permis','B'))
+                Candidat.objects.create(erp_client=client, nom=request.POST['nom'], telephone=request.POST.get('telephone',''), type_permis=request.POST.get('type_permis','B'))
         elif action == 'add_moniteur':
             if eid:
-                o = Moniteur.objects.get(id=eid); o.nom=request.POST['nom']; o.telephone=request.POST.get('telephone',''); o.specialite=request.POST.get('specialite',''); o.save()
+                o = get_object_or_404(qs(Moniteur), id=eid); o.nom=request.POST['nom']; o.telephone=request.POST.get('telephone',''); o.specialite=request.POST.get('specialite',''); o.save()
             else:
-                Moniteur.objects.create(nom=request.POST['nom'], telephone=request.POST.get('telephone',''), specialite=request.POST.get('specialite',''))
+                Moniteur.objects.create(erp_client=client, nom=request.POST['nom'], telephone=request.POST.get('telephone',''), specialite=request.POST.get('specialite',''))
         elif action == 'add_vehicule':
             if eid:
-                o = Vehicule.objects.get(id=eid); o.immatriculation=request.POST['immatriculation']; o.marque=request.POST['marque']; o.modele=request.POST['modele']; o.save()
+                o = get_object_or_404(qs(Vehicule), id=eid); o.immatriculation=request.POST['immatriculation']; o.marque=request.POST['marque']; o.modele=request.POST['modele']; o.save()
             else:
-                Vehicule.objects.create(immatriculation=request.POST['immatriculation'], marque=request.POST['marque'], modele=request.POST['modele'])
+                Vehicule.objects.create(erp_client=client, immatriculation=request.POST['immatriculation'], marque=request.POST['marque'], modele=request.POST['modele'])
         elif action == 'add_lecon':
             if eid:
-                o = Lecon.objects.get(id=eid); o.candidat_id=request.POST['candidat']; o.moniteur_id=request.POST.get('moniteur'); o.vehicule_id=request.POST.get('vehicule'); o.date_lecon=request.POST['date_lecon'].replace('T',' '); o.duree_minutes=request.POST.get('duree',60); o.save()
+                o = get_object_or_404(qs(Lecon), id=eid); o.candidat_id=request.POST['candidat']; o.moniteur_id=request.POST.get('moniteur'); o.vehicule_id=request.POST.get('vehicule'); o.date_lecon=request.POST['date_lecon'].replace('T',' '); o.duree_minutes=request.POST.get('duree',60); o.save()
             else:
-                Lecon.objects.create(candidat_id=request.POST['candidat'], moniteur_id=request.POST.get('moniteur'), vehicule_id=request.POST.get('vehicule'), date_lecon=request.POST['date_lecon'].replace('T',' '), duree_minutes=request.POST.get('duree',60))
+                Lecon.objects.create(erp_client=client, candidat_id=request.POST['candidat'], moniteur_id=request.POST.get('moniteur'), vehicule_id=request.POST.get('vehicule'), date_lecon=request.POST['date_lecon'].replace('T',' '), duree_minutes=request.POST.get('duree',60))
         elif action == 'add_examen':
             if eid:
-                o = Examen.objects.get(id=eid); o.candidat_id=request.POST['candidat']; o.date_examen=request.POST['date_examen']; o.type_examen=request.POST.get('type','code'); o.save()
+                o = get_object_or_404(qs(Examen), id=eid); o.candidat_id=request.POST['candidat']; o.date_examen=request.POST['date_examen']; o.type_examen=request.POST.get('type','code'); o.save()
             else:
-                Examen.objects.create(candidat_id=request.POST['candidat'], date_examen=request.POST['date_examen'], type_examen=request.POST.get('type','code'))
+                Examen.objects.create(erp_client=client, candidat_id=request.POST['candidat'], date_examen=request.POST['date_examen'], type_examen=request.POST.get('type','code'))
         elif action == 'delete':
             model_map = {'candidat':Candidat,'moniteur':Moniteur,'vehicule':Vehicule,'lecon':Lecon,'examen':Examen}
             m = model_map.get(request.POST.get('model'))
-            if m: m.objects.filter(id=request.POST.get('id')).delete()
-        return redirect('gestion_auto_ecole')
-    candidats = Candidat.objects.all()
-    moniteurs = Moniteur.objects.filter(actif=True)
-    vehicules = Vehicule.objects.filter(disponible=True)
-    lecons = Lecon.objects.all().select_related('candidat','moniteur','vehicule')[:30]
-    examens = Examen.objects.all().select_related('candidat')[:20]
+            if m: qs(m).filter(id=request.POST.get('id')).delete()
+        return redirect(request.path)
+    candidats = qs(Candidat)
+    moniteurs = qs(Moniteur).filter(actif=True)
+    vehicules = qs(Vehicule).filter(disponible=True)
+    lecons = qs(Lecon).select_related('candidat','moniteur','vehicule')[:30]
+    examens = qs(Examen).select_related('candidat')[:20]
     return render(request, 'studio/erp_auto_ecole.html', {
         'module': ERPModule.objects.get(slug='auto-ecole'),
+        'tenant': client,
         'candidats': candidats, 'moniteurs': moniteurs, 'vehicules': vehicules,
         'lecons': lecons, 'examens': examens,
         'total_candidats': candidats.count(), 'total_moniteurs': moniteurs.count(),
-        'total_lecons': Lecon.objects.count(), 'total_reussite': Examen.objects.filter(reussi=True).count(),
-        'total_examens': Examen.objects.count(),
+        'total_lecons': qs(Lecon).count(), 'total_reussite': qs(Examen).filter(reussi=True).count(),
+        'total_examens': qs(Examen).count(),
     })
 
 # ─── Santé / Clinique ───────────────────────────────────────
 @login_required
 def gestion_sante(request):
+    client, qs, redirect_response = _tenant_or_redirect(request)
+    if redirect_response is not None:
+        return redirect_response
     if request.method == 'POST':
         action = request.POST.get('action')
         eid = request.POST.get('edit_id')
         if action == 'add_patient':
             if eid:
-                o = Patient.objects.get(id=eid); o.nom=request.POST['nom']; o.date_naissance=request.POST['date_naissance']; o.telephone=request.POST.get('telephone',''); o.mutuelle=request.POST.get('mutuelle',''); o.save()
+                o = get_object_or_404(qs(Patient), id=eid); o.nom=request.POST['nom']; o.date_naissance=request.POST['date_naissance']; o.telephone=request.POST.get('telephone',''); o.mutuelle=request.POST.get('mutuelle',''); o.save()
             else:
-                Patient.objects.create(nom=request.POST['nom'], date_naissance=request.POST['date_naissance'], telephone=request.POST.get('telephone',''), mutuelle=request.POST.get('mutuelle',''))
+                Patient.objects.create(erp_client=client, nom=request.POST['nom'], date_naissance=request.POST['date_naissance'], telephone=request.POST.get('telephone',''), mutuelle=request.POST.get('mutuelle',''))
         elif action == 'add_rdv':
             if eid:
-                o = RendezVous.objects.get(id=eid); o.patient_id=request.POST['patient']; o.medecin_id=request.POST.get('medecin'); o.date_rdv=request.POST['date_rdv'].replace('T',' '); o.motif=request.POST.get('motif',''); o.save()
+                o = get_object_or_404(qs(RendezVous), id=eid); o.patient_id=request.POST['patient']; o.medecin_id=request.POST.get('medecin'); o.date_rdv=request.POST['date_rdv'].replace('T',' '); o.motif=request.POST.get('motif',''); o.save()
             else:
-                RendezVous.objects.create(patient_id=request.POST['patient'], medecin_id=request.POST.get('medecin'), date_rdv=request.POST['date_rdv'].replace('T',' '), motif=request.POST.get('motif',''))
+                RendezVous.objects.create(erp_client=client, patient_id=request.POST['patient'], medecin_id=request.POST.get('medecin'), date_rdv=request.POST['date_rdv'].replace('T',' '), motif=request.POST.get('motif',''))
         elif action == 'add_facture':
             if eid:
-                o = FacturationSante.objects.get(id=eid); o.patient_id=request.POST['patient']; o.montant=request.POST['montant']; o.type_facture=request.POST.get('type','consultation'); o.save()
+                o = get_object_or_404(qs(FacturationSante), id=eid); o.patient_id=request.POST['patient']; o.montant=request.POST['montant']; o.type_facture=request.POST.get('type','consultation'); o.save()
             else:
-                FacturationSante.objects.create(patient_id=request.POST['patient'], montant=request.POST['montant'], type_facture=request.POST.get('type','consultation'))
+                FacturationSante.objects.create(erp_client=client, patient_id=request.POST['patient'], montant=request.POST['montant'], type_facture=request.POST.get('type','consultation'))
         elif action == 'toggle_lit':
-            lit = Lit.objects.get(id=request.POST['id'])
+            lit = get_object_or_404(qs(Lit), id=request.POST['id'])
             lit.occupe = not lit.occupe
             lit.save()
         elif action == 'delete':
             model_map = {'patient':Patient,'rdv':RendezVous,'facture':FacturationSante}
             m = model_map.get(request.POST.get('model'))
-            if m: m.objects.filter(id=request.POST.get('id')).delete()
-        return redirect('gestion_sante')
-    patients = Patient.objects.all()
-    medecins = Medecin.objects.filter(actif=True)
-    rdvs = RendezVous.objects.all()[:30]
-    lits = Lit.objects.all()
-    factures = FacturationSante.objects.all()[:20]
+            if m: qs(m).filter(id=request.POST.get('id')).delete()
+        return redirect(request.path)
+    patients = qs(Patient)
+    medecins = qs(Medecin).filter(actif=True)
+    rdvs = qs(RendezVous)[:30]
+    lits = qs(Lit)
+    factures = qs(FacturationSante)[:20]
     return render(request, 'studio/erp_sante.html', {
         'module': ERPModule.objects.get(slug='sante'),
+        'tenant': client,
         'patients': patients, 'medecins': medecins, 'rdvs': rdvs, 'lits': lits, 'factures': factures,
         'total_patients': patients.count(), 'total_medecins': medecins.count(),
         'lits_occupes': lits.filter(occupe=True).count(), 'total_lits': lits.count(),
@@ -439,37 +502,41 @@ def gestion_sante(request):
 # ─── Hôtellerie / Tourisme ──────────────────────────────────
 @login_required
 def gestion_hotel(request):
+    client, qs, redirect_response = _tenant_or_redirect(request)
+    if redirect_response is not None:
+        return redirect_response
     if request.method == 'POST':
         action = request.POST.get('action')
         eid = request.POST.get('edit_id')
         if action == 'add_client':
             if eid:
-                o = ClientHotel.objects.get(id=eid); o.nom=request.POST['nom']; o.telephone=request.POST.get('telephone',''); o.email=request.POST.get('email',''); o.nationalite=request.POST.get('nationalite',''); o.save()
+                o = get_object_or_404(qs(ClientHotel), id=eid); o.nom=request.POST['nom']; o.telephone=request.POST.get('telephone',''); o.email=request.POST.get('email',''); o.nationalite=request.POST.get('nationalite',''); o.save()
             else:
-                ClientHotel.objects.create(nom=request.POST['nom'], telephone=request.POST.get('telephone',''), email=request.POST.get('email',''), nationalite=request.POST.get('nationalite',''))
+                ClientHotel.objects.create(erp_client=client, nom=request.POST['nom'], telephone=request.POST.get('telephone',''), email=request.POST.get('email',''), nationalite=request.POST.get('nationalite',''))
         elif action == 'add_reservation':
-            ch = Chambre.objects.get(id=request.POST['chambre'])
-            cl = ClientHotel.objects.get(id=request.POST['client'])
+            ch = get_object_or_404(qs(Chambre), id=request.POST['chambre'])
+            cl = get_object_or_404(qs(ClientHotel), id=request.POST['client'])
             if eid:
-                o = ReservationHotel.objects.get(id=eid); o.client=cl; o.chambre=ch; o.date_arrivee=request.POST['arrivee']; o.date_depart=request.POST['depart']; o.save()
+                o = get_object_or_404(qs(ReservationHotel), id=eid); o.client=cl; o.chambre=ch; o.date_arrivee=request.POST['arrivee']; o.date_depart=request.POST['depart']; o.save()
             else:
-                ReservationHotel.objects.create(client=cl, chambre=ch, date_arrivee=request.POST['arrivee'], date_depart=request.POST['depart'])
+                ReservationHotel.objects.create(erp_client=client, client=cl, chambre=ch, date_arrivee=request.POST['arrivee'], date_depart=request.POST['depart'])
         elif action == 'add_chambre':
             if eid:
-                o = Chambre.objects.get(id=eid); o.numero=request.POST['numero']; o.type_chambre=request.POST.get('type','simple'); o.prix_nuit=request.POST.get('prix',100); o.etage=request.POST.get('etage',1); o.save()
+                o = get_object_or_404(qs(Chambre), id=eid); o.numero=request.POST['numero']; o.type_chambre=request.POST.get('type','simple'); o.prix_nuit=request.POST.get('prix',100); o.etage=request.POST.get('etage',1); o.save()
             else:
-                Chambre.objects.create(numero=request.POST['numero'], type_chambre=request.POST.get('type','simple'), prix_nuit=request.POST.get('prix',100), etage=request.POST.get('etage',1))
+                Chambre.objects.create(erp_client=client, numero=request.POST['numero'], type_chambre=request.POST.get('type','simple'), prix_nuit=request.POST.get('prix',100), etage=request.POST.get('etage',1))
         elif action == 'delete':
             model_map = {'client':ClientHotel,'reservation':ReservationHotel,'chambre':Chambre}
             m = model_map.get(request.POST.get('model'))
-            if m: m.objects.filter(id=request.POST.get('id')).delete()
-        return redirect('gestion_hotel')
-    clients = ClientHotel.objects.all()
-    chambres = Chambre.objects.all()
-    base_reservations = ReservationHotel.objects.all()
+            if m: qs(m).filter(id=request.POST.get('id')).delete()
+        return redirect(request.path)
+    clients = qs(ClientHotel)
+    chambres = qs(Chambre)
+    base_reservations = qs(ReservationHotel)
     reservations = base_reservations[:30]
     return render(request, 'studio/erp_hotel.html', {
         'module': ERPModule.objects.get(slug='hotellerie'),
+        'tenant': client,
         'clients': clients, 'chambres': chambres, 'reservations': reservations,
         'total_chambres': chambres.count(), 'disponibles': chambres.filter(disponible=True).count(),
         'reservations_actives': base_reservations.filter(statut__in=['confirmee','en_cours']).count(),
@@ -478,73 +545,82 @@ def gestion_hotel(request):
 # ─── Commerce / Retail ──────────────────────────────────────
 @login_required
 def gestion_commerce(request):
+    client, qs, redirect_response = _tenant_or_redirect(request)
+    if redirect_response is not None:
+        return redirect_response
     if request.method == 'POST':
         action = request.POST.get('action')
         eid = request.POST.get('edit_id')
         if action == 'add_produit':
             if eid:
-                o = Produit.objects.get(id=eid); o.nom=request.POST['nom']; o.categorie_id=request.POST.get('categorie'); o.fournisseur_id=request.POST.get('fournisseur'); o.prix_achat=request.POST.get('prix_achat',0); o.prix_vente=request.POST.get('prix_vente',0); o.stock_actuel=request.POST.get('stock',0); o.save()
+                o = get_object_or_404(qs(Produit), id=eid); o.nom=request.POST['nom']; o.categorie_id=request.POST.get('categorie'); o.fournisseur_id=request.POST.get('fournisseur'); o.prix_achat=request.POST.get('prix_achat',0); o.prix_vente=request.POST.get('prix_vente',0); o.stock_actuel=request.POST.get('stock',0); o.save()
             else:
-                Produit.objects.create(nom=request.POST['nom'], categorie_id=request.POST.get('categorie'), fournisseur_id=request.POST.get('fournisseur'), prix_achat=request.POST.get('prix_achat',0), prix_vente=request.POST.get('prix_vente',0), stock_actuel=request.POST.get('stock',0))
+                Produit.objects.create(erp_client=client, nom=request.POST['nom'], categorie_id=request.POST.get('categorie'), fournisseur_id=request.POST.get('fournisseur'), prix_achat=request.POST.get('prix_achat',0), prix_vente=request.POST.get('prix_vente',0), stock_actuel=request.POST.get('stock',0))
         elif action == 'add_categorie':
             if eid:
-                o = Categorie.objects.get(id=eid); o.nom=request.POST['nom']; o.save()
+                o = get_object_or_404(qs(Categorie), id=eid); o.nom=request.POST['nom']; o.save()
             else:
-                Categorie.objects.create(nom=request.POST['nom'])
+                Categorie.objects.create(erp_client=client, nom=request.POST['nom'])
         elif action == 'add_vente':
-            p = Produit.objects.get(id=request.POST['produit'])
+            p = get_object_or_404(qs(Produit), id=request.POST['produit'])
             if eid:
-                o = Vente.objects.get(id=eid); o.produit=p; o.quantite=request.POST.get('quantite',1); o.prix_unitaire=p.prix_vente; o.save()
+                o = get_object_or_404(qs(Vente), id=eid); o.produit=p; o.quantite=request.POST.get('quantite',1); o.prix_unitaire=p.prix_vente; o.save()
             else:
-                Vente.objects.create(produit=p, quantite=request.POST.get('quantite',1), prix_unitaire=p.prix_vente)
+                Vente.objects.create(erp_client=client, produit=p, quantite=request.POST.get('quantite',1), prix_unitaire=p.prix_vente)
         elif action == 'delete':
             model_map = {'produit':Produit,'categorie':Categorie,'vente':Vente,'fournisseur':Fournisseur}
             m = model_map.get(request.POST.get('model'))
-            if m: m.objects.filter(id=request.POST.get('id')).delete()
-        return redirect('gestion_commerce')
-    produits = Produit.objects.filter(actif=True)
-    categories = Categorie.objects.all()
-    fournisseurs = Fournisseur.objects.all()
-    ventes = Vente.objects.all()[:30]
-    stock_faible = Produit.objects.filter(stock_actuel__lte=models.F('stock_minimum'), actif=True)
+            if m: qs(m).filter(id=request.POST.get('id')).delete()
+        return redirect(request.path)
+    produits = qs(Produit).filter(actif=True)
+    categories = qs(Categorie)
+    fournisseurs = qs(Fournisseur)
+    ventes = qs(Vente)[:30]
+    stock_faible = qs(Produit).filter(stock_actuel__lte=models.F('stock_minimum'), actif=True)
     return render(request, 'studio/erp_commerce.html', {
         'module': ERPModule.objects.get(slug='commerce'),
+        'tenant': client,
         'produits': produits, 'categories': categories, 'fournisseurs': fournisseurs, 'ventes': ventes,
         'total_produits': produits.count(), 'total_categories': categories.count(),
-        'alerte_stock': stock_faible.count(), 'total_ventes': Vente.objects.count(),
+        'alerte_stock': stock_faible.count(), 'total_ventes': qs(Vente).count(),
     })
 
 # ─── Juridique (Avocat) ─────────────────────────────────────
 @login_required
 def gestion_juridique(request):
+    client, qs, redirect_response = _tenant_or_redirect(request)
+    if redirect_response is not None:
+        return redirect_response
     if request.method == 'POST':
         action = request.POST.get('action')
         eid = request.POST.get('edit_id')
         if action == 'add_client':
             if eid:
-                o = ClientJuridique.objects.get(id=eid); o.nom=request.POST['nom']; o.type_client=request.POST.get('type','particulier'); o.telephone=request.POST.get('telephone',''); o.save()
+                o = get_object_or_404(qs(ClientJuridique), id=eid); o.nom=request.POST['nom']; o.type_client=request.POST.get('type','particulier'); o.telephone=request.POST.get('telephone',''); o.save()
             else:
-                ClientJuridique.objects.create(nom=request.POST['nom'], type_client=request.POST.get('type','particulier'), telephone=request.POST.get('telephone',''))
+                ClientJuridique.objects.create(erp_client=client, nom=request.POST['nom'], type_client=request.POST.get('type','particulier'), telephone=request.POST.get('telephone',''))
         elif action == 'add_dossier':
+            cl = get_object_or_404(qs(ClientJuridique), id=request.POST['client'])
             if eid:
-                o = DossierJuridique.objects.get(id=eid); o.reference=request.POST['reference']; o.client_id=request.POST['client']; o.titre=request.POST['titre']; o.type_affaire=request.POST.get('type_affaire',''); o.tribunal=request.POST.get('tribunal',''); o.save()
+                o = get_object_or_404(qs(DossierJuridique), id=eid); o.reference=request.POST['reference']; o.client=cl; o.titre=request.POST['titre']; o.type_affaire=request.POST.get('type_affaire',''); o.tribunal=request.POST.get('tribunal',''); o.save()
             else:
-                DossierJuridique.objects.create(reference=request.POST['reference'], client_id=request.POST['client'], titre=request.POST['titre'], type_affaire=request.POST.get('type_affaire',''), tribunal=request.POST.get('tribunal',''))
+                DossierJuridique.objects.create(erp_client=client, reference=request.POST['reference'], client=cl, titre=request.POST['titre'], type_affaire=request.POST.get('type_affaire',''), tribunal=request.POST.get('tribunal',''))
         elif action == 'add_audience':
             if eid:
-                o = Audience.objects.get(id=eid); o.dossier_id=request.POST['dossier']; o.date_audience=request.POST['date_audience'].replace('T',' '); o.lieu=request.POST.get('lieu',''); o.save()
+                o = get_object_or_404(qs(Audience), id=eid); o.dossier_id=request.POST['dossier']; o.date_audience=request.POST['date_audience'].replace('T',' '); o.lieu=request.POST.get('lieu',''); o.save()
             else:
-                Audience.objects.create(dossier_id=request.POST['dossier'], date_audience=request.POST['date_audience'].replace('T',' '), lieu=request.POST.get('lieu',''))
+                Audience.objects.create(erp_client=client, dossier_id=request.POST['dossier'], date_audience=request.POST['date_audience'].replace('T',' '), lieu=request.POST.get('lieu',''))
         elif action == 'delete':
             model_map = {'client':ClientJuridique,'dossier':DossierJuridique,'audience':Audience}
             m = model_map.get(request.POST.get('model'))
-            if m: m.objects.filter(id=request.POST.get('id')).delete()
-        return redirect('gestion_juridique')
-    dossiers = DossierJuridique.objects.all()
-    clients = ClientJuridique.objects.all()
-    audiences = Audience.objects.all()[:20]
+            if m: qs(m).filter(id=request.POST.get('id')).delete()
+        return redirect(request.path)
+    dossiers = qs(DossierJuridique)
+    clients = qs(ClientJuridique)
+    audiences = qs(Audience)[:20]
     return render(request, 'studio/erp_juridique.html', {
         'module': ERPModule.objects.get(slug='juridique'),
+        'tenant': client,
         'dossiers': dossiers, 'clients': clients, 'audiences': audiences,
         'total_dossiers': dossiers.count(), 'dossiers_ouverts': dossiers.filter(statut='ouvert').count(),
         'total_clients': clients.count(),
@@ -553,79 +629,87 @@ def gestion_juridique(request):
 # ─── Comptabilité ───────────────────────────────────────────
 @login_required
 def gestion_comptabilite(request):
+    client, qs, redirect_response = _tenant_or_redirect(request)
+    if redirect_response is not None:
+        return redirect_response
     if request.method == 'POST':
         action = request.POST.get('action')
         eid = request.POST.get('edit_id')
         if action == 'add_ecriture':
             if eid:
-                o = EcritureComptable.objects.get(id=eid); o.date_ecriture=request.POST['date_ecriture']; o.libelle=request.POST['libelle']; o.compte_debit=request.POST['compte_debit']; o.compte_credit=request.POST['compte_credit']; o.montant=request.POST['montant']; o.journal_id=request.POST.get('journal'); o.save()
+                o = get_object_or_404(qs(EcritureComptable), id=eid); o.date_ecriture=request.POST['date_ecriture']; o.libelle=request.POST['libelle']; o.compte_debit=request.POST['compte_debit']; o.compte_credit=request.POST['compte_credit']; o.montant=request.POST['montant']; o.journal_id=request.POST.get('journal'); o.save()
             else:
-                EcritureComptable.objects.create(date_ecriture=request.POST['date_ecriture'], libelle=request.POST['libelle'], compte_debit=request.POST['compte_debit'], compte_credit=request.POST['compte_credit'], montant=request.POST['montant'], journal_id=request.POST.get('journal'))
+                EcritureComptable.objects.create(erp_client=client, date_ecriture=request.POST['date_ecriture'], libelle=request.POST['libelle'], compte_debit=request.POST['compte_debit'], compte_credit=request.POST['compte_credit'], montant=request.POST['montant'], journal_id=request.POST.get('journal'))
         elif action == 'add_facture':
             ht = float(request.POST.get('montant_ht',0))
             tva = float(request.POST.get('tva',19))
             if eid:
-                o = Facture.objects.get(id=eid); o.numero=request.POST['numero']; o.client_nom=request.POST['client_nom']; o.client_matricule=request.POST.get('matricule',''); o.montant_ht=ht; o.tva=tva; o.montant_ttc=ht*(1+tva/100); o.save()
+                o = get_object_or_404(qs(Facture), id=eid); o.numero=request.POST['numero']; o.client_nom=request.POST['client_nom']; o.client_matricule=request.POST.get('matricule',''); o.montant_ht=ht; o.tva=tva; o.montant_ttc=ht*(1+tva/100); o.save()
             else:
-                Facture.objects.create(numero=request.POST['numero'], client_nom=request.POST['client_nom'], client_matricule=request.POST.get('matricule',''), montant_ht=ht, tva=tva, montant_ttc=ht*(1+tva/100))
+                Facture.objects.create(erp_client=client, numero=request.POST['numero'], client_nom=request.POST['client_nom'], client_matricule=request.POST.get('matricule',''), montant_ht=ht, tva=tva, montant_ttc=ht*(1+tva/100))
         elif action == 'add_journal':
             if eid:
-                o = JournalComptable.objects.get(id=eid); o.code=request.POST['code']; o.nom=request.POST['nom']; o.save()
+                o = get_object_or_404(qs(JournalComptable), id=eid); o.code=request.POST['code']; o.nom=request.POST['nom']; o.save()
             else:
-                JournalComptable.objects.create(code=request.POST['code'], nom=request.POST['nom'])
+                JournalComptable.objects.create(erp_client=client, code=request.POST['code'], nom=request.POST['nom'])
         elif action == 'delete':
             model_map = {'ecriture':EcritureComptable,'facture':Facture,'journal':JournalComptable}
             m = model_map.get(request.POST.get('model'))
-            if m: m.objects.filter(id=request.POST.get('id')).delete()
-        return redirect('gestion_comptabilite')
-    ecritures = EcritureComptable.objects.all()[:30]
-    factures = Facture.objects.all()[:30]
-    journaux = JournalComptable.objects.all()
+            if m: qs(m).filter(id=request.POST.get('id')).delete()
+        return redirect(request.path)
+    ecritures = qs(EcritureComptable)[:30]
+    factures = qs(Facture)[:30]
+    journaux = qs(JournalComptable)
     return render(request, 'studio/erp_comptabilite.html', {
         'module': ERPModule.objects.get(slug='comptabilite'),
+        'tenant': client,
         'ecritures': ecritures, 'factures': factures, 'journaux': journaux,
-        'total_ecritures': EcritureComptable.objects.count(),
-        'total_factures': Facture.objects.count(),
-        'factures_impayees': Facture.objects.filter(payee=False).count(),
+        'total_ecritures': qs(EcritureComptable).count(),
+        'total_factures': qs(Facture).count(),
+        'factures_impayees': qs(Facture).filter(payee=False).count(),
     })
 
 # ─── RH & Paie ──────────────────────────────────────────────
 @login_required
 def gestion_rh(request):
+    client, qs, redirect_response = _tenant_or_redirect(request)
+    if redirect_response is not None:
+        return redirect_response
     if request.method == 'POST':
         action = request.POST.get('action')
         eid = request.POST.get('edit_id')
         if action == 'add_employe':
             if eid:
-                o = Employe.objects.get(id=eid); o.nom=request.POST['nom']; o.email=request.POST['email']; o.poste=request.POST['poste']; o.departement=request.POST.get('departement',''); o.date_embauche=request.POST['date_embauche']; o.salaire_base=request.POST.get('salaire',1500); o.save()
+                o = get_object_or_404(qs(Employe), id=eid); o.nom=request.POST['nom']; o.email=request.POST['email']; o.poste=request.POST['poste']; o.departement=request.POST.get('departement',''); o.date_embauche=request.POST['date_embauche']; o.salaire_base=request.POST.get('salaire',1500); o.save()
             else:
-                Employe.objects.create(nom=request.POST['nom'], email=request.POST['email'], poste=request.POST['poste'], departement=request.POST.get('departement',''), date_embauche=request.POST['date_embauche'], salaire_base=request.POST.get('salaire',1500))
+                Employe.objects.create(erp_client=client, nom=request.POST['nom'], email=request.POST['email'], poste=request.POST['poste'], departement=request.POST.get('departement',''), date_embauche=request.POST['date_embauche'], salaire_base=request.POST.get('salaire',1500))
         elif action == 'add_conge':
             deb = datetime.strptime(request.POST['date_debut'],'%Y-%m-%d').date()
             fin = datetime.strptime(request.POST['date_fin'],'%Y-%m-%d').date()
             if eid:
-                o = Conge.objects.get(id=eid); o.employe_id=request.POST['employe']; o.date_debut=deb; o.date_fin=fin; o.nb_jours=(fin-deb).days+1; o.type_conge=request.POST.get('type','annuel'); o.save()
+                o = get_object_or_404(qs(Conge), id=eid); o.employe_id=request.POST['employe']; o.date_debut=deb; o.date_fin=fin; o.nb_jours=(fin-deb).days+1; o.type_conge=request.POST.get('type','annuel'); o.save()
             else:
-                Conge.objects.create(employe_id=request.POST['employe'], date_debut=deb, date_fin=fin, nb_jours=(fin-deb).days+1, type_conge=request.POST.get('type','annuel'))
+                Conge.objects.create(erp_client=client, employe_id=request.POST['employe'], date_debut=deb, date_fin=fin, nb_jours=(fin-deb).days+1, type_conge=request.POST.get('type','annuel'))
         elif action == 'add_formation':
             if eid:
-                o = Formation.objects.get(id=eid); o.employe_id=request.POST['employe']; o.titre=request.POST['titre']; o.organisme=request.POST.get('organisme',''); o.date_debut=request.POST['date_debut']; o.date_fin=request.POST['date_fin']; o.cout=request.POST.get('cout',0); o.save()
+                o = get_object_or_404(qs(Formation), id=eid); o.employe_id=request.POST['employe']; o.titre=request.POST['titre']; o.organisme=request.POST.get('organisme',''); o.date_debut=request.POST['date_debut']; o.date_fin=request.POST['date_fin']; o.cout=request.POST.get('cout',0); o.save()
             else:
-                Formation.objects.create(employe_id=request.POST['employe'], titre=request.POST['titre'], organisme=request.POST.get('organisme',''), date_debut=request.POST['date_debut'], date_fin=request.POST['date_fin'], cout=request.POST.get('cout',0))
+                Formation.objects.create(erp_client=client, employe_id=request.POST['employe'], titre=request.POST['titre'], organisme=request.POST.get('organisme',''), date_debut=request.POST['date_debut'], date_fin=request.POST['date_fin'], cout=request.POST.get('cout',0))
         elif action == 'delete':
             model_map = {'employe':Employe,'conge':Conge,'formation':Formation,'contrat':Contrat}
             m = model_map.get(request.POST.get('model'))
-            if m: m.objects.filter(id=request.POST.get('id')).delete()
-        return redirect('gestion_rh')
-    employes = Employe.objects.filter(actif=True)
-    conges = Conge.objects.all()[:20]
-    formations = Formation.objects.all()[:20]
+            if m: qs(m).filter(id=request.POST.get('id')).delete()
+        return redirect(request.path)
+    employes = qs(Employe).filter(actif=True)
+    conges = qs(Conge)[:20]
+    formations = qs(Formation)[:20]
     return render(request, 'studio/erp_rh.html', {
         'module': ERPModule.objects.get(slug='rh-paie'),
+        'tenant': client,
         'employes': employes, 'conges': conges, 'formations': formations,
         'total_employes': employes.count(),
-        'conges_en_cours': Conge.objects.filter(valide=True).count(),
-        'masse_salariale': sum(e.salaire_base for e in Employe.objects.filter(actif=True)),
+        'conges_en_cours': qs(Conge).filter(valide=True).count(),
+        'masse_salariale': sum(e.salaire_base for e in qs(Employe).filter(actif=True)),
     })
 
 @csrf_exempt
@@ -644,26 +728,31 @@ def api_erp_demo(request):
 # ─── Restaurant ──────────────────────────────────────────────
 @login_required
 def gestion_restaurant(request):
+    client, qs, redirect_response = _tenant_or_redirect(request)
+    if redirect_response is not None:
+        return redirect_response
     if request.method == 'POST':
         action = request.POST.get('action')
         eid = request.POST.get('edit_id')
         if action == 'add_menu':
             if eid:
-                o = MenuItem.objects.get(id=eid); o.nom=request.POST['nom']; o.categorie=request.POST.get('categorie','plat'); o.prix=request.POST.get('prix',0); o.disponible=request.POST.get('disponible','1')=='1'; o.save()
+                o = get_object_or_404(qs(MenuItem), id=eid); o.nom=request.POST['nom']; o.categorie=request.POST.get('categorie','plat'); o.prix=request.POST.get('prix',0); o.disponible=request.POST.get('disponible','1')=='1'; o.save()
             else:
-                MenuItem.objects.create(nom=request.POST['nom'], categorie=request.POST.get('categorie','plat'), prix=request.POST.get('prix',0), disponible=request.POST.get('disponible','1')=='1')
+                MenuItem.objects.create(erp_client=client, nom=request.POST['nom'], categorie=request.POST.get('categorie','plat'), prix=request.POST.get('prix',0), disponible=request.POST.get('disponible','1')=='1')
         elif action == 'add_table':
             if eid:
-                o = TableRestaurant.objects.get(id=eid); o.numero=request.POST['numero']; o.capacite=request.POST.get('capacite',4); o.statut=request.POST.get('statut','libre'); o.save()
+                o = get_object_or_404(qs(TableRestaurant), id=eid); o.numero=request.POST['numero']; o.capacite=request.POST.get('capacite',4); o.statut=request.POST.get('statut','libre'); o.save()
             else:
-                TableRestaurant.objects.create(numero=request.POST['numero'], capacite=request.POST.get('capacite',4), statut=request.POST.get('statut','libre'))
+                TableRestaurant.objects.create(erp_client=client, numero=request.POST['numero'], capacite=request.POST.get('capacite',4), statut=request.POST.get('statut','libre'))
         elif action == 'delete':
             m = {'menu':MenuItem,'table':TableRestaurant}.get(request.POST.get('model'))
-            if m: m.objects.filter(id=request.POST.get('id')).delete()
-        return redirect('gestion_restaurant')
-    menus = MenuItem.objects.all()
-    tables = TableRestaurant.objects.all()
+            if m: qs(m).filter(id=request.POST.get('id')).delete()
+        return redirect(request.path)
+    menus = qs(MenuItem)
+    tables = qs(TableRestaurant)
     return render(request, 'studio/erp_restaurant.html', {
+        'module': ERPModule.objects.get(slug='restaurant'),
+        'tenant': client,
         'menus': menus, 'tables': tables,
         'total_menus': menus.count(), 'total_tables': tables.count(),
         'tables_libres': tables.filter(statut='libre').count(),
@@ -719,27 +808,32 @@ def gestion_innerstudio(request):
 # ─── Pâtisserie ──────────────────────────────────────────────
 @login_required
 def gestion_patisserie(request):
+    client, qs, redirect_response = _tenant_or_redirect(request)
+    if redirect_response is not None:
+        return redirect_response
     if request.method == 'POST':
         action = request.POST.get('action')
         eid = request.POST.get('edit_id')
         if action == 'add_recipe':
             if eid:
-                o = PatisserieRecipe.objects.get(id=eid); o.nom=request.POST['nom']; o.categorie=request.POST.get('categorie','patisserie'); o.cout_production=request.POST.get('cout_production',0); o.prix_vente=request.POST.get('prix_vente',0); o.save()
+                o = get_object_or_404(qs(PatisserieRecipe), id=eid); o.nom=request.POST['nom']; o.categorie=request.POST.get('categorie','patisserie'); o.cout_production=request.POST.get('cout_production',0); o.prix_vente=request.POST.get('prix_vente',0); o.save()
             else:
-                PatisserieRecipe.objects.create(nom=request.POST['nom'], categorie=request.POST.get('categorie','patisserie'), cout_production=request.POST.get('cout_production',0), prix_vente=request.POST.get('prix_vente',0))
+                PatisserieRecipe.objects.create(erp_client=client, nom=request.POST['nom'], categorie=request.POST.get('categorie','patisserie'), cout_production=request.POST.get('cout_production',0), prix_vente=request.POST.get('prix_vente',0))
         elif action == 'add_product':
             if eid:
-                o = PatisserieProduct.objects.get(id=eid); o.nom=request.POST['nom']; o.recette_id=request.POST.get('recette'); o.stock_actuel=request.POST.get('stock_actuel',0); o.prix_vente=request.POST.get('prix_vente',0); o.actif=request.POST.get('actif','1')=='1'; o.save()
+                o = get_object_or_404(qs(PatisserieProduct), id=eid); o.nom=request.POST['nom']; o.recette_id=request.POST.get('recette'); o.stock_actuel=request.POST.get('stock_actuel',0); o.prix_vente=request.POST.get('prix_vente',0); o.actif=request.POST.get('actif','1')=='1'; o.save()
             else:
-                PatisserieProduct.objects.create(nom=request.POST['nom'], recette_id=request.POST.get('recette'), stock_actuel=request.POST.get('stock_actuel',0), prix_vente=request.POST.get('prix_vente',0), actif=request.POST.get('actif','1')=='1')
+                PatisserieProduct.objects.create(erp_client=client, nom=request.POST['nom'], recette_id=request.POST.get('recette'), stock_actuel=request.POST.get('stock_actuel',0), prix_vente=request.POST.get('prix_vente',0), actif=request.POST.get('actif','1')=='1')
         elif action == 'delete':
             m = {'recipe':PatisserieRecipe,'product':PatisserieProduct}.get(request.POST.get('model'))
-            if m: m.objects.filter(id=request.POST.get('id')).delete()
-        return redirect('gestion_patisserie')
-    recipes = PatisserieRecipe.objects.all()
-    products = PatisserieProduct.objects.all().select_related('recette')
+            if m: qs(m).filter(id=request.POST.get('id')).delete()
+        return redirect(request.path)
+    recipes = qs(PatisserieRecipe)
+    products = qs(PatisserieProduct).select_related('recette')
     alert_stock = products.filter(stock_actuel__lt=models.F('stock_minimum'), actif=True).count()
     return render(request, 'studio/erp_patisserie.html', {
+        'module': ERPModule.objects.get(slug='patisserie'),
+        'tenant': client,
         'recipes': recipes, 'products': products,
         'total_recipes': recipes.count(), 'total_products': products.count(),
         'alert_stock': alert_stock,

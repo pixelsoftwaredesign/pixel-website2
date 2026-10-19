@@ -236,6 +236,9 @@ class ERPMembership(models.Model):
 
 # ─── Auto-École ─────────────────────────────────────────────
 class Moniteur(models.Model):
+    erp_client = models.ForeignKey(
+        'ERPClient', on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name="Entreprise")
     nom = models.CharField(max_length=100)
     telephone = models.CharField(max_length=20, blank=True)
     email = models.EmailField(blank=True)
@@ -246,6 +249,9 @@ class Moniteur(models.Model):
     def __str__(self): return self.nom
 
 class Candidat(models.Model):
+    erp_client = models.ForeignKey(
+        'ERPClient', on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name="Entreprise")
     nom = models.CharField(max_length=100)
     telephone = models.CharField(max_length=20, blank=True)
     email = models.EmailField(blank=True)
@@ -259,16 +265,24 @@ class Candidat(models.Model):
     def __str__(self): return f"{self.nom} ({self.type_permis})"
 
 class Vehicule(models.Model):
-    immatriculation = models.CharField(max_length=20, unique=True)
+    erp_client = models.ForeignKey(
+        'ERPClient', on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name="Entreprise")
+    immatriculation = models.CharField(max_length=20)
     marque = models.CharField(max_length=50)
     modele = models.CharField(max_length=50)
     annee = models.IntegerField(default=2024)
     disponible = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    class Meta: verbose_name = "Véhicule"; verbose_name_plural = "Véhicules"
+    class Meta:
+        verbose_name = "Véhicule"; verbose_name_plural = "Véhicules"
+        unique_together = [('erp_client', 'immatriculation')]
     def __str__(self): return f"{self.marque} {self.modele} ({self.immatriculation})"
 
 class Lecon(models.Model):
+    erp_client = models.ForeignKey(
+        'ERPClient', on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name="Entreprise")
     candidat = models.ForeignKey(Candidat, on_delete=models.CASCADE, related_name='lecons')
     moniteur = models.ForeignKey(Moniteur, on_delete=models.SET_NULL, null=True)
     vehicule = models.ForeignKey(Vehicule, on_delete=models.SET_NULL, null=True)
@@ -281,6 +295,9 @@ class Lecon(models.Model):
     def __str__(self): return f"{self.candidat.nom} - {self.date_lecon.strftime('%d/%m/%Y')}"
 
 class Examen(models.Model):
+    erp_client = models.ForeignKey(
+        'ERPClient', on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name="Entreprise")
     candidat = models.ForeignKey(Candidat, on_delete=models.CASCADE, related_name='examens')
     date_examen = models.DateField(verbose_name="Date d'examen")
     type_examen = models.CharField(max_length=20, choices=[('code','Code'),('pratique','Pratique')], default='code')
@@ -294,6 +311,9 @@ class Examen(models.Model):
 
 # ─── Santé / Clinique ───────────────────────────────────────
 class Medecin(models.Model):
+    erp_client = models.ForeignKey(
+        'ERPClient', on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name="Entreprise")
     nom = models.CharField(max_length=100)
     specialite = models.CharField(max_length=100)
     telephone = models.CharField(max_length=20, blank=True)
@@ -304,6 +324,9 @@ class Medecin(models.Model):
     def __str__(self): return f"Dr {self.nom} ({self.specialite})"
 
 class Patient(models.Model):
+    erp_client = models.ForeignKey(
+        'ERPClient', on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name="Entreprise")
     nom = models.CharField(max_length=100)
     date_naissance = models.DateField(verbose_name="Date de naissance")
     telephone = models.CharField(max_length=20, blank=True)
@@ -316,16 +339,24 @@ class Patient(models.Model):
     def __str__(self): return self.nom
 
 class Lit(models.Model):
-    numero = models.CharField(max_length=20, unique=True, verbose_name="N° Lit")
+    erp_client = models.ForeignKey(
+        'ERPClient', on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name="Entreprise")
+    numero = models.CharField(max_length=20, verbose_name="N° Lit")
     chambre = models.CharField(max_length=50, blank=True)
     type_lit = models.CharField(max_length=50, choices=[('simple','Simple'),('double','Double'),('soins','Soins intensifs')], default='simple')
     occupe = models.BooleanField(default=False)
     patient = models.OneToOneField(Patient, on_delete=models.SET_NULL, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    class Meta: verbose_name = "Lit"; verbose_name_plural = "Lits"
+    class Meta:
+        verbose_name = "Lit"; verbose_name_plural = "Lits"
+        unique_together = [('erp_client', 'numero')]
     def __str__(self): return f"Lit {self.numero} ({self.chambre})"
 
 class RendezVous(models.Model):
+    erp_client = models.ForeignKey(
+        'ERPClient', on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name="Entreprise")
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='rendez_vous')
     medecin = models.ForeignKey(Medecin, on_delete=models.SET_NULL, null=True)
     date_rdv = models.DateTimeField(verbose_name="Date du rendez-vous")
@@ -337,6 +368,9 @@ class RendezVous(models.Model):
     def __str__(self): return f"{self.patient.nom} - Dr {self.medecin.nom if self.medecin else 'N/A'}"
 
 class FacturationSante(models.Model):
+    erp_client = models.ForeignKey(
+        'ERPClient', on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name="Entreprise")
     patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='factures')
     montant = models.DecimalField(max_digits=10, decimal_places=2, verbose_name="Montant (TND)")
     date_facture = models.DateField(auto_now_add=True)
@@ -349,6 +383,9 @@ class FacturationSante(models.Model):
 
 # ─── Hôtellerie / Tourisme ──────────────────────────────────
 class ClientHotel(models.Model):
+    erp_client = models.ForeignKey(
+        'ERPClient', on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name="Entreprise")
     nom = models.CharField(max_length=100)
     telephone = models.CharField(max_length=20, blank=True)
     email = models.EmailField(blank=True)
@@ -359,17 +396,25 @@ class ClientHotel(models.Model):
     def __str__(self): return self.nom
 
 class Chambre(models.Model):
-    numero = models.CharField(max_length=20, unique=True, verbose_name="N° Chambre")
+    erp_client = models.ForeignKey(
+        'ERPClient', on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name="Entreprise")
+    numero = models.CharField(max_length=20, verbose_name="N° Chambre")
     type_chambre = models.CharField(max_length=50, choices=[('simple','Simple'),('double','Double'),('suite','Suite'),('suite-p','Suite Présidentielle')], default='simple')
     prix_nuit = models.DecimalField(max_digits=8, decimal_places=2, default=100, verbose_name="Prix/nuit (TND)")
     disponible = models.BooleanField(default=True)
     etage = models.IntegerField(default=1)
     capacite = models.IntegerField(default=2)
     created_at = models.DateTimeField(auto_now_add=True)
-    class Meta: verbose_name = "Chambre"; verbose_name_plural = "Chambres"
+    class Meta:
+        verbose_name = "Chambre"; verbose_name_plural = "Chambres"
+        unique_together = [('erp_client', 'numero')]
     def __str__(self): return f"Chambre {self.numero} ({self.get_type_chambre_display()})"
 
 class ReservationHotel(models.Model):
+    erp_client = models.ForeignKey(
+        'ERPClient', on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name="Entreprise")
     client = models.ForeignKey(ClientHotel, on_delete=models.CASCADE, related_name='reservations')
     chambre = models.ForeignKey(Chambre, on_delete=models.CASCADE, related_name='reservations')
     date_arrivee = models.DateField(verbose_name="Date d'arrivée")
@@ -392,12 +437,20 @@ class ServiceHotel(models.Model):
 
 # ─── Commerce / Retail ──────────────────────────────────────
 class Categorie(models.Model):
-    nom = models.CharField(max_length=100, unique=True)
+    erp_client = models.ForeignKey(
+        'ERPClient', on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name="Entreprise")
+    nom = models.CharField(max_length=100)
     description = models.TextField(blank=True)
-    class Meta: verbose_name = "Catégorie"; verbose_name_plural = "Catégories"
+    class Meta:
+        verbose_name = "Catégorie"; verbose_name_plural = "Catégories"
+        unique_together = [('erp_client', 'nom')]
     def __str__(self): return self.nom
 
 class Fournisseur(models.Model):
+    erp_client = models.ForeignKey(
+        'ERPClient', on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name="Entreprise")
     nom = models.CharField(max_length=100)
     contact = models.CharField(max_length=100, blank=True)
     telephone = models.CharField(max_length=20, blank=True)
@@ -407,6 +460,9 @@ class Fournisseur(models.Model):
     def __str__(self): return self.nom
 
 class Produit(models.Model):
+    erp_client = models.ForeignKey(
+        'ERPClient', on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name="Entreprise")
     nom = models.CharField(max_length=200)
     categorie = models.ForeignKey(Categorie, on_delete=models.SET_NULL, null=True, related_name='produits')
     fournisseur = models.ForeignKey(Fournisseur, on_delete=models.SET_NULL, null=True, blank=True)
@@ -421,6 +477,9 @@ class Produit(models.Model):
     def __str__(self): return self.nom
 
 class Vente(models.Model):
+    erp_client = models.ForeignKey(
+        'ERPClient', on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name="Entreprise")
     produit = models.ForeignKey(Produit, on_delete=models.CASCADE, related_name='ventes')
     quantite = models.IntegerField(default=1)
     prix_unitaire = models.DecimalField(max_digits=10, decimal_places=2, default=0)
@@ -432,6 +491,9 @@ class Vente(models.Model):
 
 # ─── Juridique (Avocat) ─────────────────────────────────────
 class ClientJuridique(models.Model):
+    erp_client = models.ForeignKey(
+        'ERPClient', on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name="Entreprise")
     nom = models.CharField(max_length=100)
     type_client = models.CharField(max_length=20, choices=[('particulier','Particulier'),('entreprise','Entreprise')], default='particulier')
     telephone = models.CharField(max_length=20, blank=True)
@@ -442,7 +504,10 @@ class ClientJuridique(models.Model):
     def __str__(self): return self.nom
 
 class DossierJuridique(models.Model):
-    reference = models.CharField(max_length=50, unique=True, verbose_name="Référence")
+    erp_client = models.ForeignKey(
+        'ERPClient', on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name="Entreprise")
+    reference = models.CharField(max_length=50, verbose_name="Référence")
     client = models.ForeignKey(ClientJuridique, on_delete=models.CASCADE, related_name='dossiers')
     titre = models.CharField(max_length=200)
     type_affaire = models.CharField(max_length=100, blank=True)
@@ -453,10 +518,15 @@ class DossierJuridique(models.Model):
     honoraires = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Honoraires (TND)")
     notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    class Meta: verbose_name = "Dossier juridique"; verbose_name_plural = "Dossiers juridiques"; ordering = ['-date_ouverture']
+    class Meta:
+        verbose_name = "Dossier juridique"; verbose_name_plural = "Dossiers juridiques"; ordering = ['-date_ouverture']
+        unique_together = [('erp_client', 'reference')]
     def __str__(self): return f"{self.reference} - {self.client.nom}"
 
 class Audience(models.Model):
+    erp_client = models.ForeignKey(
+        'ERPClient', on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name="Entreprise")
     dossier = models.ForeignKey(DossierJuridique, on_delete=models.CASCADE, related_name='audiences')
     date_audience = models.DateField(verbose_name="Date d'audience")
     lieu = models.CharField(max_length=100, blank=True)
@@ -469,12 +539,20 @@ class Audience(models.Model):
 
 # ─── Comptabilité ───────────────────────────────────────────
 class JournalComptable(models.Model):
-    code = models.CharField(max_length=10, unique=True)
+    erp_client = models.ForeignKey(
+        'ERPClient', on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name="Entreprise")
+    code = models.CharField(max_length=10)
     nom = models.CharField(max_length=100)
-    class Meta: verbose_name = "Journal comptable"; verbose_name_plural = "Journaux comptables"
+    class Meta:
+        verbose_name = "Journal comptable"; verbose_name_plural = "Journaux comptables"
+        unique_together = [('erp_client', 'code')]
     def __str__(self): return f"{self.code} - {self.nom}"
 
 class EcritureComptable(models.Model):
+    erp_client = models.ForeignKey(
+        'ERPClient', on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name="Entreprise")
     journal = models.ForeignKey(JournalComptable, on_delete=models.SET_NULL, null=True)
     date_ecriture = models.DateField(verbose_name="Date d'écriture")
     libelle = models.CharField(max_length=200)
@@ -487,7 +565,10 @@ class EcritureComptable(models.Model):
     def __str__(self): return f"{self.date_ecriture} - {self.libelle}"
 
 class Facture(models.Model):
-    numero = models.CharField(max_length=50, unique=True)
+    erp_client = models.ForeignKey(
+        'ERPClient', on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name="Entreprise")
+    numero = models.CharField(max_length=50)
     client_nom = models.CharField(max_length=100)
     client_matricule = models.CharField(max_length=50, blank=True, verbose_name="Matricule fiscal")
     date_facture = models.DateField(auto_now_add=True)
@@ -497,7 +578,9 @@ class Facture(models.Model):
     payee = models.BooleanField(default=False)
     date_paiement = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    class Meta: verbose_name = "Facture"; verbose_name_plural = "Factures"; ordering = ['-date_facture']
+    class Meta:
+        verbose_name = "Facture"; verbose_name_plural = "Factures"; ordering = ['-date_facture']
+        unique_together = [('erp_client', 'numero')]
     def __str__(self): return f"Facture {self.numero} - {self.client_nom}"
 
 class DeclarationFiscale(models.Model):
@@ -515,6 +598,9 @@ class DeclarationFiscale(models.Model):
 
 # ─── RH & Paie ──────────────────────────────────────────────
 class Employe(models.Model):
+    erp_client = models.ForeignKey(
+        'ERPClient', on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name="Entreprise")
     nom = models.CharField(max_length=100)
     email = models.EmailField()
     telephone = models.CharField(max_length=20, blank=True)
@@ -529,6 +615,9 @@ class Employe(models.Model):
     def __str__(self): return f"{self.nom} ({self.poste})"
 
 class Contrat(models.Model):
+    erp_client = models.ForeignKey(
+        'ERPClient', on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name="Entreprise")
     employe = models.ForeignKey(Employe, on_delete=models.CASCADE, related_name='contrats')
     type_contrat = models.CharField(max_length=50, choices=[('cdi','CDI'),('cdd','CDD'),('stage','Stage'),('freelance','Freelance')], default='cdi')
     date_debut = models.DateField(verbose_name="Date de début")
@@ -540,6 +629,9 @@ class Contrat(models.Model):
     def __str__(self): return f"{self.employe.nom} - {self.get_type_contrat_display()}"
 
 class FichePaie(models.Model):
+    erp_client = models.ForeignKey(
+        'ERPClient', on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name="Entreprise")
     employe = models.ForeignKey(Employe, on_delete=models.CASCADE, related_name='fiches_paie')
     mois = models.CharField(max_length=20, verbose_name="Mois", help_text="ex: Janvier 2026")
     salaire_base = models.DecimalField(max_digits=10, decimal_places=2)
@@ -554,6 +646,9 @@ class FichePaie(models.Model):
     def __str__(self): return f"{self.employe.nom} - {self.mois}"
 
 class Conge(models.Model):
+    erp_client = models.ForeignKey(
+        'ERPClient', on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name="Entreprise")
     employe = models.ForeignKey(Employe, on_delete=models.CASCADE, related_name='conges')
     type_conge = models.CharField(max_length=50, choices=[('annuel','Annuel'),('maladie','Maladie'),('maternite','Maternité'),('exceptionnel','Exceptionnel')], default='annuel')
     date_debut = models.DateField(verbose_name="Date de début")
@@ -566,6 +661,9 @@ class Conge(models.Model):
     def __str__(self): return f"{self.employe.nom} - {self.get_type_conge_display()}"
 
 class Formation(models.Model):
+    erp_client = models.ForeignKey(
+        'ERPClient', on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name="Entreprise")
     employe = models.ForeignKey(Employe, on_delete=models.CASCADE, related_name='formations')
     titre = models.CharField(max_length=200)
     organisme = models.CharField(max_length=100, blank=True)
@@ -580,6 +678,9 @@ class Formation(models.Model):
 
 # ─── Restaurant / Café ───────────────────────────────────────
 class MenuItem(models.Model):
+    erp_client = models.ForeignKey(
+        'ERPClient', on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name="Entreprise")
     CAT_CHOICES = [
         ('entree','Entrée'),('plat','Plat principal'),('dessert','Dessert'),
         ('boisson','Boisson'),('snack','Snack'),('petit-dej','Petit-déjeuner'),
@@ -595,12 +696,17 @@ class MenuItem(models.Model):
     def __str__(self): return f"{self.nom} ({self.get_categorie_display()})"
 
 class TableRestaurant(models.Model):
-    numero = models.CharField(max_length=10, unique=True, verbose_name="N° Table")
+    erp_client = models.ForeignKey(
+        'ERPClient', on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name="Entreprise")
+    numero = models.CharField(max_length=10, verbose_name="N° Table")
     capacite = models.IntegerField(default=4)
     STATUT_CHOICES = [('libre','Libre'),('occupee','Occupée'),('reservee','Réservée')]
     statut = models.CharField(max_length=20, choices=STATUT_CHOICES, default='libre')
     created_at = models.DateTimeField(auto_now_add=True)
-    class Meta: verbose_name = "Table"; verbose_name_plural = "Tables"; ordering = ['numero']
+    class Meta:
+        verbose_name = "Table"; verbose_name_plural = "Tables"; ordering = ['numero']
+        unique_together = [('erp_client', 'numero')]
     def __str__(self): return f"Table {self.numero} ({self.capacite} pers.)"
 
 
@@ -633,6 +739,9 @@ class StudioProject3D(models.Model):
 
 # ─── Pâtisserie / Boulangerie ────────────────────────────────
 class PatisserieRecipe(models.Model):
+    erp_client = models.ForeignKey(
+        'ERPClient', on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name="Entreprise")
     CAT_CHOICES = [('patisserie','Pâtisserie'),('boulangerie','Boulangerie'),('chocolaterie','Chocolaterie'),('confiserie','Confiserie'),('glacier','Glacier'),('traiteur','Traiteur')]
     nom = models.CharField(max_length=200, verbose_name="Recette")
     categorie = models.CharField(max_length=50, choices=CAT_CHOICES, default='patisserie')
@@ -645,6 +754,9 @@ class PatisserieRecipe(models.Model):
     def __str__(self): return self.nom
 
 class PatisserieProduct(models.Model):
+    erp_client = models.ForeignKey(
+        'ERPClient', on_delete=models.CASCADE, null=True, blank=True,
+        verbose_name="Entreprise")
     recette = models.ForeignKey(PatisserieRecipe, on_delete=models.SET_NULL, null=True, blank=True, related_name='produits')
     nom = models.CharField(max_length=200)
     stock_actuel = models.IntegerField(default=0, verbose_name="Stock actuel")

@@ -4,10 +4,10 @@ Servi par `studio.middleware.GestiActivHostMiddleware` : les requêtes du
 sous-domaine sont routées ici, avec SSO (même session) que le site principal.
 """
 from django.conf import settings
-from django.conf.urls.static import static
 from django.http import HttpResponse
-from django.urls import path
+from django.urls import path, re_path
 from django.views.generic.base import RedirectView
+from django.views.static import serve as static_serve
 from django.contrib.staticfiles.storage import staticfiles_storage
 
 from . import views
@@ -43,6 +43,8 @@ urlpatterns = [
     path('juridique/', views.gestion_juridique, name='g_juridique'),
     path('comptabilite/', views.gestion_comptabilite, name='g_comptabilite'),
     path('rh/', views.gestion_rh, name='g_rh'),
+    path('restaurant/', views.gestion_restaurant, name='g_restaurant'),
+    path('patisserie/', views.gestion_patisserie, name='g_patisserie'),
 
     # API (JSON, réutilisées du site principal)
     path('api/connexion/', views.api_connexion, name='g_api_connexion'),
@@ -50,4 +52,7 @@ urlpatterns = [
     path('api/deconnexion/', views.api_deconnexion, name='g_api_deconnexion'),
 ]
 
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Fichiers media servis quel que soit DEBUG (embarqués dans l'image Docker).
+urlpatterns += [
+    re_path(r'^media/(?P<path>.*)$', static_serve, {'document_root': settings.MEDIA_ROOT}),
+]
