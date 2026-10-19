@@ -36,6 +36,13 @@ def bootstrap():
     from django.core.management import call_command
     from django.db import connection
 
+    if connection.vendor != 'sqlite':
+        raise SystemExit(
+            "Refus d'executer les suites sur '%s' : elles ne tournent que sur une "
+            "base SQLite jetable (elles creent et suppriment des donnees). "
+            "Utiliser checks/run_checks.py, ou definir PIXEL_CHECK_DB."
+            % connection.vendor)
+
     if 'studio_erpmodule' not in connection.introspection.table_names():
         # Base neuve : la migration de donnees 0030_seed_erp_modules cree les
         # 9 modules metier attendus par les suites.
