@@ -607,9 +607,9 @@ def gestion_juridique(request):
                 DossierJuridique.objects.create(erp_client=client, reference=request.POST['reference'], client=cl, titre=request.POST['titre'], type_affaire=request.POST.get('type_affaire',''), tribunal=request.POST.get('tribunal',''))
         elif action == 'add_audience':
             if eid:
-                o = get_object_or_404(qs(Audience), id=eid); o.dossier_id=request.POST['dossier']; o.date_audience=request.POST['date_audience'].replace('T',' '); o.lieu=request.POST.get('lieu',''); o.save()
+                o = get_object_or_404(qs(Audience), id=eid); o.dossier_id=request.POST['dossier']; o.date_audience=request.POST['date_audience']; o.lieu=request.POST.get('lieu',''); o.save()
             else:
-                Audience.objects.create(erp_client=client, dossier_id=request.POST['dossier'], date_audience=request.POST['date_audience'].replace('T',' '), lieu=request.POST.get('lieu',''))
+                Audience.objects.create(erp_client=client, dossier_id=request.POST['dossier'], date_audience=request.POST['date_audience'], lieu=request.POST.get('lieu',''))
         elif action == 'delete':
             model_map = {'client':ClientJuridique,'dossier':DossierJuridique,'audience':Audience}
             m = model_map.get(request.POST.get('model'))

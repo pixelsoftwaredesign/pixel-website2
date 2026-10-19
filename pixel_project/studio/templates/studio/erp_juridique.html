@@ -133,13 +133,13 @@
 <h3>🏛️ Audiences</h3>
 <form method="POST" class="erp-add-form">{% csrf_token %}<input type="hidden" name="edit_id" value=""><input type="hidden" name="action" value="add_audience">
 <select name="dossier" required><option value="">Dossier</option>{% for d in dossiers %}<option value="{{ d.id }}">{{ d.reference }}</option>{% endfor %}</select>
-<input name="date_audience" type="datetime-local" required>
+<input name="date_audience" type="date" required>
 <input name="lieu" placeholder="Lieu">
 <button type="submit" class="btn-add">+ Ajouter</button><span class="edit-actions"><button type="submit" style="background:#1EB482;color:#05100D;border:none;padding:.25rem .6rem;border-radius:4px;cursor:pointer;font-weight:700;font-size:.65rem">✓</button><button type="button" onclick="cancelEdit(this)" style="background:transparent;color:#ef4444;border:1px solid #ef4444;padding:.25rem .6rem;border-radius:4px;cursor:pointer;font-size:.65rem;margin-left:.3rem">✕</button></span>
 </form>
 <input class="erp-search" type="text" placeholder="🔍 Filtrer..." oninput="filterTable(this)"><table class="erp-table"><thead><tr><th>Dossier</th><th>Date</th><th>Lieu</th><th></th></tr></thead>
 <tbody>{% for x in audiences %}<tr data-model="audience" data-id="{{ x.id }}">
-<td>{{ x.dossier.reference }}</td><td>{{ x.date_audience|date:"d/m/Y H:i" }}</td><td>{{ x.lieu|default:"—" }}</td>
+<td>{{ x.dossier.reference }}</td><td>{{ x.date_audience|date:"d/m/Y" }}</td><td>{{ x.lieu|default:"—" }}</td>
 <td><a href="#" class="edit" onclick="editRecord(this)" data-model="audience" data-id="{{ x.id }}">✎</a><a href="#" class="del" onclick="if(confirm('Supprimer ?'))fetch('',{method:'POST',headers:{'X-CSRFToken':'{{ csrf_token }}'},body:new URLSearchParams({action:'delete',model:'audience',id:'{{ x.id }}'})}).then(()=>location.reload())">✕</a></td>
 </tr>{% empty %}<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:1rem">Aucune audience</td></tr>{% endfor %}</tbody></table>
 </div>
