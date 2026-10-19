@@ -15,15 +15,21 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.views.generic.base import RedirectView
+from django.views.static import serve as static_serve
 from django.contrib.staticfiles.storage import staticfiles_storage
 from django.conf import settings
-from django.conf.urls.static import static
 
 urlpatterns = [
     path('favicon.ico', RedirectView.as_view(url=staticfiles_storage.url('favicon.svg'), permanent=True)),
     path('', include('studio.urls')),
     path('admin/', admin.site.urls),
     path('', include('blockchain.urls')),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
+
+# Fichiers media servis quel que soit DEBUG (les médias sont embarqués dans
+# l'image Docker). `static()` ne les sert qu'avec DEBUG=True.
+urlpatterns += [
+    re_path(r'^media/(?P<path>.*)$', static_serve, {'document_root': settings.MEDIA_ROOT}),
+]
