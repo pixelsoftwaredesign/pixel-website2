@@ -1,7 +1,8 @@
 /* ─────────────────────────────────────────────────────────────
-   Marque de l'administration Django + page de connexion
-   (scoping volontairement limité à .login pour ne pas altérer
-   le reste de l'administration Django).
+   Habillage de l'administration Django :
+   1) marque (en-tête) ;
+   2) thème sombre forcé (variables natives Django) ;
+   3) page de connexion brandée.
    ──────────────────────────────────────────────────────────── */
 
 #header #site-name a {
@@ -18,10 +19,83 @@
   text-transform: uppercase;
   padding: 3px 8px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, .16);
-  color: inherit;
+  background: rgba(56, 189, 248, .18);
+  color: #7dd3fc;
   vertical-align: middle;
 }
+
+/* ── Thème sombre (forcé, aligné sur l'espace admin Pixel) ── */
+:root,
+html,
+html[data-theme="light"],
+html[data-theme="dark"],
+html[data-theme="auto"] {
+  --primary: #0f172a !important;
+  --secondary: #0b1220 !important;
+  --accent: #38bdf8 !important;
+  --primary-fg: #e7ebf3 !important;
+
+  --body-fg: #e7ebf3 !important;
+  --body-bg: #070b16 !important;
+  --body-quiet-color: #8d9ab0 !important;
+  --body-medium-color: #cbd5e6 !important;
+  --body-loud-color: #ffffff !important;
+
+  --header-color: #e2e8f0 !important;
+  --header-branding-color: #38bdf8 !important;
+  --header-bg: #0b1220 !important;
+  --header-link-color: #e2e8f0 !important;
+
+  --breadcrumbs-fg: #94a3b8 !important;
+  --breadcrumbs-link-fg: #38bdf8 !important;
+  --breadcrumbs-bg: #0f172a !important;
+
+  --link-fg: #38bdf8 !important;
+  --link-hover-color: #7dd3fc !important;
+  --link-selected-fg: #a78bfa !important;
+
+  --hairline-color: rgba(255, 255, 255, .09) !important;
+  --border-color: rgba(255, 255, 255, .14) !important;
+
+  --error-fg: #fb7185 !important;
+
+  --message-success-bg: rgba(52, 211, 153, .14) !important;
+  --message-warning-bg: rgba(251, 191, 36, .14) !important;
+  --message-error-bg: rgba(251, 113, 133, .14) !important;
+
+  --darkened-bg: #0c1222 !important;
+  --selected-bg: #14213a !important;
+  --selected-row: #123047 !important;
+
+  --button-fg: #f1f5f9 !important;
+  --button-bg: #1e293b !important;
+  --button-hover-bg: #334155 !important;
+  --default-button-bg: #0284c7 !important;
+  --default-button-hover-bg: #0ea5e9 !important;
+  --close-button-bg: #1e293b !important;
+  --close-button-hover-bg: #334155 !important;
+  --delete-button-bg: #b91c1c !important;
+  --delete-button-hover-bg: #dc2626 !important;
+
+  --object-tools-fg: #f1f5f9 !important;
+  --object-tools-bg: #334155 !important;
+  --object-tools-hover-bg: #475569 !important;
+
+  color-scheme: dark !important;
+}
+
+/* Le thème est forcé : on masque le sélecteur clair/sombre de Django. */
+.theme-toggle { display: none !important; }
+
+/* Messages colorés lisibles sur fond sombre. */
+.messagelist li.success { color: #6ee7b7 !important; }
+.messagelist li.warning { color: #fcd34d !important; }
+.messagelist li.error { color: #fda4af !important; }
+
+/* Barre supérieure et menu latéral assortis au site. */
+#header { border-bottom: 1px solid var(--hairline-color); }
+#nav-sidebar { background: #080d18; }
+div.breadcrumbs { border-bottom: 1px solid var(--hairline-color); }
 
 /* ── Connexion ───────────────────────────────────────────── */
 body.login {
