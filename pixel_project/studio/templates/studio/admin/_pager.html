@@ -1,0 +1,16 @@
+{# Pagination partagée : `pager` = contexte renvoyé par studio.views._paginate #}
+{% if pager.has_previous or pager.has_next %}
+<nav class="pxadmin-pager" aria-label="Pagination">
+  {% if pager.has_previous %}
+  <a class="pxadmin-btn pxadmin-btn--sm pxadmin-btn--ghost" href="{{ pager.previous_url }}" rel="prev">‹ Précédent</a>
+  {% else %}
+  <span class="pxadmin-btn pxadmin-btn--sm pxadmin-btn--ghost" aria-disabled="true">‹ Précédent</span>
+  {% endif %}
+  <span class="pxadmin-pager-info">Page {{ pager.page }}</span>
+  {% if pager.has_next %}
+  <a class="pxadmin-btn pxadmin-btn--sm pxadmin-btn--ghost" href="{{ pager.next_url }}" rel="next">Suivant ›</a>
+  {% else %}
+  <span class="pxadmin-btn pxadmin-btn--sm pxadmin-btn--ghost" aria-disabled="true">Suivant ›</span>
+  {% endif %}
+</nav>
+{% endif %}

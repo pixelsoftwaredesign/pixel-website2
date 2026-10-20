@@ -42,6 +42,10 @@
         <span class="pxadmin-link-icon">⚙️</span>
         <span class="pxadmin-link-text"><strong>Admin Django</strong><small>Tableau de bord</small></span>
       </a>
+      <a class="pxadmin-link" href="/admin-bancaire/">
+        <span class="pxadmin-link-icon">🏦</span>
+        <span class="pxadmin-link-text"><strong>Banque &amp; paiements</strong><small>RIB &amp; encaissement</small></span>
+      </a>
     </div>
   </div>
 </section>
@@ -66,10 +70,13 @@
             <td>{% include "studio/admin/_statut.html" with statut=cmd.statut %}</td>
             <td class="cell-nowrap cell-muted">{{ cmd.date_commande|date:"d/m/Y H:i" }}</td>
           </tr>
+          {% empty %}
+          <tr><td colspan="4"><div class="pxadmin-empty"><span class="pxadmin-empty-icon">🛒</span><p>Aucune commande pour le moment</p></div></td></tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
+    {% include "studio/admin/_pager.html" with pager=commandes_page %}
   </div>
 </section>
 {% endif %}

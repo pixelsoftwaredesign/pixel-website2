@@ -1744,39 +1744,96 @@ def portail(request):
     })
 
 # ─── Administration bancaire ─────────────────────────────────
+def _admin_page(request, page_param):
+    """Numéro de page validé depuis `?<page_param>=` (jamais d'erreur 500)."""
+    try:
+        page = int(request.GET.get(page_param) or 1)
+    except (TypeError, ValueError):
+        return 1
+    return page if page >= 1 else 1
+
+
+def _page_url(request, page_param, target):
+    """Même URL avec le paramètre de pagination demandé."""
+    params = request.GET.copy()
+    params[page_param] = target
+    return '?%s' % params.urlencode()
+
+
+def _paginate(queryset, page_param, request, per_page=20):
+    """Tranche un queryset et prépare le contexte de pagination du gabarit."""
+    page = _admin_page(request, page_param)
+    total = queryset.count()
+    start = (page - 1) * per_page
+    rows = list(queryset[start:start + per_page]) if start < total else []
+    has_previous = start > 0 and total > 0
+    has_next = (start + per_page) < total
+    return rows, {
+        'page': page,
+        'has_previous': has_previous,
+        'has_next': has_next,
+        'previous_url': _page_url(request, page_param, page - 1) if has_previous else '',
+        'next_url': _page_url(request, page_param, page + 1) if has_next else '',
+    }
+
+
+def _selected(value, choices):
+    """Renvoie `value` si elle fait partie des valeurs autorisées, sinon ""."""
+    allowed = {str(c[0]) for c in choices}
+    return str(value) if str(value) in allowed else ''
+
+
 @staff_required
 def admin_bancaire(request):
-    banques = ConfigurationBancaire.objects.all()
-    configs_enligne = ConfigurationPaiementEnLigne.objects.all()
+    banques = ConfigurationBancaire.objects.order_by('banque', 'titulaire')
+    configs_enligne = ConfigurationPaiementEnLigne.objects.order_by('fournisseur')
     if request.method == 'POST':
         action = request.POST.get('action')
         if action == 'add_banque':
             ConfigurationBancaire.objects.create(
-                banque=request.POST.get('banque'), agence=request.POST.get('agence',''),
-                rib=request.POST.get('rib',''), swift=request.POST.get('swift',''),
-                titulaire=request.POST.get('titulaire',''),
-                est_defaut=request.POST.get('est_defaut','0')=='1'
+                banque=_selected(request.POST.get('banque'), ConfigurationBancaire.BANQUES_TUNISIE) or 'BIAT',
+                agence=request.POST.get('agence', ''),
+                rib=request.POST.get('rib', ''), swift=request.POST.get('swift', ''),
+                titulaire=request.POST.get('titulaire', ''),
+                est_defaut=request.POST.get('est_defaut', '0') == '1'
             )
         elif action == 'edit_banque':
             b = get_object_or_404(ConfigurationBancaire, id=request.POST.get('edit_id'))
-            b.banque = request.POST.get('banque'); b.agence = request.POST.get('agence','')
-            b.rib = request.POST.get('rib',''); b.swift = request.POST.get('swift','')
-            b.titulaire = request.POST.get('titulaire','')
-            b.est_defaut = request.POST.get('est_defaut','0')=='1'
-            b.is_active = request.POST.get('is_active','1')=='1'
+            b.banque = _selected(request.POST.get('banque'), ConfigurationBancaire.BANQUES_TUNISIE) or b.banque
+            b.agence = request.POST.get('agence', '')
+            b.titulaire = request.POST.get('titulaire', '')
+            # Le RIB n'est jamais reaffiche dans le formulaire : un champ vide
+            # signifie « conserver le RIB actuel ».
+            nouveau_rib = (request.POST.get('rib') or '').strip()
+            if nouveau_rib:
+                b.rib = nouveau_rib
+            b.swift = request.POST.get('swift', '')
+            b.est_defaut = request.POST.get('est_defaut', '0') == '1'
+            b.is_active = request.POST.get('is_active', '0') == '1'
             b.save()
         elif action == 'delete_banque':
             ConfigurationBancaire.objects.filter(id=request.POST.get('id')).delete()
         elif action == 'save_paiement_config':
-            cfg, _ = ConfigurationPaiementEnLigne.objects.get_or_create(id=request.POST.get('config_id',0))
-            cfg.fournisseur = request.POST.get('fournisseur','manual')
-            cfg.instructions = request.POST.get('instructions','')
-            cfg.frais_pourcentage = request.POST.get('frais_pourcentage',0)
-            cfg.est_actif = request.POST.get('est_actif','1')=='1'
+            cid = (request.POST.get('config_id') or '').strip()
+            cfg = ConfigurationPaiementEnLigne.objects.filter(pk=cid).first() if cid.isdigit() else None
+            if cfg is None:
+                cfg = ConfigurationPaiementEnLigne()
+            cfg.fournisseur = _selected(request.POST.get('fournisseur'), ConfigurationPaiementEnLigne.FOURNISSEURS) or cfg.fournisseur or 'manual'
+            cfg.instructions = request.POST.get('instructions', '')
+            cfg.frais_pourcentage = request.POST.get('frais_pourcentage') or 0
+            cfg.est_actif = request.POST.get('est_actif') == '1'
             cfg.save()
         return redirect('admin_bancaire')
     return render(request, 'studio/admin_bancaire.html', {
-        'banques': banques, 'configs_enligne': configs_enligne
+        'banques': banques,
+        'configs_enligne': configs_enligne,
+        'banque_choices': ConfigurationBancaire.BANQUES_TUNISIE,
+        'paiement_choices': ConfigurationPaiementEnLigne.FOURNISSEURS,
+        'total_banques': banques.count(),
+        'banques_defaut': banques.filter(est_defaut=True).count(),
+        'banques_actives': banques.filter(is_active=True).count(),
+        'total_paiements': configs_enligne.count(),
+        'paiements_actifs': configs_enligne.filter(est_actif=True).count(),
     })
 
 # ─── API: Vérifier clé d'activation ─────────────────────────
@@ -3574,16 +3631,21 @@ def api_pixsoftpay_profile_photo(request):
 @staff_required
 def admin_receptions_dashboard(request):
     from .models import CommandeECommerce, ProjetContact, Candidature
-    commandes = CommandeECommerce.objects.all().order_by('-date_commande')[:10]
-    contacts = ProjetContact.objects.all().order_by('-date_reception')[:10]
-    try:
-        candidatures = Candidature.objects.all().order_by('-created_at')[:10]
-    except Exception:
-        candidatures = []
     try:
         total_candidatures = Candidature.objects.count()
     except Exception:
         total_candidatures = 0
+    commandes, commandes_page = _paginate(
+        CommandeECommerce.objects.order_by('-date_commande'), 'cpage', request, 10)
+    contacts, contacts_page = _paginate(
+        ProjetContact.objects.order_by('-date_reception'), 'dpage', request, 10)
+    try:
+        candidatures, candidatures_page = _paginate(
+            Candidature.objects.order_by('-created_at'), 'kpage', request, 10)
+    except Exception:
+        candidatures, candidatures_page = [], {'page': 1, 'has_previous': False,
+                                               'has_next': False, 'previous_url': '',
+                                               'next_url': ''}
     stats = {
         'total_commandes': CommandeECommerce.objects.count(),
         'nouvelles_commandes': CommandeECommerce.objects.filter(statut='en_attente').count(),
@@ -3596,13 +3658,15 @@ def admin_receptions_dashboard(request):
         'contacts': contacts,
         'candidatures': candidatures,
         'stats': stats,
+        'commandes_page': commandes_page,
+        'contacts_page': contacts_page,
+        'candidatures_page': candidatures_page,
     }
     return render(request, 'studio/admin_receptions_dashboard.html', context)
 
 @role_required('Commercial', 'SuperAdmin', 'Admin')
 def admin_dashboard_commercial(request):
     from .models import ProjetContact, Candidature
-    contacts = ProjetContact.objects.all().order_by('-date_reception')[:10]
     total_contacts = ProjetContact.objects.count()
     contacts_non_repondus = ProjetContact.objects.filter(a_repondu=False).count()
     contacts_repondus = ProjetContact.objects.filter(a_repondu=True).count()
@@ -3614,8 +3678,11 @@ def admin_dashboard_commercial(request):
         taux_reponse_label = "%d%% de réponse" % round(contacts_repondus * 100 / total_contacts)
     else:
         taux_reponse_label = ""
+    contacts, contacts_page = _paginate(
+        ProjetContact.objects.order_by('-date_reception'), 'page', request, 10)
     return render(request, 'studio/admin_dashboard_commercial.html', {
         'contacts': contacts,
+        'contacts_page': contacts_page,
         'total_contacts': total_contacts,
         'contacts_non_repondus': contacts_non_repondus,
         'contacts_repondus': contacts_repondus,
@@ -3623,13 +3690,13 @@ def admin_dashboard_commercial(request):
         'total_candidatures': total_candidatures,
     })
 
+
 @role_required('Comptable', 'SuperAdmin', 'Admin')
 def admin_dashboard_comptable(request):
     from django.db.models import Sum
     from .models import CommandeECommerce
     # Statuts considérés comme « confirmés » (au-delà du panier / de l'attente).
     STATUTS_CONFIRMES = ['confirmee', 'preparation', 'expediee', 'livree']
-    commandes = CommandeECommerce.objects.all().order_by('-date_commande')[:10]
     total_commandes = CommandeECommerce.objects.count()
     payees = CommandeECommerce.objects.filter(statut__in=STATUTS_CONFIRMES).count()
     try:
@@ -3641,8 +3708,23 @@ def admin_dashboard_comptable(request):
         taux_paiement_label = "%d%% confirmées" % round(payees * 100 / total_commandes)
     else:
         taux_paiement_label = ""
+    qs = CommandeECommerce.objects.order_by('-date_commande')
+    statut = (request.GET.get('statut') or '').strip()
+    if statut in dict(CommandeECommerce.STATUTS):
+        qs = qs.filter(statut=statut)
+    else:
+        statut = ''
+    commandes, commandes_page = _paginate(qs, 'page', request, 10)
     return render(request, 'studio/admin_dashboard_comptable.html', {
         'commandes': commandes,
+        'commandes_page': commandes_page,
+        'statut': statut,
+        'statut_choices': CommandeECommerce.STATUTS,
+        'statut_counts': [
+            {'value': value, 'label': label,
+             'count': CommandeECommerce.objects.filter(statut=value).count()}
+            for value, label in CommandeECommerce.STATUTS
+        ],
         'total_commandes': total_commandes,
         'nouvelles_commandes': CommandeECommerce.objects.filter(statut='en_attente').count(),
         'payees': payees,
@@ -3654,11 +3736,15 @@ def admin_dashboard_comptable(request):
 @role_required('Editeur', 'SuperAdmin', 'Admin')
 def admin_dashboard_editeur(request):
     from .models import NewsletterCampaign, NewsletterSubscriber, Temoignage
-    campagnes = NewsletterCampaign.objects.all().order_by('-date_creation')[:10]
-    temoignages = Temoignage.objects.all().order_by('-created_at')[:10]
+    campagnes, campagnes_page = _paginate(
+        NewsletterCampaign.objects.order_by('-date_creation'), 'cpage', request, 10)
+    temoignages, temoignages_page = _paginate(
+        Temoignage.objects.order_by('-created_at'), 'tpage', request, 10)
     return render(request, 'studio/admin_dashboard_editeur.html', {
         'campagnes': campagnes,
+        'campagnes_page': campagnes_page,
         'temoignages': temoignages,
+        'temoignages_page': temoignages_page,
         'total_campagnes': NewsletterCampaign.objects.count(),
         'total_abonnes': NewsletterSubscriber.objects.filter(actif=True).count(),
         'total_temoignages': Temoignage.objects.count(),
@@ -3667,13 +3753,15 @@ def admin_dashboard_editeur(request):
 @role_required('SuperAdmin')
 def admin_dashboard_superadmin(request):
     from .models import CommandeECommerce, ProjetContact, Produit, Candidature
-    commandes = CommandeECommerce.objects.all().order_by('-date_commande')[:10]
+    commandes, commandes_page = _paginate(
+        CommandeECommerce.objects.order_by('-date_commande'), 'page', request, 10)
     try:
         total_candidatures = Candidature.objects.count()
     except Exception:
         total_candidatures = 0
     return render(request, 'studio/admin_dashboard_superadmin.html', {
         'commandes': commandes,
+        'commandes_page': commandes_page,
         'total_users': User.objects.count(),
         'total_commandes': CommandeECommerce.objects.count(),
         'total_contacts': ProjetContact.objects.count(),
@@ -3685,9 +3773,11 @@ def admin_dashboard_superadmin(request):
 def admin_dashboard_admin(request):
     from django.contrib.auth.models import Group
     from .models import CommandeECommerce, ProjetContact
-    commandes = CommandeECommerce.objects.all().order_by('-date_commande')[:10]
+    commandes, commandes_page = _paginate(
+        CommandeECommerce.objects.order_by('-date_commande'), 'page', request, 10)
     return render(request, 'studio/admin_dashboard_admin.html', {
         'commandes': commandes,
+        'commandes_page': commandes_page,
         'total_users': User.objects.count(),
         'total_groups': Group.objects.count(),
         'total_commandes': CommandeECommerce.objects.count(),

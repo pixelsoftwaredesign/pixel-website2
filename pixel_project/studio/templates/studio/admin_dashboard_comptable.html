@@ -30,12 +30,26 @@
     <span class="pxadmin-link-icon">🔁</span>
     <span class="pxadmin-link-text"><strong>Transactions</strong><small>Historique</small></span>
   </a>
+  <a class="pxadmin-link" href="/admin-bancaire/">
+    <span class="pxadmin-link-icon">🏦</span>
+    <span class="pxadmin-link-text"><strong>Banque &amp; paiements</strong><small>RIB &amp; encaissement</small></span>
+  </a>
 </div>
 
 <section class="panel">
   <div class="panel-head">
-    <h2>🧾 Dernières commandes</h2>
+    <div class="panel-head-main">
+      <h2>🧾 Commandes</h2>
+      <span class="panel-sub">{{ total_commandes }} au total · {% if statut %}filtre : {{ statut }}{% else %}tous les statuts{% endif %}</span>
+    </div>
     <a class="pxadmin-btn pxadmin-btn--sm" href="/admin/studio/commandecommerce/">Voir tout ↗</a>
+  </div>
+
+  <div class="pxadmin-filters" role="group" aria-label="Filtrer les commandes par statut">
+    <a class="px-pill{% if not statut %} is-on{% endif %}" href="?">Toutes ({{ total_commandes }})</a>
+    {% for s in statut_counts %}
+    <a class="px-pill{% if statut == s.value %} is-on{% endif %}" href="?statut={{ s.value }}">{{ s.label }} ({{ s.count }})</a>
+    {% endfor %}
   </div>
   <div class="panel-body panel-body--flush">
     <div class="table-responsive">
@@ -55,11 +69,12 @@
             <td class="cell-nowrap"><a class="pxadmin-btn pxadmin-btn--sm" href="/admin/studio/commandecommerce/{{ cmd.id }}/change/">Ouvrir</a></td>
           </tr>
           {% empty %}
-          <tr><td colspan="7"><div class="pxadmin-empty"><span class="pxadmin-empty-icon">🧾</span><p>Aucune commande</p></div></td></tr>
+          <tr><td colspan="7"><div class="pxadmin-empty"><span class="pxadmin-empty-icon">🧾</span><p>Aucune commande pour ce filtre</p></div></td></tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
+    {% include "studio/admin/_pager.html" with pager=commandes_page %}
   </div>
 </section>
 

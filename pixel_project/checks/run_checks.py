@@ -19,6 +19,7 @@ SUITES = [
     'check_tenant_isolation.py',
     'check_links.py',
     'check_admin.py',
+    'check_admin_pages.py',
     'check_modules.py',
 ]
 

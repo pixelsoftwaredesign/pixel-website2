@@ -32,6 +32,9 @@
             <strong>{{ item.label }}</strong>
             <small>{{ item.desc }}</small>
           </span>
+          {% if item.count %}
+          <span class="pxadmin-nav-count" title="{{ item.count }} à traiter">{{ item.count }}</span>
+          {% endif %}
         </a>
         {% endfor %}
       </div>

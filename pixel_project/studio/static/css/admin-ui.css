@@ -419,6 +419,57 @@ form.pxadmin-inline { display: inline; margin: 0; }
 .panel-head-tools { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .pxadmin-count { margin: 0; color: var(--px-muted); font-size: .76rem; white-space: nowrap; }
 
+.pxadmin-nav-count {
+  margin-left: auto;
+  flex: 0 0 auto;
+  min-width: 22px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  text-align: center;
+  font-size: .72rem;
+  font-weight: 700;
+  color: #fde68a;
+  background: rgba(251, 191, 36, .18);
+  border: 1px solid rgba(251, 191, 36, .38);
+}
+.pxadmin-btn--block { width: 100%; justify-content: center; }
+
+.pxadmin-pager {
+  display: flex; align-items: center; justify-content: flex-end; gap: 10px;
+  padding: 12px 18px;
+  border-top: 1px solid var(--px-border);
+  background: rgba(255, 255, 255, .012);
+}
+.pxadmin-pager-info { color: var(--px-muted); font-size: .78rem; }
+
+/* ── Formulaires de l'espace admin ───────────────────────── */
+.pxadmin-form { display: flex; flex-direction: column; gap: 14px; }
+.pxadmin-form-row { display: flex; flex-wrap: wrap; gap: 14px; }
+.pxadmin-form-row > .pxadmin-field { flex: 1 1 200px; }
+.pxadmin-field { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.pxadmin-field > span { color: var(--px-muted); font-size: .74rem; }
+.pxadmin-field input[type="text"],
+.pxadmin-field input[type="number"],
+.pxadmin-field textarea,
+.pxadmin-select {
+  padding: 8px 10px;
+  border-radius: 9px;
+  border: 1px solid var(--px-border);
+  background: rgba(255, 255, 255, .05);
+  color: var(--px-text);
+  font: inherit;
+  font-size: .84rem;
+  width: 100%;
+}
+.pxadmin-field textarea { resize: vertical; }
+.pxadmin-field input:hover, .pxadmin-field textarea:hover { border-color: var(--px-border-strong); }
+.pxadmin-field input:focus, .pxadmin-field textarea:focus {
+  outline: none;
+  border-color: rgba(56, 189, 248, .6);
+  background: rgba(56, 189, 248, .07);
+}
+.cell-mono { font-family: 'Space Mono', ui-monospace, monospace; font-size: .8rem; letter-spacing: .04em; }
+
 .pxadmin-search { position: relative; display: block; min-width: 250px; }
 .pxadmin-search input {
   width: 100%;

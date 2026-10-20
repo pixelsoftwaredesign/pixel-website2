@@ -36,6 +36,7 @@
     <h2>📄 Dernières demandes de projet</h2>
     <a class="pxadmin-btn pxadmin-btn--sm" href="/admin/studio/projetcontact/">Voir tout ↗</a>
   </div>
+
   <div class="panel-body panel-body--flush">
     <div class="table-responsive">
       <table class="pxadmin-table">
@@ -61,6 +62,7 @@
         </tbody>
       </table>
     </div>
+    {% include "studio/admin/_pager.html" with pager=contacts_page %}
   </div>
 </section>
 

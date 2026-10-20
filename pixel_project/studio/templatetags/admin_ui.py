@@ -68,6 +68,15 @@ DASHBOARDS = [
         'group': 'Système',
     },
     {
+        'key': 'bancaire',
+        'label': 'Banque & paiements',
+        'desc': 'RIB & encaissement',
+        'icon': '🏦',
+        'url': '/admin-bancaire/',
+        'roles': ['Comptable', 'SuperAdmin', 'Admin'],
+        'group': 'Système',
+    },
+    {
         'key': 'roles',
         'label': 'Rôles & accès',
         'desc': 'Groupes & membres',
@@ -87,6 +96,25 @@ def _user_roles(user):
         return set(user.groups.values_list('name', flat=True))
     except Exception:
         return set()
+
+
+def _nav_counts():
+    """Compteurs « à traiter » affichés dans la navigation.
+
+    Best-effort : une erreur de requête ne doit jamais empêcher d'afficher
+    l'espace d'administration.
+    """
+    counts = {}
+    try:
+        from studio.models import CommandeECommerce, ProjetContact
+        commandes = CommandeECommerce.objects.filter(statut='en_attente').count()
+        contacts = ProjetContact.objects.filter(a_repondu=False).count()
+        counts['receptions'] = commandes + contacts
+        counts['commercial'] = contacts
+        counts['comptable'] = commandes
+    except Exception:
+        return {}
+    return counts
 
 
 def user_can(user, dashboard):
@@ -115,6 +143,7 @@ def admin_nav(user, current_path=''):
     if not user or not user.is_authenticated:
         return groups
     current = (current_path or '').rstrip('/')
+    counts = _nav_counts()
     for d in DASHBOARDS:
         if not user_can(user, d):
             continue
@@ -125,6 +154,7 @@ def admin_nav(user, current_path=''):
             'icon': d['icon'],
             'url': d['url'],
             'active': current == d['url'].rstrip('/'),
+            'count': counts.get(d['key'], 0),
         }
         if not groups or groups[-1]['name'] != d['group']:
             groups.append({'name': d['group'], 'items': []})
