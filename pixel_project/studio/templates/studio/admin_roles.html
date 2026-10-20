@@ -182,11 +182,12 @@
     b.addEventListener('click', function () {
       var v = b.getAttribute('data-role-filter') || '';
       activeRole = (v === activeRole && v !== '') ? '' : v;
-      apply();
-      if (b.classList.contains('px-pill') === false && section) {
-        section.scrollIntoView({behavior: 'smooth', block: 'start'});
-        if (input) input.focus({preventScroll: true});
+      if (!b.classList.contains('px-pill')) {
+        /* « Voir les membres » depuis une carte : on repart de la liste complete. */
+        if (input) input.value = '';
+        if (section) section.scrollIntoView({behavior: 'smooth', block: 'start'});
       }
+      apply();
     });
   });
 
@@ -195,6 +196,14 @@
     if (input) input.value = '';
     apply();
     if (input) input.focus();
+  });
+
+  if (input) input.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && input.value) {
+      e.preventDefault();
+      input.value = '';
+      apply();
+    }
   });
 
   document.addEventListener('keydown', function (e) {
