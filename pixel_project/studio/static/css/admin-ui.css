@@ -19,6 +19,7 @@
   --px-radius: 16px;
   --px-radius-sm: 10px;
   --px-shadow: 0 18px 40px -24px rgba(0, 0, 0, .8);
+  --px-topbar-h: 70px;
 
   display: flex;
   align-items: stretch;
@@ -289,7 +290,7 @@ form.pxadmin-inline { display: inline; margin: 0; }
   width: 100%; border-collapse: collapse; margin: 0; font-size: .875rem;
 }
 .panel table.pxadmin-table thead th {
-  position: sticky; top: 0;
+  position: sticky; top: var(--px-topbar-h, 0px); z-index: 2;
   text-align: left;
   padding: 12px 18px;
   font-size: .7rem; letter-spacing: .1em; text-transform: uppercase;
@@ -413,6 +414,103 @@ form.pxadmin-inline { display: inline; margin: 0; }
 .pxadmin-hint { color: var(--px-muted); font-size: .8rem; }
 .pxadmin-note { margin: 0; color: var(--px-muted); font-size: .82rem; }
 
+/* ── Recherche, filtres & rôles (UX) ─────────────────────── */
+.panel-head-main { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.panel-head-tools { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.pxadmin-count { margin: 0; color: var(--px-muted); font-size: .76rem; white-space: nowrap; }
+
+.pxadmin-search { position: relative; display: block; min-width: 250px; }
+.pxadmin-search input {
+  width: 100%;
+  padding: 8px 12px 8px 34px;
+  border-radius: 10px;
+  border: 1px solid var(--px-border);
+  background: rgba(255, 255, 255, .05);
+  color: var(--px-text);
+  font: inherit;
+  font-size: .84rem;
+  transition: border-color .16s ease, background .16s ease;
+}
+.pxadmin-search input::placeholder { color: var(--px-muted); }
+.pxadmin-search input:hover { border-color: var(--px-border-strong); }
+.pxadmin-search input:focus { outline: none; border-color: rgba(56, 189, 248, .6); background: rgba(56, 189, 248, .07); }
+.pxadmin-search::before {
+  content: "🔍";
+  position: absolute; left: 11px; top: 50%;
+  transform: translateY(-50%);
+  font-size: .82rem; opacity: .75; pointer-events: none;
+}
+
+.pxadmin-filters {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--px-border);
+  background: rgba(255, 255, 255, .012);
+}
+.px-pill {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--px-border);
+  background: rgba(255, 255, 255, .035);
+  color: #cbd5e6;
+  font: inherit; font-size: .78rem; font-weight: 500;
+  cursor: pointer;
+  transition: background .16s ease, border-color .16s ease, color .16s ease;
+}
+.px-pill:hover { background: rgba(255, 255, 255, .08); color: #fff; }
+.px-pill.is-on {
+  background: rgba(56, 189, 248, .16);
+  border-color: rgba(56, 189, 248, .5);
+  color: #bae6fd;
+}
+
+.px-role-counts { display: flex; flex-wrap: wrap; gap: 6px; }
+.px-role-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; }
+.pxadmin-btn.is-on { border-color: rgba(56, 189, 248, .55); color: #bae6fd; background: rgba(56, 189, 248, .12); }
+
+.pxadmin-table tbody tr[hidden] { display: none; }
+.pxadmin-table tbody tr.is-changed {
+  animation: px-highlight 2.4s ease-out 1;
+}
+@keyframes px-highlight {
+  0% { background: rgba(52, 211, 153, .26); }
+  100% { background: transparent; }
+}
+
+.pxadmin-select option { background: #0c1322; color: var(--px-text); }
+.pxadmin-btn:disabled,
+.pxadmin-btn[disabled] {
+  opacity: .45; cursor: not-allowed; transform: none; filter: none;
+}
+.pxadmin-btn.is-loading { cursor: progress; }
+.pxadmin-roleform.is-dirty select { border-color: rgba(56, 189, 248, .55); }
+
+.visually-hidden {
+  position: absolute !important;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0);
+  white-space: nowrap; border: 0;
+}
+
+/* ── Accessibilité : focus clavier visible ───────────────── */
+.pxadmin a:focus-visible,
+.pxadmin button:focus-visible,
+.pxadmin select:focus-visible,
+.pxadmin input:focus-visible,
+.pxadmin [tabindex]:focus-visible {
+  outline: 2px solid var(--px-sky);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pxadmin *, .pxadmin *::before, .pxadmin *::after {
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 1024px) {
   .pxadmin-sidebar {
@@ -440,6 +538,7 @@ form.pxadmin-inline { display: inline; margin: 0; }
 @media (min-width: 1025px) { .pxadmin-overlay { display: none; } }
 
 @media (max-width: 720px) {
+  .pxadmin { --px-topbar-h: 58px; }
   .pxadmin-content { padding: 18px 14px; }
   .pxadmin-topbar { padding: 12px 14px; gap: 10px; }
   .pxadmin-page-title h1 { font-size: 1.08rem; }
@@ -447,4 +546,8 @@ form.pxadmin-inline { display: inline; margin: 0; }
   .pxadmin-topbar-actions .pxadmin-btn .label { display: none; }
   .pxadmin-footer { flex-direction: column; padding: 16px 14px 22px; }
   .stat-card .stat-value { font-size: 1.6rem; }
+  .panel-head { flex-direction: column; align-items: stretch; }
+  .panel-head-tools { justify-content: space-between; }
+  .pxadmin-search { min-width: 0; flex: 1 1 100%; }
+  .pxadmin-filters { padding: 10px 14px; }
 }

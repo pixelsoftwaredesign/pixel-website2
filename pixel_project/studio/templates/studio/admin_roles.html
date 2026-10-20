@@ -14,8 +14,10 @@
 
 <section class="panel">
   <div class="panel-head">
-    <h2>🛡️ Rôles</h2>
-    <span class="panel-sub">{{ roles_used }} rôle(s) attribué(s) · {{ members_total }} affectation(s)</span>
+    <div class="panel-head-main">
+      <h2>🛡️ Rôles</h2>
+      <span class="panel-sub">{{ roles_used }} rôle(s) attribué(s) · {{ members_total }} affectation(s)</span>
+    </div>
   </div>
   <div class="panel-body">
     <div class="px-roles">
@@ -25,9 +27,13 @@
           <span class="px-role-icon" aria-hidden="true">{{ r.icon }}</span>
           <div class="px-role-title">
             <strong>{{ r.name }}</strong>
-            <small>{{ r.count }} membre{{ r.count|pluralize }} · {{ r.perms }} permission{{ r.perms|pluralize }}</small>
+            <small>{{ r.desc|default:"—" }}</small>
           </div>
         </header>
+        <div class="px-role-counts">
+          <span class="px-badge px-badge--info">{{ r.count }} membre{{ r.count|pluralize }}</span>
+          <span class="px-badge px-badge--neutral">{{ r.perms }} permission{{ r.perms|pluralize }}</span>
+        </div>
         <div class="px-role-members">
           {% for m in r.members %}
           <span class="px-chip" title="{{ m.email }}">{{ m.username }}</span>
@@ -35,29 +41,57 @@
           <span class="px-chip px-chip--muted">Aucun membre</span>
           {% endfor %}
         </div>
-        {% if r.id and perms.auth.view_group %}
-        <a class="pxadmin-btn pxadmin-btn--sm pxadmin-btn--ghost" href="/admin/auth/group/{{ r.id }}/change/">Permissions ↗</a>
-        {% endif %}
+        <div class="px-role-actions">
+          <button class="pxadmin-btn pxadmin-btn--sm pxadmin-btn--ghost" type="button"
+                  data-role-filter="{{ r.name }}" aria-controls="roleUsers">Voir les membres</button>
+          {% if r.id and perms.auth.view_group %}
+          <a class="pxadmin-btn pxadmin-btn--sm pxadmin-btn--ghost" href="/admin/auth/group/{{ r.id }}/change/">Permissions ↗</a>
+          {% endif %}
+        </div>
       </article>
       {% endfor %}
     </div>
   </div>
 </section>
 
-<section class="panel">
+<section class="panel" id="roleUsers">
   <div class="panel-head">
-    <h2>👥 Utilisateurs & rôles</h2>
-    <span class="panel-sub">{{ users_with_role }} affecté(s) · {{ users_without_role }} sans rôle</span>
+    <div class="panel-head-main">
+      <h2>👥 Utilisateurs &amp; rôles</h2>
+      <span class="panel-sub">{{ users_with_role }} affecté(s) · {{ users_without_role }} sans rôle</span>
+    </div>
+    <div class="panel-head-tools">
+      <label class="pxadmin-search">
+        <span class="visually-hidden">Rechercher un utilisateur</span>
+        <input type="search" id="userFilter" autocomplete="off" spellcheck="false"
+               placeholder="Rechercher un nom, un e-mail, un rôle…"
+               aria-controls="roleUsersTable" aria-describedby="userCount">
+      </label>
+      <p class="pxadmin-count" id="userCount" aria-live="polite">{{ users|length }} utilisateur(s)</p>
+    </div>
   </div>
+
+  <div class="pxadmin-filters" role="group" aria-label="Filtrer par rôle">
+    <button class="px-pill is-on" type="button" data-role-filter="" aria-pressed="true">Tous ({{ total_users }})</button>
+    <button class="px-pill" type="button" data-role-filter="__none__" aria-pressed="false">Sans rôle ({{ users_without_role }})</button>
+    {% for r in role_cards %}
+    <button class="px-pill" type="button" data-role-filter="{{ r.name }}" aria-pressed="false">{{ r.icon }} {{ r.name }} ({{ r.count }})</button>
+    {% endfor %}
+  </div>
+
   <div class="panel-body panel-body--flush">
     <div class="table-responsive">
-      <table class="pxadmin-table">
+      <table class="pxadmin-table" id="roleUsersTable">
         <thead>
           <tr><th>Utilisateur</th><th>Email</th><th>Statut</th><th>Rôle</th><th>Attribuer</th></tr>
         </thead>
         <tbody>
           {% for row in users %}
-          <tr>
+          <tr data-user-row
+              data-role="{{ row.role }}"
+              data-search="{{ row.search }}"
+              data-username="{{ row.obj.username }}"
+              {% if highlight and row.obj.id == highlight %}class="is-changed"{% endif %}>
             <td class="cell-strong">
               {{ row.obj.username }}
               {% if row.obj.is_superuser %}<span class="px-badge px-badge--violet">superuser</span>{% endif %}
@@ -73,7 +107,7 @@
             </td>
             <td>
               {% if row.editable %}
-              <form class="pxadmin-inline" method="post" action="">
+              <form class="pxadmin-inline pxadmin-roleform" method="post" action="">
                 {% csrf_token %}
                 <input type="hidden" name="user_id" value="{{ row.obj.id }}">
                 <select name="role" class="pxadmin-select" aria-label="Rôle de {{ row.obj.username }}">
@@ -82,7 +116,7 @@
                   <option value="{{ choice }}"{% if choice == row.role %} selected{% endif %}>{{ choice }}</option>
                   {% endfor %}
                 </select>
-                <button class="pxadmin-btn pxadmin-btn--sm pxadmin-btn--accent" type="submit">OK</button>
+                <button class="pxadmin-btn pxadmin-btn--sm pxadmin-btn--accent" type="submit">Enregistrer</button>
               </form>
               {% else %}
               <span class="pxadmin-hint">🔒 non modifiable</span>
@@ -92,6 +126,11 @@
           {% endfor %}
         </tbody>
       </table>
+      <div class="pxadmin-empty" id="usersEmpty" hidden>
+        <span class="pxadmin-empty-icon" aria-hidden="true">🔍</span>
+        <p>Aucun utilisateur ne correspond au filtre.</p>
+        <button class="pxadmin-btn pxadmin-btn--sm" type="button" id="userFilterReset">Réinitialiser la recherche</button>
+      </div>
     </div>
   </div>
 </section>
@@ -100,4 +139,101 @@
 <p class="pxadmin-note">Seul un superutilisateur peut attribuer ou retirer le rôle <strong>SuperAdmin</strong>.</p>
 {% endif %}
 
+{% endblock %}
+
+{% block admin_scripts %}
+<script>
+(function () {
+  var body = document.querySelector('#roleUsersTable tbody');
+  if (!body) return;
+  var rows = Array.prototype.slice.call(body.querySelectorAll('[data-user-row]'));
+  var input = document.getElementById('userFilter');
+  var count = document.getElementById('userCount');
+  var empty = document.getElementById('usersEmpty');
+  var reset = document.getElementById('userFilterReset');
+  var section = document.getElementById('roleUsers');
+  var pills = Array.prototype.slice.call(document.querySelectorAll('[data-role-filter]'));
+  var activeRole = '';
+
+  function apply() {
+    var q = ((input && input.value) || '').trim().toLowerCase();
+    var visible = 0;
+    rows.forEach(function (tr) {
+      var role = tr.getAttribute('data-role') || '';
+      var okText = !q || (tr.getAttribute('data-search') || '').indexOf(q) !== -1;
+      var okRole = !activeRole ||
+        (activeRole === '__none__' ? role === '' : role === activeRole);
+      var show = okText && okRole;
+      tr.hidden = !show;
+      if (show) visible++;
+    });
+    if (empty) empty.hidden = visible !== 0;
+    if (count) count.textContent = visible + ' / ' + rows.length + ' utilisateur(s)';
+    pills.forEach(function (b) {
+      var on = b.getAttribute('data-role-filter') === activeRole;
+      b.classList.toggle('is-on', on);
+      if (b.hasAttribute('aria-pressed')) b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  }
+
+  if (input) input.addEventListener('input', apply);
+
+  pills.forEach(function (b) {
+    b.addEventListener('click', function () {
+      var v = b.getAttribute('data-role-filter') || '';
+      activeRole = (v === activeRole && v !== '') ? '' : v;
+      apply();
+      if (b.classList.contains('px-pill') === false && section) {
+        section.scrollIntoView({behavior: 'smooth', block: 'start'});
+        if (input) input.focus({preventScroll: true});
+      }
+    });
+  });
+
+  if (reset) reset.addEventListener('click', function () {
+    activeRole = '';
+    if (input) input.value = '';
+    apply();
+    if (input) input.focus();
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === '/' && document.activeElement &&
+        !/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) {
+      e.preventDefault();
+      if (input) input.focus();
+    }
+  });
+
+  /* Envoi : rien à changer -> bouton désactivé, sinon confirmation explicite. */
+  Array.prototype.forEach.call(document.querySelectorAll('.pxadmin-roleform'), function (f) {
+    var sel = f.querySelector('select[name="role"]');
+    var btn = f.querySelector('button[type="submit"]');
+    if (!sel || !btn) return;
+    var initial = sel.value;
+    var row = f.closest('[data-user-row]');
+    var who = row ? row.getAttribute('data-username') : '';
+
+    function refresh() { btn.disabled = (sel.value === initial); }
+    refresh();
+    sel.addEventListener('change', function () {
+      refresh();
+      f.classList.add('is-dirty');
+    });
+
+    f.addEventListener('submit', function (e) {
+      if (sel.value === initial) { e.preventDefault(); return; }
+      var msg = sel.value
+        ? 'Attribuer le rôle « ' + sel.value + ' » à ' + who + ' ?\n' +
+          'Cet utilisateur obtient l’accès à l’espace d’administration correspondant (statut personnel accordé automatiquement).'
+        : 'Retirer tout rôle à ' + who + ' ?\n' +
+          'Il perdra l’accès aux tableaux de bord de l’espace d’administration.';
+      if (!window.confirm(msg)) { e.preventDefault(); return; }
+      btn.disabled = true;
+      btn.classList.add('is-loading');
+      btn.textContent = 'Envoi…';
+    });
+  });
+})();
+</script>
 {% endblock %}

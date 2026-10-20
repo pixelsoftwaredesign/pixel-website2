@@ -40,6 +40,8 @@
 
     <div class="pxadmin-sidebar-foot">
       <p class="pxadmin-foot-label">Raccourcis</p>
+      <a class="pxadmin-btn pxadmin-btn--ghost" href="/dashboard/">📊 Tableau de bord</a>
+      <a class="pxadmin-btn pxadmin-btn--ghost" href="/portail/">👤 Mon espace</a>
       <a class="pxadmin-btn pxadmin-btn--ghost" href="/" target="_blank" rel="noopener">↗ Voir le site</a>
       <a class="pxadmin-btn pxadmin-btn--ghost" href="/admin/">⚙ Administration Django</a>
     </div>
@@ -47,7 +49,8 @@
 
   <div class="pxadmin-main">
     <header class="pxadmin-topbar">
-      <button class="pxadmin-burger" type="button" data-pxadmin-open aria-label="Ouvrir le menu">☰</button>
+      <button class="pxadmin-burger" type="button" data-pxadmin-open
+              aria-label="Ouvrir le menu" aria-controls="pxadminSidebar" aria-expanded="false">☰</button>
       <div class="pxadmin-page-title">
         <h1>{% block admin_title %}Administration{% endblock %}</h1>
         <p>{% block admin_subtitle %}Espace de gestion Pixel Software Design{% endblock %}</p>
@@ -62,7 +65,7 @@
         </span>
         <form class="pxadmin-inline" method="post" action="/admin/logout/">
           {% csrf_token %}
-          <button class="pxadmin-btn pxadmin-btn--danger" type="submit">Déconnexion</button>
+          <button class="pxadmin-btn pxadmin-btn--danger" type="submit" aria-label="Se déconnecter">🚪 <span class="label">Déconnexion</span></button>
         </form>
       </div>
     </header>
@@ -91,15 +94,27 @@
 (function () {
   var root = document.getElementById('pxadmin');
   if (!root) return;
+
+  function setOpen(open) {
+    root.classList.toggle('is-open', open);
+    document.querySelectorAll('[data-pxadmin-open]').forEach(function (b) {
+      if (b.hasAttribute('aria-expanded')) b.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+  }
+
   document.querySelectorAll('[data-pxadmin-open]').forEach(function (b) {
-    b.addEventListener('click', function () { root.classList.add('is-open'); });
+    b.addEventListener('click', function () { setOpen(true); });
   });
   document.querySelectorAll('[data-pxadmin-close]').forEach(function (b) {
-    b.addEventListener('click', function () { root.classList.remove('is-open'); });
+    b.addEventListener('click', function () { setOpen(false); });
+  });
+  root.querySelectorAll('.pxadmin-nav-link').forEach(function (a) {
+    a.addEventListener('click', function () { setOpen(false); });
   });
   document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') root.classList.remove('is-open');
+    if (e.key === 'Escape') setOpen(false);
   });
 })();
 </script>
+{% block admin_scripts %}{% endblock %}
 {% endblock %}

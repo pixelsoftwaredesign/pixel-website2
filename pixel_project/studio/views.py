@@ -3705,6 +3705,18 @@ ROLE_ICONS = {
     'Editeur': '✍️',
 }
 
+# Ce que chaque rôle ouvre concrètement dans l'espace d'administration.
+ROLE_DESC = {
+    'SuperAdmin': 'Vue globale, tous les tableaux de bord',
+    'Admin': 'Système, utilisateurs, rôles & accès',
+    'Commercial': 'Demandes, clients & candidatures',
+    'Comptable': 'Commandes, paiements & factures',
+    'Editeur': 'Contenu, newsletter & témoignages',
+}
+
+# Paramètre `?changed=<id>` : la ligne modifiée mise en évidence après le POST.
+HIGHLIGHT_PARAM = 'changed'
+
 
 @role_required('Admin', 'SuperAdmin')
 def admin_roles(request):
@@ -3719,6 +3731,7 @@ def admin_roles(request):
         role = (request.POST.get('role') or '').strip()
         target_is_super = bool(target and (
             target.is_superuser or target.groups.filter(name='SuperAdmin').exists()))
+        changed_pk = None
         if target is None:
             messages.error(request, "Utilisateur introuvable.")
         elif role and role not in ROLE_GROUPS:
@@ -3744,11 +3757,20 @@ def admin_roles(request):
                     target.save(update_fields=changed)
             else:
                 target.groups.clear()
+            changed_pk = target.pk
             messages.success(
                 request,
                 "%s → %s" % (target.username, role or "aucun rôle"),
             )
-        return redirect('admin_roles')
+        url = reverse('admin_roles')
+        if changed_pk:
+            url = '%s?%s=%s' % (url, HIGHLIGHT_PARAM, changed_pk)
+        return redirect(url)
+
+    try:
+        highlight = int(request.GET.get(HIGHLIGHT_PARAM) or 0)
+    except (TypeError, ValueError):
+        highlight = 0
 
     role_cards = []
     roles_used = 0
@@ -3762,6 +3784,7 @@ def admin_roles(request):
         role_cards.append({
             'name': name,
             'icon': ROLE_ICONS.get(name, '👤'),
+            'desc': ROLE_DESC.get(name, ''),
             'members': members,
             'count': len(members),
             'perms': group.permissions.count() if group else 0,
@@ -3778,11 +3801,19 @@ def admin_roles(request):
         protected = u.is_superuser or 'SuperAdmin' in names
         if current:
             users_with_role += 1
+        # Index de recherche côté client (voir `admin_roles` / JS du gabarit).
+        haystack = ' '.join([
+            u.username, u.get_full_name(), u.email, current,
+            'staff' if u.is_staff else 'hors-staff',
+            'actif' if u.is_active else 'inactif',
+            'superuser' if u.is_superuser else '',
+        ]).lower()
         users.append({
             'obj': u,
             'role': current,
             'protected': protected,
             'editable': is_super or not protected,
+            'search': haystack,
         })
 
     total_roles = len(role_cards)
@@ -3791,6 +3822,7 @@ def admin_roles(request):
         'users': users,
         'role_choices': role_choices,
         'can_manage_super': is_super,
+        'highlight': highlight,
         'total_users': len(users),
         'total_roles': total_roles,
         'users_with_role': users_with_role,

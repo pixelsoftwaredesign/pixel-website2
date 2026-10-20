@@ -5,6 +5,8 @@ Verifie que l'acces aux tableaux de bord est reserve aux membres du personnel
 n'expose jamais un lien inaccessible, et que l'ecran « Roles & acces »
 accorde bien l'acces au personnel.
 """
+import os
+
 from _common import HOST_APEX as APEX, bootstrap, check, report
 
 bootstrap()
@@ -126,6 +128,8 @@ adm.force_login(users['admin staff'])
 r = adm.post('/admin/roles/', {'user_id': target.id, 'role': 'Commercial'})
 target.refresh_from_db()
 check('POST /admin/roles/ -> 302', r.status_code == 302, r.status_code)
+check('redirection avec la ligne mise en evidence',
+      '?changed=%s' % target.id in r.get('Location', ''), r.get('Location'))
 check('role attribue', target.groups.filter(name='Commercial').exists())
 check('is_staff accorde automatiquement', target.is_staff)
 check('compte reactive automatiquement', target.is_active)
@@ -140,5 +144,40 @@ adm.post('/admin/roles/', {'user_id': other.id, 'role': 'SuperAdmin'})
 other.refresh_from_db()
 check('SuperAdmin refuse a un Admin non-super',
       not other.groups.filter(name='SuperAdmin').exists())
+
+print('\n== 7. Ecran « Roles & acces » : structure UX ==')
+r = adm.get('/admin/roles/')
+html = r.content.decode()
+check('GET /admin/roles/ -> 200', r.status_code == 200, r.status_code)
+for token, label in [
+    ('id="userFilter"', 'champ de recherche'),
+    ('class="px-pill', 'filtres par role'),
+    ('data-role-filter="__none__"', 'filtre « sans role »'),
+    ('data-search=', 'index de recherche par ligne'),
+    ('>Enregistrer<', 'bouton Enregistrer'),
+    ('data-user-row', 'lignes filtrables'),
+    ('aria-live="polite"', 'compteur accessible'),
+]:
+    check(f'roles : {label}', token in html)
+check('roles : confirmation avant changement', 'window.confirm' in html)
+check('roles : description des roles', 'Demandes, clients' in html)
+check('roles : ligne modifiee mise en evidence', 'is-changed' in adm.get(
+    '/admin/roles/?changed=%s' % target.id).content.decode())
+
+print('\n== 8. Coquille admin : raccourcis & accessibilite ==')
+shell = adm.get('/admin/receptions/').content.decode()
+for token, label in [
+    ('href="/dashboard/"', 'raccourci Tableau de bord'),
+    ('href="/portail/"', 'raccourci Mon espace'),
+    ('aria-controls="pxadminSidebar"', 'burger relie a la sidebar'),
+    ('aria-label="Se déconnecter"', 'bouton deconnexion libelle'),
+    ('aria-current="page"', 'page courante signalee'),
+]:
+    check(f'coquille : {label}', token in shell)
+
+css = open(os.path.join('studio', 'static', 'css', 'admin-ui.css'), encoding='utf-8').read()
+check('css : focus clavier visible', ':focus-visible' in css)
+check('css : respect de prefers-reduced-motion', 'prefers-reduced-motion' in css)
+check('css : table filtrable (lignes masquees)', 'tr[hidden]' in css)
 
 raise SystemExit(report())
