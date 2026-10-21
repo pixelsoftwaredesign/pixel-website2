@@ -6,31 +6,31 @@
 {% block admin_content %}
 
 <div class="pxadmin-stats">
-  {% include "studio/admin/_stat.html" with label="Utilisateurs" value=total_users icon="👥" accent="sky" %}
-  {% include "studio/admin/_stat.html" with label="Commandes" value=total_commandes icon="🛒" accent="emerald" %}
-  {% include "studio/admin/_stat.html" with label="Demandes" value=total_contacts icon="📄" accent="violet" %}
-  {% include "studio/admin/_stat.html" with label="Produits" value=total_produits icon="📦" accent="amber" %}
-  {% include "studio/admin/_stat.html" with label="Candidatures" value=total_candidatures icon="🧑‍💼" accent="rose" %}
+  {% include "studio/admin/_stat.html" with label="Utilisateurs" value=total_users icon="👥" accent="sky" model="auth.user" %}
+  {% include "studio/admin/_stat.html" with label="Commandes" value=total_commandes icon="🛒" accent="emerald" model="studio.commandeecommerce" %}
+  {% include "studio/admin/_stat.html" with label="Demandes" value=total_contacts icon="📄" accent="violet" model="studio.projetcontact" %}
+  {% include "studio/admin/_stat.html" with label="Produits" value=total_produits icon="📦" accent="amber" model="studio.produit" %}
+  {% include "studio/admin/_stat.html" with label="Candidatures" value=total_candidatures icon="🧑‍💼" accent="rose" model="studio.candidature"  %}
 </div>
 
 <div class="pxadmin-links">
-  <a class="pxadmin-link" href="/admin/auth/user/">
+  <a class="pxadmin-link" model="auth.user">
     <span class="pxadmin-link-icon">👥</span>
     <span class="pxadmin-link-text"><strong>Utilisateurs</strong><small>Comptes & accès</small></span>
   </a>
-  <a class="pxadmin-link" href="/admin/auth/group/">
+  <a class="pxadmin-link" href="{% url 'admin:auth_group_changelist' %}">
     <span class="pxadmin-link-icon">🛡️</span>
     <span class="pxadmin-link-text"><strong>Groupes & rôles</strong><small>Permissions</small></span>
   </a>
-  <a class="pxadmin-link" href="/admin/studio/commandecommerce/">
+  <a class="pxadmin-link" model="studio.commandeecommerce" >
     <span class="pxadmin-link-icon">🛒</span>
     <span class="pxadmin-link-text"><strong>Commandes</strong><small>E-commerce</small></span>
   </a>
-  <a class="pxadmin-link" href="/admin/studio/projetcontact/">
+  <a class="pxadmin-link" model="studio.projetcontact" >
     <span class="pxadmin-link-icon">📄</span>
     <span class="pxadmin-link-text"><strong>Demandes</strong><small>Devis & contact</small></span>
   </a>
-  <a class="pxadmin-link" href="/admin/studio/produit/">
+  <a class="pxadmin-link" model="studio.produit">
     <span class="pxadmin-link-icon">📦</span>
     <span class="pxadmin-link-text"><strong>Produits</strong><small>Catalogue</small></span>
   </a>
@@ -43,7 +43,7 @@
 <section class="panel">
   <div class="panel-head">
     <h2>🛒 Dernières commandes</h2>
-    <a class="pxadmin-btn pxadmin-btn--sm" href="/admin/studio/commandecommerce/">Voir tout ↗</a>
+    <a class="pxadmin-btn pxadmin-btn--sm" model="studio.commandeecommerce" >Voir tout ↗</a>
   </div>
   <div class="panel-body panel-body--flush">
     <div class="table-responsive">
@@ -53,8 +53,8 @@
         </thead>
         <tbody>
           {% for cmd in commandes %}
-          <tr>
-            <td class="cell-strong">{{ cmd.reference }}</td>
+          <tr data-href="{% url 'admin:studio_commandeecommerce_change' cmd.id %}">
+            <td class="cell-strong"><a href="{% url 'admin:studio_commandeecommerce_change' cmd.id %}">#{{ cmd.reference }}</a></td>
             <td>{{ cmd.client_nom }}</td>
             <td class="cell-money">{{ cmd.total_ttc|floatformat:2 }} <span class="cell-muted">TND</span></td>
             <td>{% include "studio/admin/_statut.html" with statut=cmd.statut %}</td>

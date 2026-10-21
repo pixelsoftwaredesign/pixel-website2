@@ -117,6 +117,17 @@
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape') setOpen(false);
   });
+
+  /* Lignes de tableau cliquables : la 1re cellule porte le lien (accessible
+     au clavier) ; le reste de la ligne suit le meme lien, sauf si l'on clique
+     sur un bouton, un lien ou un champ. */
+  root.querySelectorAll('tr[data-href]').forEach(function (tr) {
+    tr.classList.add('is-clickable');
+    tr.addEventListener('click', function (e) {
+      if (e.target.closest('a, button, input, select, textarea, form, label')) return;
+      window.location.href = tr.getAttribute('data-href');
+    });
+  });
 })();
 </script>
 {% block admin_scripts %}{% endblock %}

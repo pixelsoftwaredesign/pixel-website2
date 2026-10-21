@@ -241,6 +241,18 @@ form.pxadmin-inline { display: inline; margin: 0; }
   opacity: .9;
 }
 .stat-card:hover { transform: translateY(-3px); border-color: var(--px-border-strong); }
+a.stat-card { text-decoration: none; color: inherit; padding-right: 36px; }
+a.stat-card::before {
+  content: "↗";
+  position: absolute;
+  top: 12px; right: 14px;
+  font-size: .9rem;
+  color: var(--stat-accent, var(--px-sky));
+  opacity: 0;
+  transition: opacity .16s ease, transform .16s ease;
+}
+a.stat-card:hover::before { opacity: 1; transform: translate(1px, -1px); }
+a.stat-card:focus-visible { outline-offset: 3px; }
 .stat-card .stat-icon {
   width: 52px; height: 52px; flex: 0 0 auto;
   display: grid; place-items: center;
@@ -309,6 +321,10 @@ form.pxadmin-inline { display: inline; margin: 0; }
 .panel table.pxadmin-table tbody tr:last-child td { border-bottom: none; }
 .panel table.pxadmin-table tbody tr { transition: background .14s ease; }
 .panel table.pxadmin-table tbody tr:hover { background: rgba(56, 189, 248, .06); }
+.panel table.pxadmin-table tbody tr.is-clickable { cursor: pointer; }
+.panel table.pxadmin-table tbody tr.is-clickable:hover { background: rgba(56, 189, 248, .09); }
+.panel table.pxadmin-table tbody tr.is-clickable td:first-child { box-shadow: inset 2px 0 0 transparent; transition: box-shadow .14s ease; }
+.panel table.pxadmin-table tbody tr.is-clickable:hover td:first-child { box-shadow: inset 2px 0 0 var(--px-sky); }
 .pxadmin-table .cell-strong { font-weight: 600; color: #fff; }
 .pxadmin-table .cell-muted { color: var(--px-muted); }
 .pxadmin-table .cell-nowrap { white-space: nowrap; }

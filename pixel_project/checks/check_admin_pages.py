@@ -19,17 +19,19 @@ from django.test import Client
 
 from studio.models import (
     Candidature, CommandeECommerce, ConfigurationBancaire,
-    ConfigurationPaiementEnLigne, ProjetContact,
+    ConfigurationPaiementEnLigne, NewsletterCampaign, ProjetContact,
+    Temoignage,
 )
 
 for name in ['SuperAdmin', 'Admin', 'Commercial', 'Comptable', 'Editeur']:
     Group.objects.get_or_create(name=name)
 
 
-def mkuser(name, groups=(), staff=True):
+def mkuser(name, groups=(), staff=True, superuser=False):
     User.objects.filter(username=name).delete()
     u = User.objects.create_user(name, password='secret123', email=name + '@test.tn')
     u.is_staff = staff
+    u.is_superuser = superuser
     u.save()
     for g in groups:
         u.groups.add(Group.objects.get(name=g))
@@ -52,6 +54,8 @@ print('\n== 1. Jeu de donnees de pagination ==')
 CommandeECommerce.objects.filter(reference__startswith='CHK').delete()
 ProjetContact.objects.filter(nom__startswith='CHKD').delete()
 Candidature.objects.filter(nom__startswith='CHKC').delete()
+NewsletterCampaign.objects.filter(sujet__startswith='CHKC').delete()
+Temoignage.objects.filter(nom__startswith='CHKC').delete()
 ConfigurationBancaire.objects.filter(titulaire__startswith='Chk ').delete()
 # 45 commandes : 1 en attente (la plus recente), 44 livrees.
 for i in range(45):
@@ -66,6 +70,10 @@ for i in range(25):
     ProjetContact.objects.create(nom='CHKD%02d' % i, email='chkd%d@test.tn' % i, message='msg')
 for i in range(25):
     Candidature.objects.create(nom='CHKC%02d' % i, email='chkc%d@test.tn' % i)
+# Une campagne et un temoignage : le tableau editeur a ainsi des lignes
+# cliquables a verifier.
+NewsletterCampaign.objects.create(sujet='CHKC Campagne', contenu_html='<p>x</p>')
+Temoignage.objects.create(nom='CHKC Temoignage', entreprise='Chk', note=5)
 check('45 commandes + 1 en attente creees',
       CommandeECommerce.objects.filter(reference__startswith='CHK').count() == 46)
 check('25 demandes creees', ProjetContact.objects.filter(nom__startswith='CHKD').count() == 25)
@@ -87,7 +95,7 @@ def refs(html, prefix, index=None):
     candidatures) : `index` selectionne le tableau vise, sinon la recherche
     porte sur tous les tableaux de la page.
     """
-    pattern = 'cell-strong">(%s\\w*)' % prefix
+    pattern = 'cell-strong">(?:<a[^>]*>)?#?(%s\\w*)' % prefix
     blocks = tables(html)
     if index is not None:
         blocks = blocks[index:index + 1]
@@ -148,7 +156,8 @@ check('statut sans resultat : etat vide explicite',
 
 print('\n== 4. Pagination des autres tableaux de bord ==')
 body = login(superadmin).get('/admin/dash/editeur/').content.decode()
-check('editeur : pager campagnes', 'pxadmin-pager' in body or 'Aucune campagne' in body)
+check('editeur : pager campagnes',
+      'pxadmin-pager' in body or 'Aucune campagne' in body or 'CHKC' in body)
 body = login(superadmin).get('/admin/dash/superadmin/').content.decode()
 check('superadmin : pager commandes', 'pxadmin-pager' in body)
 body = cc.get('/admin/dash/admin/').content.decode()
@@ -250,7 +259,225 @@ check('paiement : 302', r.status_code == 302, r.status_code)
 check('paiement : fournisseur enregistre', cfg.fournisseur == 'paymee', cfg.fournisseur)
 check('paiement : instructions enregistrees', cfg.instructions == 'Payez ici')
 
-print('\n== 8. Navigation : badge « a traiter » ==')
+print('\n== 8. Navigation actionnable : KPI cliquables et lignes navigables ==')
+# Les cartes de statistiques pointent vers la liste Django admin correspondante.
+CARTE = r'<a class="stat-card[^"]*" href="([^"]+)"'
+
+
+def cartes(html):
+    return _re.findall(CARTE, html)
+
+
+for url, attendu, client in [
+    ('/admin/receptions/', '/admin/studio/commandeecommerce/', cc),
+    ('/admin/dash/commercial/', '/admin/studio/projetcontact/', cc),
+    ('/admin/dash/comptable/', '/admin/studio/commandeecommerce/', cc),
+    ('/admin/dash/editeur/', '/admin/studio/newslettercampaign/', cc),
+    ('/admin/dash/superadmin/', '/admin/auth/user/', login(superadmin)),
+    ('/admin/dash/admin/', '/admin/auth/group/', cc),
+]:
+    body = client.get(url).content.decode()
+    liens = cartes(body)
+    check('%s : KPI cliquables' % url, len(liens) >= 3, len(liens))
+    check('%s : KPI vers la liste admin' % url,
+          any(l.startswith(attendu) for l in liens), liens[:2])
+    check('%s : KPI sans cible vide' % url, all(l.strip() for l in liens))
+
+# Les liens de filtre utilisent la syntaxe du list_filter Django (pas __exact
+# sur un choix, pas de __in : Django tronque la valeur caractere par caractere).
+body = cc.get('/admin/dash/comptable/').content.decode()
+check('KPI commande : filtre par statut (syntaxe list_filter)',
+      '/admin/studio/commandeecommerce/?statut=en_attente' in body)
+check('KPI commande : pas de lookup __in (incompatible Django)',
+      'statut__in' not in body)
+body = cc.get('/admin/dash/commercial/').content.decode()
+check('KPI demande : filtre sur les non repondues',
+      '/admin/studio/projetcontact/?a_repondu__exact=0' in body)
+
+# Les cibles des KPI repondent 200 (et non 404) pour un superuser Django admin.
+root = mkuser('chk_dp_root', superuser=True, staff=True)
+dc = login(root)
+for href in set(cartes(cc.get('/admin/receptions/').content.decode())):
+    r = dc.get(href)
+    check('cible KPI joignable : %s' % href, r.status_code == 200, r.status_code)
+
+# Les lignes de tableau sont cliquables (data-href) et portent un lien
+# accessible au clavier dans la premiere colonne.
+body = cc.get('/admin/receptions/').content.decode()
+check('receptions : lignes cliquables', 'data-href="/admin/studio/commandeecommerce/' in body)
+check('receptions : lien accessible dans la cellule',
+      _re.search(r'cell-strong"><a href="/admin/studio/commandeecommerce/\d+/change/">', body)
+      is not None)
+for url, prefix, client in [
+    ('/admin/dash/commercial/', '/admin/studio/projetcontact/', cc),
+    ('/admin/dash/comptable/', '/admin/studio/commandeecommerce/', cc),
+    ('/admin/dash/editeur/', '/admin/studio/temoignage/', cc),
+    ('/admin/dash/superadmin/', '/admin/studio/commandeecommerce/', login(superadmin)),
+    ('/admin/dash/admin/', '/admin/studio/commandeecommerce/', cc),
+]:
+    body = client.get(url).content.decode()
+    check('%s : lignes cliquables' % url, ('data-href="%s' % prefix) in body)
+
+# Le gestionnaire JS des lignes cliquables est present sur la coquille admin.
+body = cc.get('/admin/dash/admin/').content.decode()
+check('coquille : gestionnaire des lignes cliquables',
+      "tr[data-href]" in body and 'is-clickable' in body)
+check('coquille : les boutons internes ne declenchent pas la navigation',
+      "closest('a, button, input, select, textarea, form, label')" in body)
+
+print('\n== 9. Filtres et recherche dans l\'admin Django ==')
+# Les KPI pointent vers des listes reellement filtrees.
+body = dc.get('/admin/studio/commandeecommerce/?statut=en_attente').content.decode()
+check('admin commandes : filtre en_attente -> seule la commande en attente',
+      'CHKATT' in body and 'CHK00' not in body)
+body = dc.get('/admin/studio/commandeecommerce/?statut=livree').content.decode()
+check('admin commandes : filtre livree -> pas la commande en attente',
+      'CHKATT' not in body)
+check('admin commandes : filtre livree -> des commandes livrees',
+      len(_re.findall(r'CHK\d\d', body)) >= 10, len(_re.findall(r'CHK\d\d', body)))
+body = dc.get('/admin/studio/projetcontact/?a_repondu__exact=0').content.decode()
+check('admin demandes : filtre non repondu -> les demandes CHKD sont la',
+      'CHKD00' in body)
+check('admin commandes : recherche par reference disponible',
+      dc.get('/admin/studio/commandeecommerce/?q=CHKATT').status_code == 200)
+check('admin commandes : tri par date disponible',
+      dc.get('/admin/studio/commandeecommerce/?o=-1').status_code == 200)
+
+print('\n== 10. Aucun lien mort vers l\'administration Django ==')
+# Chaque lien "/admin/..." rendu par l'espace d'administration doit resoudre
+# vers une vraie page (le "catch-all" de l'admin renvoie un 404 silencieux).
+from django.urls import resolve, reverse  # noqa: E402
+
+PAGES_ADMIN = [
+    ('/admin/receptions/', cc),
+    ('/admin/dash/commercial/', cc),
+    ('/admin/dash/comptable/', cc),
+    ('/admin/dash/editeur/', cc),
+    ('/admin/dash/superadmin/', login(superadmin)),
+    ('/admin/dash/admin/', cc),
+    ('/admin/roles/', login(superadmin)),
+    ('/admin-bancaire/', cc),
+]
+LIEN_ADMIN = _re.compile(r'(?:href|data-href)="(/admin/[^"{}\s]+)"')
+liens_morts = []
+nb_liens = 0
+for url, client in PAGES_ADMIN:
+    body = client.get(url).content.decode()
+    trouves = sorted(set(LIEN_ADMIN.findall(body)))
+    nb_liens += len(trouves)
+    for href in trouves:
+        chemin = href.split('?')[0].split('#')[0]
+        try:
+            match = resolve(chemin)
+            if getattr(match.func, '__name__', '') == 'catch_all_view':
+                liens_morts.append((url, href))
+        except Exception:
+            liens_morts.append((url, href))
+check('tous les liens /admin/... rendus resolus (%d liens)' % nb_liens,
+      not liens_morts, liens_morts[:5])
+
+# Garde-fou statique : chaque cible d'admin citee dans les gabarits de
+# l'espace d'administration doit exister (un nom d'URL ou un modele resolu
+# par le tag `admin_url`).
+import os  # noqa: E402
+
+from django.template import Context, Template  # noqa: E402
+
+from studio.templatetags.admin_ui import admin_url  # noqa: E402
+
+GABARITS = [
+    'studio/templates/studio/admin_dashboard_admin.html',
+    'studio/templates/studio/admin_dashboard_commercial.html',
+    'studio/templates/studio/admin_dashboard_comptable.html',
+    'studio/templates/studio/admin_dashboard_editeur.html',
+    'studio/templates/studio/admin_dashboard_superadmin.html',
+    'studio/templates/studio/admin_receptions_dashboard.html',
+    'studio/templates/studio/admin_roles.html',
+    'studio/templates/studio/admin_bancaire.html',
+    'studio/templates/studio/admin/_stat.html',
+]
+racine = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+cibles_mortes = []
+for rel in GABARITS:
+    chemin = os.path.join(racine, rel)
+    if not os.path.exists(chemin):
+        continue
+    source = open(chemin, encoding='utf-8').read()
+    for model in set(_re.findall(r'model="([\w.]+)"', source)):
+        if not admin_url(model):
+            cibles_mortes.append((rel, 'model=%s' % model))
+    for nom in set(_re.findall(r"\{%\s*url\s*'(admin:[^']+)'", source)):
+        try:
+            if nom.endswith(('_change', '_repondre')):
+                reverse(nom, args=[1])
+            else:
+                reverse(nom)
+        except Exception:
+            cibles_mortes.append((rel, nom))
+check('cibles admin citees dans les gabarits toutes valides',
+      not cibles_mortes, cibles_mortes[:5])
+
+# Contrat DOM du script de lignes cliquables (admin_base.html) : le script
+# cible `tr[data-href]`, pose la classe `is-clickable` (stylee par
+# `.panel table.pxadmin-table tbody tr.is-clickable`) et suit le lien
+# `data-href`. On verifie que le HTML rendu remplit ce contrat.
+LIGNE = _re.compile(r'<tr([^>]*)data-href="([^"]+)"([^>]*)>(.*?)</tr>', _re.S)
+contrat = []
+nb_lignes = 0
+for url, client in PAGES_ADMIN:
+    body = client.get(url).content.decode()
+    for bloc in _re.findall(r'<table\b.*?</table>', body, _re.S):
+        if 'pxadmin-table' not in bloc.split('>')[0]:
+            contrat.append((url, 'table sans la classe pxadmin-table'))
+            continue
+        for attrs_avant, href, attrs_apres, contenu in LIGNE.findall(bloc):
+            nb_lignes += 1
+            if 'is-clickable' in attrs_avant + attrs_apres:
+                # la classe est posee par le JS, pas par le HTML
+                contrat.append((url, 'classe is-clickable posee en dur'))
+            liens = _re.findall(r'<a\b[^>]*href="([^"]+)"', contenu)
+            if not liens:
+                contrat.append((url, 'ligne cliquable sans lien accessible'))
+            elif liens[0] != href:
+                contrat.append((url, 'lien (%s) != data-href (%s)' % (liens[0], href)))
+check('contrat DOM des lignes cliquables respectee (%d lignes)' % nb_lignes,
+      not contrat and nb_lignes > 0, (contrat[:5], nb_lignes))
+check('style de la ligne cliquable present',
+      'is-clickable' in open(os.path.join(racine, 'studio/static/css/admin-ui.css'),
+                             encoding='utf-8').read())
+
+# Un KPI dont le modele n'est pas resolu devient silencieusement un <div> :
+# on verifie donc que chaque tableau de bord expose bien tous ses KPI cliquables.
+for url, attendu_nb, client in [
+    ('/admin/receptions/', 5, cc),
+    ('/admin/dash/commercial/', 4, cc),
+    ('/admin/dash/comptable/', 5, cc),
+    ('/admin/dash/editeur/', 3, cc),
+    ('/admin/dash/superadmin/', 5, login(superadmin)),
+    ('/admin/dash/admin/', 4, cc),
+    ('/admin-bancaire/', 4, cc),
+    ('/admin/roles/', 3, login(superadmin)),
+]:
+    body = client.get(url).content.decode()
+    nb = len(cartes(body))
+    check('%s : %d KPI cliquables' % (url, attendu_nb), nb == attendu_nb, nb)
+
+# Les KPI banque pointent sur les listes admin filtrees.
+body = cc.get('/admin-bancaire/').content.decode()
+check('banque : KPI comptes -> liste admin',
+      '/admin/studio/configurationbancaire/' in body)
+check('banque : KPI comptes actifs -> filtre is_active',
+      'configurationbancaire/?is_active__exact=1' in body)
+check('banque : KPI compte par defaut -> filtre est_defaut',
+      'configurationbancaire/?est_defaut__exact=1' in body)
+check('banque : KPI fournisseurs -> liste admin',
+      '/admin/studio/configurationpaiementenligne/' in body)
+body = login(superadmin).get('/admin/roles/').content.decode()
+check('roles : KPI roles -> liste admin', '/admin/auth/group/' in body)
+check('roles : KPI utilisateurs -> liste admin', '/admin/auth/user/' in body)
+
+print('\n== 11. Navigation : badge « a traiter » ==')
+
 body = cc.get('/admin/dash/admin/').content.decode()
 check('badge de nav present sur la coquille', 'pxadmin-nav-count' in body)
 attendu = (CommandeECommerce.objects.filter(statut='en_attente').count() +

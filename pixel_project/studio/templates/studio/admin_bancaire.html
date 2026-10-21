@@ -6,10 +6,10 @@
 {% block admin_content %}
 
 <div class="pxadmin-stats">
-  {% include "studio/admin/_stat.html" with label="Comptes bancaires" value=total_banques icon="🏦" accent="sky" %}
-  {% include "studio/admin/_stat.html" with label="Comptes actifs" value=banques_actives icon="✅" accent="emerald" %}
-  {% include "studio/admin/_stat.html" with label="Compte par défaut" value=banques_defaut icon="⭐" accent="amber" %}
-  {% include "studio/admin/_stat.html" with label="Fournisseurs" value=total_paiements icon="💳" accent="violet" hint=paiements_actifs|stringformat:"%s actif(s)" %}
+  {% include "studio/admin/_stat.html" with label="Comptes bancaires" value=total_banques icon="🏦" accent="sky" model="studio.configurationbancaire" %}
+  {% include "studio/admin/_stat.html" with label="Comptes actifs" value=banques_actives icon="✅" accent="emerald" model="studio.configurationbancaire" params="is_active__exact=1" %}
+  {% include "studio/admin/_stat.html" with label="Compte par défaut" value=banques_defaut icon="⭐" accent="amber" model="studio.configurationbancaire" params="est_defaut__exact=1" %}
+  {% include "studio/admin/_stat.html" with label="Fournisseurs" value=total_paiements icon="💳" accent="violet" hint=paiements_actifs|stringformat:"%s actif(s)" model="studio.configurationpaiementenligne" %}
 </div>
 
 <section class="panel">

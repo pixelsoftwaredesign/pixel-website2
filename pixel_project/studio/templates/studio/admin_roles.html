@@ -6,9 +6,9 @@
 {% block admin_content %}
 
 <div class="pxadmin-stats">
-  {% include "studio/admin/_stat.html" with label="Rôles" value=total_roles icon="🛡️" accent="violet" %}
-  {% include "studio/admin/_stat.html" with label="Utilisés" value=roles_used icon="✅" accent="emerald" %}
-  {% include "studio/admin/_stat.html" with label="Utilisateurs" value=total_users icon="👥" accent="sky" %}
+  {% include "studio/admin/_stat.html" with label="Rôles" value=total_roles icon="🛡️" accent="violet" model="auth.group" %}
+  {% include "studio/admin/_stat.html" with label="Utilisés" value=roles_used icon="✅" accent="emerald" model="auth.group" %}
+  {% include "studio/admin/_stat.html" with label="Utilisateurs" value=total_users icon="👥" accent="sky" model="auth.user" %}
   {% include "studio/admin/_stat.html" with label="Sans rôle" value=users_without_role icon="➖" accent="amber" %}
 </div>
 

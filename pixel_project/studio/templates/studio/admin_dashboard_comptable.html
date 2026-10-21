@@ -6,27 +6,27 @@
 {% block admin_content %}
 
 <div class="pxadmin-stats">
-  {% include "studio/admin/_stat.html" with label="Commandes" value=total_commandes icon="🧾" accent="sky" %}
-  {% include "studio/admin/_stat.html" with label="En attente" value=nouvelles_commandes icon="⏳" accent="amber" %}
-  {% include "studio/admin/_stat.html" with label="Confirmées" value=payees icon="✅" accent="emerald" hint=taux_paiement_label %}
-  {% include "studio/admin/_stat.html" with label="Livrées" value=livrees icon="🚚" accent="cyan" %}
-  {% include "studio/admin/_stat.html" with label="Montant encaissé" value=montant_encaisse icon="💰" accent="violet" hint="TND (commandes confirmées)" %}
+  {% include "studio/admin/_stat.html" with label="Commandes" value=total_commandes icon="🧾" accent="sky" model="studio.commandeecommerce" %}
+  {% include "studio/admin/_stat.html" with label="En attente" value=nouvelles_commandes icon="⏳" accent="amber" model="studio.commandeecommerce" params="statut=en_attente" %}
+  {% include "studio/admin/_stat.html" with label="Confirmées" value=payees icon="✅" accent="emerald" hint=taux_paiement_label model="studio.commandeecommerce" %}
+  {% include "studio/admin/_stat.html" with label="Livrées" value=livrees icon="🚚" accent="cyan" model="studio.commandeecommerce" params="statut=livree" %}
+  {% include "studio/admin/_stat.html" with label="Montant encaissé" value=montant_encaisse icon="💰" accent="violet" hint="TND (commandes confirmées)" model="studio.commandeecommerce" %}
 </div>
 
 <div class="pxadmin-links">
-  <a class="pxadmin-link" href="/admin/studio/commandecommerce/">
+  <a class="pxadmin-link" model="studio.commandeecommerce" >
     <span class="pxadmin-link-icon">🧾</span>
     <span class="pxadmin-link-text"><strong>Commandes</strong><small>E-commerce</small></span>
   </a>
-  <a class="pxadmin-link" href="/admin/studio/paiement/">
+  <a class="pxadmin-link" href="{% url 'admin:studio_paiement_changelist' %}">
     <span class="pxadmin-link-icon">💳</span>
     <span class="pxadmin-link-text"><strong>Paiements</strong><small>Souscriptions</small></span>
   </a>
-  <a class="pxadmin-link" href="/admin/studio/facture/">
+  <a class="pxadmin-link" href="{% url 'admin:studio_facture_changelist' %}">
     <span class="pxadmin-link-icon">📑</span>
     <span class="pxadmin-link-text"><strong>Factures</strong><small>Documents</small></span>
   </a>
-  <a class="pxadmin-link" href="/admin/studio/transaction/">
+  <a class="pxadmin-link" href="{% url 'admin:studio_transaction_changelist' %}">
     <span class="pxadmin-link-icon">🔁</span>
     <span class="pxadmin-link-text"><strong>Transactions</strong><small>Historique</small></span>
   </a>
@@ -42,7 +42,7 @@
       <h2>🧾 Commandes</h2>
       <span class="panel-sub">{{ total_commandes }} au total · {% if statut %}filtre : {{ statut }}{% else %}tous les statuts{% endif %}</span>
     </div>
-    <a class="pxadmin-btn pxadmin-btn--sm" href="/admin/studio/commandecommerce/">Voir tout ↗</a>
+    <a class="pxadmin-btn pxadmin-btn--sm" model="studio.commandeecommerce" >Voir tout ↗</a>
   </div>
 
   <div class="pxadmin-filters" role="group" aria-label="Filtrer les commandes par statut">
@@ -59,14 +59,14 @@
         </thead>
         <tbody>
           {% for cmd in commandes %}
-          <tr>
-            <td class="cell-strong">{{ cmd.reference }}</td>
+          <tr data-href="{% url 'admin:studio_commandeecommerce_change' cmd.id %}">
+            <td class="cell-strong"><a href="{% url 'admin:studio_commandeecommerce_change' cmd.id %}">#{{ cmd.reference }}</a></td>
             <td>{{ cmd.client_nom }}<br><span class="cell-muted">{{ cmd.client_email }}</span></td>
             <td class="cell-money">{{ cmd.total_ttc|floatformat:2 }} <span class="cell-muted">TND</span></td>
             <td>{% include "studio/admin/_statut.html" with statut=cmd.statut %}</td>
             <td class="cell-muted">{{ cmd.get_methode_paiement_display|default:"—" }}</td>
             <td class="cell-nowrap cell-muted">{{ cmd.date_commande|date:"d/m/Y H:i" }}</td>
-            <td class="cell-nowrap"><a class="pxadmin-btn pxadmin-btn--sm" href="/admin/studio/commandecommerce/{{ cmd.id }}/change/">Ouvrir</a></td>
+            <td class="cell-nowrap"><a class="pxadmin-btn pxadmin-btn--sm" href="{% url 'admin:studio_commandeecommerce_change' cmd.id %}">Ouvrir</a></td>
           </tr>
           {% empty %}
           <tr><td colspan="7"><div class="pxadmin-empty"><span class="pxadmin-empty-icon">🧾</span><p>Aucune commande pour ce filtre</p></div></td></tr>

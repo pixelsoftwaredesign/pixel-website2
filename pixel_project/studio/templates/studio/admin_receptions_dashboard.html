@@ -6,17 +6,17 @@
 {% block admin_content %}
 
 <div class="pxadmin-stats">
-  {% include "studio/admin/_stat.html" with label="Commandes" value=stats.total_commandes icon="🛒" accent="sky" %}
-  {% include "studio/admin/_stat.html" with label="En attente" value=stats.nouvelles_commandes icon="⏳" accent="amber" hint="À traiter" %}
-  {% include "studio/admin/_stat.html" with label="Demandes de projet" value=stats.total_contacts icon="📄" accent="violet" %}
-  {% include "studio/admin/_stat.html" with label="Non répondues" value=stats.contacts_non_repondus icon="✉️" accent="rose" %}
-  {% include "studio/admin/_stat.html" with label="Candidatures" value=stats.total_candidatures icon="🧑‍💼" accent="emerald" %}
+  {% include "studio/admin/_stat.html" with label="Commandes" value=stats.total_commandes icon="🛒" accent="sky" model="studio.commandeecommerce" %}
+  {% include "studio/admin/_stat.html" with label="En attente" value=stats.nouvelles_commandes icon="⏳" accent="amber" hint="À traiter" model="studio.commandeecommerce" params="statut=en_attente" %}
+  {% include "studio/admin/_stat.html" with label="Demandes de projet" value=stats.total_contacts icon="📄" accent="violet" model="studio.projetcontact" %}
+  {% include "studio/admin/_stat.html" with label="Non répondues" value=stats.contacts_non_repondus icon="✉️" accent="rose" hint="À relancer" model="studio.projetcontact" params="a_repondu__exact=0" %}
+  {% include "studio/admin/_stat.html" with label="Candidatures" value=stats.total_candidatures icon="🧑‍💼" accent="emerald" model="studio.candidature"  %}
 </div>
 
 <section class="panel">
   <div class="panel-head">
     <h2>🛒 Dernières commandes</h2>
-    <a class="pxadmin-btn pxadmin-btn--sm" href="/admin/studio/commandecommerce/">Voir tout ↗</a>
+    <a class="pxadmin-btn pxadmin-btn--sm" model="studio.commandeecommerce" >Voir tout ↗</a>
   </div>
   <div class="panel-body panel-body--flush">
     <div class="table-responsive">
@@ -26,8 +26,8 @@
         </thead>
         <tbody>
           {% for cmd in commandes %}
-          <tr>
-            <td class="cell-strong">{{ cmd.reference }}</td>
+          <tr data-href="{% url 'admin:studio_commandeecommerce_change' cmd.id %}">
+            <td class="cell-strong"><a href="{% url 'admin:studio_commandeecommerce_change' cmd.id %}">#{{ cmd.reference }}</a></td>
             <td>{{ cmd.client_nom }}<br><span class="cell-muted">{{ cmd.client_email }}</span></td>
             <td class="cell-money">{{ cmd.total_ttc|floatformat:2 }} <span class="cell-muted">TND</span></td>
             <td>{% include "studio/admin/_statut.html" with statut=cmd.statut %}</td>
@@ -47,7 +47,7 @@
 <section class="panel">
   <div class="panel-head">
     <h2>📄 Dernières demandes de projet (devis)</h2>
-    <a class="pxadmin-btn pxadmin-btn--sm" href="/admin/studio/projetcontact/">Voir tout ↗</a>
+    <a class="pxadmin-btn pxadmin-btn--sm" model="studio.projetcontact" >Voir tout ↗</a>
   </div>
   <div class="panel-body panel-body--flush">
     <div class="table-responsive">
@@ -57,8 +57,8 @@
         </thead>
         <tbody>
           {% for c in contacts %}
-          <tr>
-            <td class="cell-strong">{{ c.nom }}</td>
+          <tr data-href="{% url 'admin:studio_projetcontact_change' c.id %}">
+            <td class="cell-strong"><a href="{% url 'admin:studio_projetcontact_change' c.id %}">{{ c.nom }}</a></td>
             <td><a href="mailto:{{ c.email }}">{{ c.email }}</a></td>
             <td class="cell-truncate cell-muted" title="{{ c.message }}">{{ c.message }}</td>
             <td class="cell-nowrap cell-muted">{{ c.date_reception|date:"d/m/Y H:i" }}</td>
@@ -66,7 +66,7 @@
               {% if c.a_repondu %}<span class="px-badge px-badge--success">Oui</span>
               {% else %}<span class="px-badge px-badge--warn">Non</span>{% endif %}
             </td>
-            <td class="cell-nowrap"><a class="pxadmin-btn pxadmin-btn--sm" href="/admin/studio/projetcontact/{{ c.id }}/repondre/">Répondre</a></td>
+            <td class="cell-nowrap"><a class="pxadmin-btn pxadmin-btn--sm" href="{% url 'admin:studio_projetcontact_repondre' c.id %}">Répondre</a></td>
           </tr>
           {% empty %}
           <tr><td colspan="6"><div class="pxadmin-empty"><span class="pxadmin-empty-icon">✉️</span><p>Aucune demande de projet</p></div></td></tr>
@@ -81,7 +81,7 @@
 <section class="panel">
   <div class="panel-head">
     <h2>🧑‍💼 Dernières candidatures</h2>
-    <a class="pxadmin-btn pxadmin-btn--sm" href="/admin/studio/candidature/">Voir tout ↗</a>
+    <a class="pxadmin-btn pxadmin-btn--sm" model="studio.candidature" >Voir tout ↗</a>
   </div>
   <div class="panel-body panel-body--flush">
     <div class="table-responsive">
@@ -91,8 +91,8 @@
         </thead>
         <tbody>
           {% for c in candidatures %}
-          <tr>
-            <td class="cell-strong">{{ c.nom }}<br><span class="cell-muted">{{ c.email }}</span></td>
+          <tr data-href="{% url 'admin:studio_candidature_change' c.id %}">
+            <td class="cell-strong"><a href="{% url 'admin:studio_candidature_change' c.id %}">{{ c.nom }}</a><br><span class="cell-muted">{{ c.email }}</span></td>
             <td><span class="px-badge px-badge--violet">{{ c.get_type_candidature_display }}</span></td>
             <td class="cell-muted">{{ c.poste|default:"—" }}</td>
             <td><span class="px-badge px-badge--neutral">{{ c.get_statut_display }}</span></td>

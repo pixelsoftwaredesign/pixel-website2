@@ -174,3 +174,29 @@ def admin_role(user):
         if name in roles:
             return name
     return 'Staff'
+
+
+@register.simple_tag
+def admin_url(model, params=''):
+    """URL de la liste Django admin d'un modèle.
+
+    - `model` : "app_label.model_name" (ex. "studio.commandeecommerce") ou
+      "app_label_model_name"
+    - `params` : chaîne de requête facultative, sans le "?" (ex. "statut=livree")
+
+    Résout le nom d'URL Django au lieu de l'écrire en dur : un renommage de
+    modèle ne peut plus casser silencieusement un lien. Retourne "" si le
+    modèle n'est pas exposé dans l'admin (le lien devient alors inerte).
+    """
+    from django.urls import NoReverseMatch, reverse
+
+    if not model:
+        return ''
+    name = 'admin:%s_changelist' % str(model).replace('.', '_')
+    try:
+        url = reverse(name)
+    except NoReverseMatch:
+        return ''
+    if params:
+        url = '%s?%s' % (url, params)
+    return url

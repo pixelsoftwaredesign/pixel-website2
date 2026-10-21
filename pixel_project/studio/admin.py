@@ -370,9 +370,18 @@ class PaiementAdmin(admin.ModelAdmin): list_display = ('reference','souscription
 @admin.register(CleActivation)
 class CleActivationAdmin(admin.ModelAdmin): list_display = ('code','souscription','est_utilisee','date_creation','date_activation')
 @admin.register(ConfigurationBancaire)
-class ConfigurationBancaireAdmin(admin.ModelAdmin): list_display = ('banque','titulaire','rib','est_defaut','is_active')
+class ConfigurationBancaireAdmin(admin.ModelAdmin):
+    list_display = ('banque', 'titulaire', 'rib', 'est_defaut', 'is_active')
+    list_filter = ('banque', 'is_active', 'est_defaut')
+    search_fields = ('titulaire', 'rib', 'agence', 'swift')
+    ordering = ('-est_defaut', 'banque', 'titulaire')
+
+
 @admin.register(ConfigurationPaiementEnLigne)
-class ConfigurationPaiementEnLigneAdmin(admin.ModelAdmin): list_display = ('fournisseur','est_actif','frais_pourcentage')
+class ConfigurationPaiementEnLigneAdmin(admin.ModelAdmin):
+    list_display = ('fournisseur', 'est_actif', 'frais_pourcentage')
+    list_filter = ('fournisseur', 'est_actif')
+    search_fields = ('fournisseur', 'instructions')
 
 # ─── Recrutement ───
 @admin.register(Candidature)
@@ -389,7 +398,14 @@ class TemoignageAdmin(admin.ModelAdmin):
 @admin.register(MouvementStock)
 class MouvementStockAdmin(admin.ModelAdmin): list_display = ('produit','type','quantite','stock_avant','stock_apres','date_mouvement')
 @admin.register(CommandeECommerce)
-class CommandeECommerceAdmin(admin.ModelAdmin): list_display = ('reference','client_nom','total_ttc','statut','methode_paiement','date_commande')
+class CommandeECommerceAdmin(admin.ModelAdmin):
+    list_display = ('reference', 'client_nom', 'total_ttc', 'statut',
+                    'methode_paiement', 'date_commande')
+    list_filter = ('statut', 'methode_paiement', 'date_commande')
+    search_fields = ('reference', 'client_nom', 'client_email', 'client_tel')
+    date_hierarchy = 'date_commande'
+    list_per_page = 30
+    ordering = ('-date_commande',)
 @admin.register(CommandeECommerceItem)
 class CommandeECommerceItemAdmin(admin.ModelAdmin): list_display = ('commande','nom_produit','quantite','prix_unitaire')
 

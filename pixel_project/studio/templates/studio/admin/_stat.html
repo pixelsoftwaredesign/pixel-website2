@@ -1,3 +1,5 @@
+{% load admin_ui %}
+{% admin_url model params as href %}
 {% if href %}<a class="stat-card{% if accent %} stat-card--{{ accent }}{% endif %}" href="{{ href }}">{% else %}<div class="stat-card{% if accent %} stat-card--{{ accent }}{% endif %}">{% endif %}
   <span class="stat-icon" aria-hidden="true">{{ icon }}</span>
   <span class="stat-body">

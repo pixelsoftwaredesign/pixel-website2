@@ -6,10 +6,10 @@
 {% block admin_content %}
 
 <div class="pxadmin-stats">
-  {% include "studio/admin/_stat.html" with label="Utilisateurs" value=total_users icon="👥" accent="sky" %}
-  {% include "studio/admin/_stat.html" with label="Groupes" value=total_groups icon="🛡️" accent="violet" %}
-  {% include "studio/admin/_stat.html" with label="Commandes" value=total_commandes icon="🛒" accent="emerald" %}
-  {% include "studio/admin/_stat.html" with label="Demandes" value=total_contacts icon="📄" accent="amber" %}
+  {% include "studio/admin/_stat.html" with label="Utilisateurs" value=total_users icon="👥" accent="sky" model="auth.user" %}
+  {% include "studio/admin/_stat.html" with label="Groupes" value=total_groups icon="🛡️" accent="violet" model="auth.group" %}
+  {% include "studio/admin/_stat.html" with label="Commandes" value=total_commandes icon="🛒" accent="emerald" model="studio.commandeecommerce" %}
+  {% include "studio/admin/_stat.html" with label="Demandes" value=total_contacts icon="📄" accent="amber" model="studio.projetcontact" %}
 </div>
 
 <section class="panel">
@@ -18,15 +18,15 @@
   </div>
   <div class="panel-body">
     <div class="pxadmin-links">
-      <a class="pxadmin-link" href="/admin/auth/user/">
+      <a class="pxadmin-link" model="auth.user">
         <span class="pxadmin-link-icon">👥</span>
         <span class="pxadmin-link-text"><strong>Utilisateurs</strong><small>Comptes</small></span>
       </a>
-      <a class="pxadmin-link" href="/admin/auth/group/">
+      <a class="pxadmin-link" model="auth.group">
         <span class="pxadmin-link-icon">🛡️</span>
         <span class="pxadmin-link-text"><strong>Groupes</strong><small>Rôles & droits</small></span>
       </a>
-      <a class="pxadmin-link" href="/admin/studio/userprofile/">
+      <a class="pxadmin-link" href="{% url 'admin:studio_userprofile_changelist' %}">
         <span class="pxadmin-link-icon">🪪</span>
         <span class="pxadmin-link-text"><strong>Profils</strong><small>UserProfile</small></span>
       </a>
@@ -54,7 +54,7 @@
 <section class="panel">
   <div class="panel-head">
     <h2>🛒 Dernières commandes</h2>
-    <a class="pxadmin-btn pxadmin-btn--sm" href="/admin/studio/commandecommerce/">Voir tout ↗</a>
+    <a class="pxadmin-btn pxadmin-btn--sm" model="studio.commandeecommerce" >Voir tout ↗</a>
   </div>
   <div class="panel-body panel-body--flush">
     <div class="table-responsive">
@@ -64,8 +64,8 @@
         </thead>
         <tbody>
           {% for cmd in commandes %}
-          <tr>
-            <td class="cell-strong">{{ cmd.reference }}</td>
+          <tr data-href="{% url 'admin:studio_commandeecommerce_change' cmd.id %}">
+            <td class="cell-strong"><a href="{% url 'admin:studio_commandeecommerce_change' cmd.id %}">#{{ cmd.reference }}</a></td>
             <td>{{ cmd.client_nom }}</td>
             <td>{% include "studio/admin/_statut.html" with statut=cmd.statut %}</td>
             <td class="cell-nowrap cell-muted">{{ cmd.date_commande|date:"d/m/Y H:i" }}</td>

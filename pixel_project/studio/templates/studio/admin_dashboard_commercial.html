@@ -6,26 +6,26 @@
 {% block admin_content %}
 
 <div class="pxadmin-stats">
-  {% include "studio/admin/_stat.html" with label="Demandes totales" value=total_contacts icon="📄" accent="sky" %}
-  {% include "studio/admin/_stat.html" with label="Non répondues" value=contacts_non_repondus icon="⏳" accent="rose" hint="À relancer" %}
-  {% include "studio/admin/_stat.html" with label="Répondues" value=contacts_repondus icon="✅" accent="emerald" hint=taux_reponse_label %}
-  {% include "studio/admin/_stat.html" with label="Candidatures" value=total_candidatures icon="🧑‍💼" accent="violet" %}
+  {% include "studio/admin/_stat.html" with label="Demandes totales" value=total_contacts icon="📄" accent="sky" model="studio.projetcontact" %}
+  {% include "studio/admin/_stat.html" with label="Non répondues" value=contacts_non_repondus icon="⏳" accent="rose" hint="À relancer" model="studio.projetcontact" params="a_repondu__exact=0" %}
+  {% include "studio/admin/_stat.html" with label="Répondues" value=contacts_repondus icon="✅" accent="emerald" hint=taux_reponse_label model="studio.projetcontact" params="a_repondu__exact=1" %}
+  {% include "studio/admin/_stat.html" with label="Candidatures" value=total_candidatures icon="🧑‍💼" accent="violet" model="studio.candidature" %}
 </div>
 
 <div class="pxadmin-links">
-  <a class="pxadmin-link" href="/admin/studio/projetcontact/">
+  <a class="pxadmin-link" model="studio.projetcontact" >
     <span class="pxadmin-link-icon">📄</span>
     <span class="pxadmin-link-text"><strong>Demandes & devis</strong><small>ProjetContact</small></span>
   </a>
-  <a class="pxadmin-link" href="/admin/studio/candidature/">
+  <a class="pxadmin-link" model="studio.candidature">
     <span class="pxadmin-link-icon">🧑‍💼</span>
     <span class="pxadmin-link-text"><strong>Candidatures</strong><small>Recrutement</small></span>
   </a>
-  <a class="pxadmin-link" href="/admin/studio/produit/">
+  <a class="pxadmin-link" href="{% url 'admin:studio_produit_changelist' %}">
     <span class="pxadmin-link-icon">📦</span>
     <span class="pxadmin-link-text"><strong>Produits</strong><small>Catalogue</small></span>
   </a>
-  <a class="pxadmin-link" href="/admin/studio/newslettersubscriber/">
+  <a class="pxadmin-link" href="{% url 'admin:studio_newslettersubscriber_changelist' %}">
     <span class="pxadmin-link-icon">📬</span>
     <span class="pxadmin-link-text"><strong>Abonnés</strong><small>Newsletter</small></span>
   </a>
@@ -34,7 +34,7 @@
 <section class="panel">
   <div class="panel-head">
     <h2>📄 Dernières demandes de projet</h2>
-    <a class="pxadmin-btn pxadmin-btn--sm" href="/admin/studio/projetcontact/">Voir tout ↗</a>
+    <a class="pxadmin-btn pxadmin-btn--sm" model="studio.projetcontact" >Voir tout ↗</a>
   </div>
 
   <div class="panel-body panel-body--flush">
@@ -45,8 +45,8 @@
         </thead>
         <tbody>
           {% for c in contacts %}
-          <tr>
-            <td class="cell-strong">{{ c.nom }}</td>
+          <tr data-href="{% url 'admin:studio_projetcontact_change' c.id %}">
+            <td class="cell-strong"><a href="{% url 'admin:studio_projetcontact_change' c.id %}">{{ c.nom }}</a></td>
             <td><a href="mailto:{{ c.email }}">{{ c.email }}</a></td>
             <td class="cell-truncate cell-muted" title="{{ c.message }}">{{ c.message }}</td>
             <td class="cell-nowrap cell-muted">{{ c.date_reception|date:"d/m/Y H:i" }}</td>
@@ -54,7 +54,7 @@
               {% if c.a_repondu %}<span class="px-badge px-badge--success">Oui</span>
               {% else %}<span class="px-badge px-badge--warn">Non</span>{% endif %}
             </td>
-            <td class="cell-nowrap"><a class="pxadmin-btn pxadmin-btn--sm" href="/admin/studio/projetcontact/{{ c.id }}/repondre/">Répondre</a></td>
+            <td class="cell-nowrap"><a class="pxadmin-btn pxadmin-btn--sm" href="{% url 'admin:studio_projetcontact_repondre' c.id %}">Répondre</a></td>
           </tr>
           {% empty %}
           <tr><td colspan="6"><div class="pxadmin-empty"><span class="pxadmin-empty-icon">✉️</span><p>Aucune demande pour le moment</p></div></td></tr>

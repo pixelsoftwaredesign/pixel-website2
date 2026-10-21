@@ -6,21 +6,21 @@
 {% block admin_content %}
 
 <div class="pxadmin-stats">
-  {% include "studio/admin/_stat.html" with label="Campagnes email" value=total_campagnes icon="📨" accent="sky" %}
-  {% include "studio/admin/_stat.html" with label="Abonnés actifs" value=total_abonnes icon="📬" accent="emerald" %}
-  {% include "studio/admin/_stat.html" with label="Témoignages" value=total_temoignages icon="⭐" accent="amber" %}
+  {% include "studio/admin/_stat.html" with label="Campagnes email" value=total_campagnes icon="📨" accent="sky" model="studio.newslettercampaign"  %}
+  {% include "studio/admin/_stat.html" with label="Abonnés actifs" value=total_abonnes icon="📬" accent="emerald" model="studio.newslettersubscriber" params="actif__exact=1" %}
+  {% include "studio/admin/_stat.html" with label="Témoignages" value=total_temoignages icon="⭐" accent="amber" model="studio.temoignage"  %}
 </div>
 
 <div class="pxadmin-links">
-  <a class="pxadmin-link" href="/admin/studio/post/">
+  <a class="pxadmin-link" href="{% url 'admin:studio_post_changelist' %}">
     <span class="pxadmin-link-icon">📝</span>
     <span class="pxadmin-link-text"><strong>Articles</strong><small>Blog / posts</small></span>
   </a>
-  <a class="pxadmin-link" href="/admin/studio/portfolioproject/">
+  <a class="pxadmin-link" href="{% url 'admin:studio_portfolioproject_changelist' %}">
     <span class="pxadmin-link-icon">🗂️</span>
     <span class="pxadmin-link-text"><strong>Portfolio</strong><small>Réalisations</small></span>
   </a>
-  <a class="pxadmin-link" href="/admin/studio/graphismeresource/">
+  <a class="pxadmin-link" href="{% url 'admin:studio_graphismeresource_changelist' %}">
     <span class="pxadmin-link-icon">🎨</span>
     <span class="pxadmin-link-text"><strong>Graphisme</strong><small>Ressources</small></span>
   </a>
@@ -33,7 +33,7 @@
 <section class="panel">
   <div class="panel-head">
     <h2>📨 Dernières campagnes</h2>
-    <a class="pxadmin-btn pxadmin-btn--sm" href="/admin/studio/newslettercampaign/">Gérer ↗</a>
+    <a class="pxadmin-btn pxadmin-btn--sm" model="studio.newslettercampaign" >Gérer ↗</a>
   </div>
   <div class="panel-body panel-body--flush">
     <div class="table-responsive">
@@ -43,8 +43,8 @@
         </thead>
         <tbody>
           {% for c in campagnes %}
-          <tr>
-            <td class="cell-strong">{{ c.sujet }}</td>
+          <tr data-href="{% url 'admin:studio_newslettercampaign_change' c.id %}">
+            <td class="cell-strong"><a href="{% url 'admin:studio_newslettercampaign_change' c.id %}">{{ c.sujet }}</a></td>
             <td>{% if c.envoye %}<span class="px-badge px-badge--success">Oui</span>{% else %}<span class="px-badge px-badge--warn">Brouillon</span>{% endif %}</td>
             <td class="cell-money">{{ c.nb_destinataires }}</td>
             <td class="cell-nowrap cell-muted">{{ c.date_creation|date:"d/m/Y H:i" }}</td>
@@ -62,7 +62,7 @@
 <section class="panel">
   <div class="panel-head">
     <h2>⭐ Témoignages</h2>
-    <a class="pxadmin-btn pxadmin-btn--sm" href="/admin/studio/temoignage/">Gérer ↗</a>
+    <a class="pxadmin-btn pxadmin-btn--sm" model="studio.temoignage" >Gérer ↗</a>
   </div>
   <div class="panel-body panel-body--flush">
     <div class="table-responsive">
@@ -72,8 +72,8 @@
         </thead>
         <tbody>
           {% for t in temoignages %}
-          <tr>
-            <td class="cell-strong">{{ t.nom }}</td>
+          <tr data-href="{% url 'admin:studio_temoignage_change' t.id %}">
+            <td class="cell-strong"><a href="{% url 'admin:studio_temoignage_change' t.id %}">{{ t.nom }}</a></td>
             <td class="cell-muted">{{ t.entreprise|default:"—" }}</td>
             <td class="cell-money">{{ t.note }}/5</td>
             <td>{% if t.actif %}<span class="px-badge px-badge--success">Oui</span>{% else %}<span class="px-badge px-badge--neutral">Non</span>{% endif %}</td>
