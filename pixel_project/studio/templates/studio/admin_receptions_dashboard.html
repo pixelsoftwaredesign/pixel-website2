@@ -7,7 +7,7 @@
 
 <div class="pxadmin-stats">
   {% include "studio/admin/_stat.html" with label="Commandes" value=stats.total_commandes icon="🛒" accent="sky" model="studio.commandeecommerce" %}
-  {% include "studio/admin/_stat.html" with label="En attente" value=stats.nouvelles_commandes icon="⏳" accent="amber" hint="À traiter" model="studio.commandeecommerce" params="statut=en_attente" %}
+  {% include "studio/admin/_stat.html" with label="En attente" value=stats.nouvelles_commandes icon="⏳" accent="amber" hint="À traiter" model="studio.commandeecommerce" params="statut__exact=en_attente" %}
   {% include "studio/admin/_stat.html" with label="Demandes de projet" value=stats.total_contacts icon="📄" accent="violet" model="studio.projetcontact" %}
   {% include "studio/admin/_stat.html" with label="Non répondues" value=stats.contacts_non_repondus icon="✉️" accent="rose" hint="À relancer" model="studio.projetcontact" params="a_repondu__exact=0" %}
   {% include "studio/admin/_stat.html" with label="Candidatures" value=stats.total_candidatures icon="🧑‍💼" accent="emerald" model="studio.candidature"  %}

@@ -287,7 +287,7 @@ for url, attendu, client in [
 # sur un choix, pas de __in : Django tronque la valeur caractere par caractere).
 body = cc.get('/admin/dash/comptable/').content.decode()
 check('KPI commande : filtre par statut (syntaxe list_filter)',
-      '/admin/studio/commandeecommerce/?statut=en_attente' in body)
+      '/admin/studio/commandeecommerce/?statut__exact=en_attente' in body)
 check('KPI commande : pas de lookup __in (incompatible Django)',
       'statut__in' not in body)
 body = cc.get('/admin/dash/commercial/').content.decode()
@@ -327,10 +327,10 @@ check('coquille : les boutons internes ne declenchent pas la navigation',
 
 print('\n== 9. Filtres et recherche dans l\'admin Django ==')
 # Les KPI pointent vers des listes reellement filtrees.
-body = dc.get('/admin/studio/commandeecommerce/?statut=en_attente').content.decode()
+body = dc.get('/admin/studio/commandeecommerce/?statut__exact=en_attente').content.decode()
 check('admin commandes : filtre en_attente -> seule la commande en attente',
       'CHKATT' in body and 'CHK00' not in body)
-body = dc.get('/admin/studio/commandeecommerce/?statut=livree').content.decode()
+body = dc.get('/admin/studio/commandeecommerce/?statut__exact=livree').content.decode()
 check('admin commandes : filtre livree -> pas la commande en attente',
       'CHKATT' not in body)
 check('admin commandes : filtre livree -> des commandes livrees',
@@ -475,6 +475,19 @@ check('banque : KPI fournisseurs -> liste admin',
 body = login(superadmin).get('/admin/roles/').content.decode()
 check('roles : KPI roles -> liste admin', '/admin/auth/group/' in body)
 check('roles : KPI utilisateurs -> liste admin', '/admin/auth/user/' in body)
+
+# Les paramètres de filtre des KPI doivent être ceux que Django génère
+# lui-même (sinon le filtre de la barre latérale n'est pas mis en surbrillance).
+FILTRE_ADMIN = _re.compile(r'href="\?([a-z_]+(?:\__exact)?)=')
+for model, params_attendus in [
+    ('studio.commandeecommerce', 'statut__exact'),
+    ('studio.projetcontact', 'a_repondu__exact'),
+    ('studio.configurationbancaire', 'is_active__exact'),
+]:
+    liste = dc.get('/admin/%s/' % model.replace('.', '/')).content.decode()
+    params_admin = set(FILTRE_ADMIN.findall(liste))
+    check('admin %s : filtre %s canonique' % (model, params_attendus),
+          params_attendus in params_admin, sorted(params_admin)[:6])
 
 print('\n== 11. Navigation : badge « a traiter » ==')
 
