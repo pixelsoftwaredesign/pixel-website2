@@ -13,6 +13,7 @@ urlpatterns = [
     path('innerstudio/management/', views.gestion_innerstudio, name='gestion_innerstudio'),
     path('patisserie/management/', views.gestion_patisserie, name='gestion_patisserie'),
     path('innerstudio/', views.innerstudio, name='innerstudio'),
+    path('pixoffice/', views.pixoffice, name='pixoffice'),
     path('archi/', views.pole_archi, name='pole_archi'),
     path('app/', views.pwa_app, name='pwa_app'),
     path('app/<path:path>', views.pwa_app, name='pwa_assets'),

@@ -151,8 +151,8 @@ def sitemap_xml(request):
         '/', '/a-propos/', '/portfolio/', '/prix/', '/faq/', '/temoignages/',
         '/contact/', '/recrutement/', '/gestiactiv/', '/restaurant/',
         '/patisserie/', '/pixelsoftcode/', '/innerstudio/', '/uicatalogue/',
-        '/graphisme/', '/atelierdev/', '/atelier/', '/pixmail/', '/logiciel-offline/',
-        '/archi/',
+        '/graphisme/', '/atelierdev/', '/atelier/', '/pixmail/', '/pixoffice/',
+        '/logiciel-offline/', '/archi/',
     ]
 
     def url_xml(u):
@@ -893,6 +893,9 @@ def innerstudio(request):
     return render(request, 'studio/innerstudio.html', {
         'projects_count': projects_count or 120,
     })
+
+def pixoffice(request):
+    return render(request, 'studio/pixoffice.html')
 
 def pole_archi(request):
     return render(request, 'studio/pole_archi.html')
