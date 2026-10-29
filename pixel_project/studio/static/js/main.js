@@ -196,10 +196,13 @@ fetch('/api/me/').then(r => r.json()).then(d => {
 // ── CONTACT FORM ──
 function handleFormSubmit(event) {
   event.preventDefault();
+  const form = document.getElementById('projectForm');
+  const tokenInput = form.querySelector('[name="cf-turnstile-response"]');
   const payload = {
     username: document.getElementById('username').value.trim(),
     useremail: document.getElementById('useremail').value.trim(),
-    usermessage: document.getElementById('usermessage').value.trim()
+    usermessage: document.getElementById('usermessage').value.trim(),
+    turnstile_token: tokenInput ? tokenInput.value.trim() : ''
   };
   const statusDiv = document.getElementById('formStatus');
   fetch('/api/contact/', {
@@ -209,10 +212,16 @@ function handleFormSubmit(event) {
   }).then(r => r.json()).then(data => {
     statusDiv.className = data.status === 'success' ? 'success' : 'error';
     statusDiv.innerText = data.message;
-    if (data.status === 'success') document.getElementById('projectForm').reset();
+    if (data.status === 'success') form.reset();
+    if (window.turnstile) {
+      try { window.turnstile.reset(); } catch (err) { /* widget absent */ }
+    }
   }).catch(() => {
     statusDiv.className = 'error';
     statusDiv.innerText = 'Erreur de connexion avec le serveur.';
+    if (window.turnstile) {
+      try { window.turnstile.reset(); } catch (err) { /* widget absent */ }
+    }
   });
 }
 

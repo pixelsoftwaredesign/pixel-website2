@@ -1,0 +1,24 @@
+name = "pixelsoftwaredesign-contact"
+main = "turnstile-worker.mjs"
+compatibility_date = "2024-09-25"
+
+[vars]
+BACKEND_ORIGIN = "https://pixelsoftwaredesign.onrender.com"
+
+# Seuls les formulaires de contact / devis passent par ce Worker.
+# Le secret TURNSTILE_SECRET_KEY est ajoute via `wrangler secret put`.
+[[routes]]
+pattern = "pixelsoftwaredesign.xyz/api/contact*"
+zone_name = "pixelsoftwaredesign.xyz"
+
+[[routes]]
+pattern = "pixelsoftwaredesign.xyz/contact*"
+zone_name = "pixelsoftwaredesign.xyz"
+
+[[routes]]
+pattern = "www.pixelsoftwaredesign.xyz/api/contact*"
+zone_name = "pixelsoftwaredesign.xyz"
+
+[[routes]]
+pattern = "www.pixelsoftwaredesign.xyz/contact*"
+zone_name = "pixelsoftwaredesign.xyz"

@@ -2082,16 +2082,71 @@ def api_panier_retirer(request, prod_id):
 def a_propos(request):
     return render(request, 'studio/a_propos.html')
 
+ERREURS_VERIFICATION_HUMAINE = {
+    'robot': "Merci de valider la vérification anti-robot avant d'envoyer.",
+    'indisponible': "La vérification anti-robot est momentanément indisponible. Merci de réessayer dans un instant.",
+}
+
+TYPES_PROJET_DEVIS = [
+    'Site web',
+    'Application mobile',
+    'Logiciel de gestion / ERP',
+    'E-commerce',
+    'Design graphique',
+    'Pôle Archi',
+    'Autre',
+]
+
+
 def contact_page(request):
+    """Formulaire de contact / demande de devis.
+
+    La vérification Turnstile est faite à la périphérie Cloudflare (Worker
+    `pixelsoftwaredesign-contact`) avant que la requête n'atteigne Django.
+    Le paramètre `erreur` est renseigné par ce Worker en cas d'échec.
+    """
+    devis = request.GET.get('devis') == '1' or request.POST.get('devis') == '1'
+    offre = (request.GET.get('offre') or request.POST.get('offre') or '').strip()[:120]
+    type_projet = request.POST.get('type_projet', '').strip()
+    nom = request.POST.get('nom', '').strip()
+    email = request.POST.get('email', '').strip()
+    message = request.POST.get('message', '').strip()
+    robot_error = ERREURS_VERIFICATION_HUMAINE.get(request.GET.get('erreur', ''))
+
     if request.method == 'POST':
-        nom = request.POST.get('nom', '').strip()
-        email = request.POST.get('email', '').strip()
-        message = request.POST.get('message', '').strip()
         if not nom or not email or not message:
-            return render(request, 'studio/contact.html', {'error': 'Veuillez remplir tous les champs obligatoires.'})
-        ProjetContact.objects.create(nom=nom, email=email, message=message)
-        return render(request, 'studio/contact.html', {'success': 'Merci pour votre message. Nous vous répondrons dans les plus brefs délais.'})
-    return render(request, 'studio/contact.html')
+            return render(request, 'studio/contact.html', {
+                'error': 'Veuillez remplir tous les champs obligatoires.',
+                'devis': devis,
+                'offre': offre,
+                'nom': nom,
+                'email': email,
+                'message': message,
+                'type_projet': type_projet,
+                'types_projet': TYPES_PROJET_DEVIS,
+            })
+        message_enregistre = f"[{type_projet}] {message}" if type_projet else message
+        ProjetContact.objects.create(nom=nom, email=email, message=message_enregistre)
+        return render(request, 'studio/contact.html', {
+            'success': 'Merci pour votre message. Nous vous répondrons dans les plus brefs délais.',
+            'devis': devis,
+            'offre': offre,
+            'types_projet': TYPES_PROJET_DEVIS,
+        })
+
+    message_initial = ''
+    if devis:
+        if offre:
+            message_initial = f"Bonjour, je souhaite recevoir un devis pour {offre}."
+        else:
+            message_initial = "Bonjour, je souhaite recevoir un devis pour mon projet."
+    return render(request, 'studio/contact.html', {
+        'devis': devis,
+        'offre': offre,
+        'initial_message': message_initial,
+        'error': robot_error,
+        'types_projet': TYPES_PROJET_DEVIS,
+    })
 
 def faq(request):
     faqs = [

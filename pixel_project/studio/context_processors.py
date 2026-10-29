@@ -1,4 +1,6 @@
 """Contextes de templates partagés (studio)."""
+from django.conf import settings
+
 from .middleware import is_gestiactiv
 
 # Domaine canonique du site principal Pixel.
@@ -24,3 +26,8 @@ def erp_links(request):
     if is_gestiactiv(request):
         return {'is_gestiactiv': True, 'gx_base': '', 'site_base': APEX}
     return {'is_gestiactiv': False, 'gx_base': '/gestiactiv', 'site_base': ''}
+
+
+def turnstile(request):
+    """Expose la clé publique Turnstile aux formulaires (devis / contact)."""
+    return {'turnstile_site_key': settings.TURNSTILE_SITE_KEY}

@@ -119,6 +119,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'django.template.context_processors.i18n',
                 'studio.context_processors.erp_links',
+                'studio.context_processors.turnstile',
             ],
         },
     },
@@ -193,6 +194,12 @@ PIXMAIL_FROM_EMAIL = os.getenv('PIXMAIL_FROM_EMAIL', 'Pixel Software Design <inf
 RESEND_API_KEY = os.getenv('RESEND_API_KEY', '')
 RESEND_FROM_EMAIL = os.getenv('RESEND_FROM_EMAIL', '')
 SITE_URL = os.getenv('SITE_URL', 'http://localhost:8000')
+
+# ─── Cloudflare Turnstile (vérification humaine des demandes de devis) ───
+# La clé publique est sans risque ; le secret ne doit jamais être commité.
+# Il est vérifié à la périphérie Cloudflare (Worker `pixelsoftwaredesign-contact`).
+TURNSTILE_SITE_KEY = os.getenv('TURNSTILE_SITE_KEY', '0x4AAAAAAFrCVLfADVV9RMW7')
+TURNSTILE_SECRET_KEY = os.getenv('TURNSTILE_SECRET_KEY', '')
 
 if not EMAIL_HOST_USER:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
