@@ -14,6 +14,7 @@ from django.utils import timezone
 from .models import UserProfile, ProjetContact, AtelierProfile, PortfolioProject, CodeRepository, GraphismeResource, ERPModule, ERPSubscription, ERPDemoRecord, ERPClient, ERPMembership, Moniteur, Candidat, Vehicule, Lecon, Examen, Medecin, Patient, Lit, RendezVous, FacturationSante, ClientHotel, Chambre, ReservationHotel, ServiceHotel, Categorie, Fournisseur, Produit, Vente, ClientJuridique, DossierJuridique, Audience, JournalComptable, EcritureComptable, Facture, DeclarationFiscale, Employe, Contrat, FichePaie, Conge, Formation, MenuItem, TableRestaurant, SoftCodeModule, StudioProject3D, PatisserieRecipe, PatisserieProduct, PlanAbonnement, SouscriptionClient, Paiement, CleActivation, ConfigurationBancaire, ConfigurationPaiementEnLigne, Candidature, MouvementStock, CommandeECommerce, CommandeECommerceItem, Temoignage, PixMailAccount, PixMailContact, PixMailMessage, PixMailAttachment, PixMailFolder, PixMailSignature, SocialProfile, Follow, Post, Like, Comment, Notification, Conversation, ConversationMember, EncryptedMessage, Wallet, Transaction, TwoFactorAuth, Referral, REFERRAL_BONUS_AMOUNT, REFERRAL_THRESHOLD, KYCVerification, NewsletterSubscriber, NewsletterCampaign
 from django.urls import NoReverseMatch, reverse
 from .services import notifier_activation_cle, notifier_confirmation_commande, notifier_statut_commande
+from .turnstile import verify_turnstile
 
 
 def _admin_login_redirect(request):
@@ -1171,14 +1172,24 @@ def api_contact(request):
     if request.method == 'POST':
         try:
             data = json.loads(request.body)
-            nom = data.get('username', '').strip()
-            email = data.get('useremail', '').strip()
-            message = data.get('usermessage', '').strip()
+            nom = str(data.get('username', '')).strip()
+            email = str(data.get('useremail', '')).strip()
+            message = str(data.get('usermessage', '')).strip()
+            type_projet = str(data.get('type_projet', '')).strip()
             if not nom or not email or not message:
                 return JsonResponse({"status": "error", "message": "Tous les champs sont requis."}, status=400)
+            verifie, raison = verify_turnstile(str(data.get('turnstile_token', '')))
+            if not verifie:
+                cle = 'indisponible' if raison == 'unavailable' else 'robot'
+                statut = 503 if raison == 'unavailable' else 400
+                return JsonResponse(
+                    {"status": "error", "message": ERREURS_VERIFICATION_HUMAINE[cle]},
+                    status=statut,
+                )
+            message_enregistre = f"[{type_projet}] {message}" if type_projet else message
             ProjetContact.objects.create(
                 client=request.user if request.user.is_authenticated else None,
-                nom=nom, email=email, message=message
+                nom=nom, email=email, message=message_enregistre
             )
             return JsonResponse({
                 "status": "success",
@@ -2101,9 +2112,9 @@ TYPES_PROJET_DEVIS = [
 def contact_page(request):
     """Formulaire de contact / demande de devis.
 
-    La vérification Turnstile est faite à la périphérie Cloudflare (Worker
-    `pixelsoftwaredesign-contact`) avant que la requête n'atteigne Django.
-    Le paramètre `erreur` est renseigné par ce Worker en cas d'échec.
+    Le jeton Turnstile est vérifié par Django auprès du Worker Cloudflare
+    `pixelsoftwaredesign-contact` (le secret reste dans le Worker). Le
+    paramètre `erreur` reste accepté pour les anciennes redirections.
     """
     devis = request.GET.get('devis') == '1' or request.POST.get('devis') == '1'
     offre = (request.GET.get('offre') or request.POST.get('offre') or '').strip()[:120]
@@ -2122,6 +2133,21 @@ def contact_page(request):
                 'nom': nom,
                 'email': email,
                 'message': message,
+                'initial_message': '',
+                'type_projet': type_projet,
+                'types_projet': TYPES_PROJET_DEVIS,
+            })
+        verifie, raison = verify_turnstile(request.POST.get('cf-turnstile-response', ''))
+        if not verifie:
+            cle = 'indisponible' if raison == 'unavailable' else 'robot'
+            return render(request, 'studio/contact.html', {
+                'error': ERREURS_VERIFICATION_HUMAINE[cle],
+                'devis': devis,
+                'offre': offre,
+                'nom': nom,
+                'email': email,
+                'message': message,
+                'initial_message': '',
                 'type_projet': type_projet,
                 'types_projet': TYPES_PROJET_DEVIS,
             })

@@ -197,9 +197,16 @@ SITE_URL = os.getenv('SITE_URL', 'http://localhost:8000')
 
 # ─── Cloudflare Turnstile (vérification humaine des demandes de devis) ───
 # La clé publique est sans risque ; le secret ne doit jamais être commité.
-# Il est vérifié à la périphérie Cloudflare (Worker `pixelsoftwaredesign-contact`).
+# Le Worker `pixelsoftwaredesign-contact` le garde et expose `/verify`.
 TURNSTILE_SITE_KEY = os.getenv('TURNSTILE_SITE_KEY', '0x4AAAAAAFrCVLfADVV9RMW7')
-TURNSTILE_SECRET_KEY = os.getenv('TURNSTILE_SECRET_KEY', '')
+TURNSTILE_VERIFY_PROXY_URL = os.getenv(
+    'TURNSTILE_VERIFY_PROXY_URL',
+    'https://pixelsoftwaredesign-contact.pixelsoftwaredesign.workers.dev/verify',
+)
+# En local (DEBUG) la vérification est ignorée pour ne pas dépendre du réseau.
+TURNSTILE_ENABLED = os.getenv(
+    'TURNSTILE_ENABLED', 'False' if DEBUG else 'True'
+).lower() in ('1', 'true', 'yes')
 
 if not EMAIL_HOST_USER:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'

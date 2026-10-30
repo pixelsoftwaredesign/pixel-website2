@@ -1,19 +1,14 @@
 /**
- * Protection Cloudflare Turnstile des demandes de devis / contact.
+ * Service de verification Cloudflare Turnstile.
  *
- * Le Worker n'intercepte que `/contact*` et `/api/contact*`. Il vérifie le
- * jeton Turnstile auprès de Cloudflare puis transmet la requête à l'origine
- * Render. Le secret reste dans les variables chiffrées du Worker.
+ * Le Worker est appele par le backend Django (Render) sur
+ * `POST /verify` avec `{"token": "..."}`. Il interroge Cloudflare
+ * `siteverify` avec le secret stocke dans les variables chiffrees du Worker.
+ * Il n'intercepte aucune route du site : le secret reste donc hors du depot
+ * et hors de Render.
  */
 
 const VERIFY_URL = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
-const DEFAULT_BACKEND = 'https://pixelsoftwaredesign.onrender.com';
-
-const MESSAGES = {
-  missing: "Merci de valider la vérification anti-robot avant d'envoyer.",
-  invalid: 'Vérification anti-robot échouée. Merci de réessayer.',
-  unavailable: 'Vérification anti-robot indisponible. Réessayez dans un instant.',
-};
 
 function jsonBody(data, status = 200) {
   return new Response(JSON.stringify(data), {
@@ -30,9 +25,9 @@ export async function verifyTurnstile(token, request, env, fetchImpl = fetch) {
   const secret = env && env.TURNSTILE_SECRET_KEY;
   if (!secret) return { ok: false, reason: 'unavailable' };
 
+  // Pas de `remoteip` : le Worker est appele par le serveur Django, pas par
+  // le navigateur du visiteur. L'IP transmise ne serait donc pas la bonne.
   const body = new URLSearchParams({ secret, response: token });
-  const ip = request.headers.get('CF-Connecting-IP');
-  if (ip) body.set('remoteip', ip);
 
   let response;
   try {
@@ -56,65 +51,38 @@ export async function verifyTurnstile(token, request, env, fetchImpl = fetch) {
   };
 }
 
-async function forward(request, env, bodyText, fetchImpl) {
-  const url = new URL(request.url);
-  const backend = (env && env.BACKEND_ORIGIN) || DEFAULT_BACKEND;
-  const target = new URL(url.pathname + url.search, backend);
-  const headers = new Headers(request.headers);
-  headers.delete('host');
-  headers.set('X-Forwarded-Host', url.host);
-  headers.set('X-Forwarded-Proto', 'https');
-  const ip = request.headers.get('CF-Connecting-IP');
-  if (ip) headers.set('X-Real-IP', ip);
-
-  const init = { method: request.method, headers, redirect: 'manual' };
-  if (bodyText !== undefined) init.body = bodyText;
-  else if (request.method !== 'GET' && request.method !== 'HEAD') init.body = request.body;
-  return fetchImpl(target.toString(), init);
-}
-
 export async function handleRequest(request, env, fetchImpl = fetch) {
   const url = new URL(request.url);
-  const isApi = url.pathname === '/api/contact' || url.pathname === '/api/contact/';
-  const isForm = url.pathname === '/contact' || url.pathname === '/contact/';
-
-  if (request.method !== 'POST' || (!isApi && !isForm)) {
-    return forward(request, env, undefined, fetchImpl);
+  if (url.pathname !== '/verify' && url.pathname !== '/') {
+    return jsonBody({ success: false, error: 'not_found' }, 404);
+  }
+  if (request.method !== 'POST') {
+    return jsonBody({ success: false, error: 'method_not_allowed' }, 405);
   }
 
-  const bodyText = await request.text();
-  let token = '';
-  let form = null;
+  let payload;
+  try {
+    payload = await request.json();
+  } catch (err) {
+    return jsonBody({ success: false, error: 'invalid_json' }, 400);
+  }
 
-  if (isApi) {
-    let payload;
-    try {
-      payload = JSON.parse(bodyText);
-    } catch (err) {
-      return jsonBody({ status: 'error', message: 'Requête invalide.' }, 400);
-    }
-    token = String((payload && (payload.turnstile_token || payload['cf-turnstile-response'])) || '').trim();
-  } else {
-    form = new URLSearchParams(bodyText);
-    token = String(form.get('cf-turnstile-response') || '').trim();
+  const token = String((payload && payload.token) || '').trim();
+  if (!token) {
+    return jsonBody({
+      success: false,
+      error: 'missing_token',
+      error_codes: ['missing-input-response'],
+    }, 400);
   }
 
   const result = await verifyTurnstile(token, request, env, fetchImpl);
-
-  if (!result.ok) {
-    if (isApi) {
-      const status = result.reason === 'unavailable' ? 503 : 400;
-      return jsonBody({ status: 'error', message: MESSAGES[result.reason] || MESSAGES.invalid }, status);
-    }
-    const params = new URLSearchParams();
-    if (form && form.get('devis') === '1') params.set('devis', '1');
-    const offre = form && form.get('offre');
-    if (offre) params.set('offre', offre);
-    params.set('erreur', result.reason === 'unavailable' ? 'indisponible' : 'robot');
-    return Response.redirect(new URL('/contact/?' + params.toString(), url.origin).toString(), 303);
-  }
-
-  return forward(request, env, bodyText, fetchImpl);
+  if (result.ok) return jsonBody({ success: true });
+  return jsonBody({
+    success: false,
+    error: result.reason,
+    error_codes: result.codes || [],
+  }, result.reason === 'unavailable' ? 503 : 200);
 }
 
 export default {

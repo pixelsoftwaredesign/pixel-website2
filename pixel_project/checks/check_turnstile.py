@@ -1,19 +1,23 @@
 """Verification humaine (Cloudflare Turnstile) des demandes de devis.
 
-Le jeton est valide a la peripherie par le Worker Cloudflare
-(`cloudflare/turnstile-worker.mjs`). Ces controles verifient que les pages
-exposent bien le widget et que le parcours de devis reste coherent.
+Django valide le jeton aupres du Worker Cloudflare
+(`cloudflare/turnstile-worker.mjs`), qui garde le secret. Ces controles
+verifient le widget, le parcours de devis et le refus des demandes non
+verifiees.
 """
 from _common import HOST_APEX as APEX, bootstrap, check, report
 
 bootstrap()
 
+import json
 from pathlib import Path
+from unittest.mock import patch
 
 from django.conf import settings
-from django.test import Client
+from django.test import Client, override_settings
 
 from studio.models import ProjetContact
+from studio.turnstile import verify_turnstile
 
 c = Client(HTTP_HOST=APEX)
 sitekey = settings.TURNSTILE_SITE_KEY
@@ -74,6 +78,88 @@ check('demande enregistree', contact is not None)
 if contact:
     check('type de projet conserve dans le message',
           contact.message.startswith('[Logiciel de gestion / ERP]'))
+ProjetContact.objects.filter(email=email).delete()
+
+print('\n== 6. Verification serveur aupres du Worker ==')
+
+
+class _ReponseWorker:
+    def __init__(self, payload):
+        self.payload = payload
+
+    def read(self):
+        return json.dumps(self.payload).encode()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        return False
+
+
+check('URL de verification du Worker configuree', bool(settings.TURNSTILE_VERIFY_PROXY_URL))
+with override_settings(
+    TURNSTILE_ENABLED=True,
+    TURNSTILE_VERIFY_PROXY_URL='https://verify.test/verify',
+):
+    check('jeton absent refuse', verify_turnstile('') == (False, 'missing'))
+    with patch(
+        'studio.turnstile.urllib.request.urlopen',
+        return_value=_ReponseWorker({'success': True}),
+    ):
+        check('jeton valide accepte', verify_turnstile('jeton') == (True, ''))
+    with patch(
+        'studio.turnstile.urllib.request.urlopen',
+        return_value=_ReponseWorker({'success': False, 'error_codes': ['invalid-input-response']}),
+    ):
+        check('jeton invalide refuse', verify_turnstile('faux') == (False, 'invalid'))
+    with patch('studio.turnstile.urllib.request.urlopen', side_effect=OSError('down')):
+        check('Worker indisponible signale', verify_turnstile('jeton') == (False, 'unavailable'))
+    with patch(
+        'studio.turnstile.urllib.request.urlopen',
+        return_value=_ReponseWorker({'success': False, 'error_codes': ['invalid-input-secret']}),
+    ):
+        check('secret invalide = indisponible', verify_turnstile('jeton') == (False, 'unavailable'))
+
+print('\n== 7. Le serveur refuse une demande non verifiee ==')
+email = 'turnstile-gate@example.test'
+ProjetContact.objects.filter(email=email).delete()
+with patch('studio.views.verify_turnstile', return_value=(False, 'invalid')):
+    r = c.post('/contact/?devis=1', {
+        'nom': 'Tentative non verifiee',
+        'email': email,
+        'type_projet': 'Site web',
+        'message': 'Sans jeton.',
+        'devis': '1',
+    })
+    check('formulaire non verifie : erreur affichee',
+          "valider la vérification anti-robot" in r.content.decode(), r.status_code)
+    check('formulaire non verifie : aucune demande creee',
+          not ProjetContact.objects.filter(email=email).exists())
+
+    r = c.post('/api/contact/', data=json.dumps({
+        'username': 'Tentative API',
+        'useremail': email,
+        'usermessage': 'Sans jeton.',
+        'turnstile_token': 'faux',
+    }), content_type='application/json')
+    check('API non verifiee : 400', r.status_code == 400, r.status_code)
+    check('API non verifiee : aucune demande creee',
+          not ProjetContact.objects.filter(email=email).exists())
+
+with patch('studio.views.verify_turnstile', return_value=(True, '')):
+    r = c.post('/api/contact/', data=json.dumps({
+        'username': 'Demande verifiee',
+        'useremail': email,
+        'usermessage': 'Avec jeton.',
+        'type_projet': 'Site web',
+        'turnstile_token': 'valide',
+    }), content_type='application/json')
+    check('API verifiee : 201', r.status_code == 201, r.status_code)
+    contact = ProjetContact.objects.filter(email=email).first()
+    check('API verifiee : demande creee', contact is not None)
+    check('API verifiee : type de projet conserve',
+          bool(contact and contact.message.startswith('[Site web]')))
 ProjetContact.objects.filter(email=email).delete()
 
 raise SystemExit(report())
