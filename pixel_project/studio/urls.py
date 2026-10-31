@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views
+from . import views, views_devis
 
 urlpatterns = [
     path('robots.txt', views.robots_txt, name='robots_txt'),
@@ -179,4 +179,15 @@ urlpatterns = [
     path('admin/dash/superadmin/', views.admin_dashboard_superadmin, name='admin_dashboard_superadmin'),
     path('admin/dash/admin/', views.admin_dashboard_admin, name='admin_dashboard_admin'),
     path('admin/roles/', views.admin_roles, name='admin_roles'),
+    # ─── Devis, ventes, préfactures, catalogue ──────────────
+    path('admin/devis/', views_devis.devis_list, name='admin_devis_list'),
+    path('admin/devis/nouveau/', views_devis.devis_create, name='admin_devis_create'),
+    path('admin/devis/<int:pk>/', views_devis.devis_detail, name='admin_devis_detail'),
+    path('admin/devis/<int:pk>/imprimer/', views_devis.devis_print, name='admin_devis_print'),
+    path('admin/ventes/', views_devis.ventes_list, name='admin_ventes'),
+    path('admin/prefactures/', views_devis.prefactures_list, name='admin_prefactures'),
+    path('admin/prefactures/nouvelle/', views_devis.prefacture_create, name='admin_prefacture_create'),
+    path('admin/prefactures/<int:pk>/', views_devis.prefacture_detail, name='admin_prefacture_detail'),
+    path('admin/prefactures/<int:pk>/imprimer/', views_devis.prefacture_print, name='admin_prefacture_print'),
+    path('admin/produits/', views_devis.produits_list, name='admin_produits'),
 ]

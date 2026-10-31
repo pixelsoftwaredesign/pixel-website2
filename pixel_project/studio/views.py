@@ -3714,11 +3714,21 @@ def api_pixsoftpay_profile_photo(request):
 
 @staff_required
 def admin_receptions_dashboard(request):
-    from .models import CommandeECommerce, ProjetContact, Candidature
+    from .models import (
+        CommandeECommerce, ProjetContact, Candidature, Devis, PreFacture, Vente,
+    )
     try:
         total_candidatures = Candidature.objects.count()
     except Exception:
         total_candidatures = 0
+    try:
+        total_devis = Devis.objects.count()
+        devis_a_traiter = Devis.objects.filter(
+            statut__in=['nouveau', 'en_cours']).count()
+        total_ventes = Vente.objects.filter(erp_client__isnull=True).count()
+        total_prefactures = PreFacture.objects.count()
+    except Exception:
+        total_devis = devis_a_traiter = total_ventes = total_prefactures = 0
     commandes, commandes_page = _paginate(
         CommandeECommerce.objects.order_by('-date_commande'), 'cpage', request, 10)
     contacts, contacts_page = _paginate(
@@ -3736,6 +3746,10 @@ def admin_receptions_dashboard(request):
         'total_contacts': ProjetContact.objects.count(),
         'contacts_non_repondus': ProjetContact.objects.filter(a_repondu=False).count(),
         'total_candidatures': total_candidatures,
+        'total_devis': total_devis,
+        'devis_a_traiter': devis_a_traiter,
+        'total_ventes': total_ventes,
+        'total_prefactures': total_prefactures,
     }
     context = {
         'commandes': commandes,
@@ -3750,7 +3764,7 @@ def admin_receptions_dashboard(request):
 
 @role_required('Commercial', 'SuperAdmin', 'Admin')
 def admin_dashboard_commercial(request):
-    from .models import ProjetContact, Candidature
+    from .models import ProjetContact, Candidature, Devis, Vente
     total_contacts = ProjetContact.objects.count()
     contacts_non_repondus = ProjetContact.objects.filter(a_repondu=False).count()
     contacts_repondus = ProjetContact.objects.filter(a_repondu=True).count()
@@ -3758,6 +3772,14 @@ def admin_dashboard_commercial(request):
         total_candidatures = Candidature.objects.count()
     except Exception:
         total_candidatures = 0
+    try:
+        total_devis = Devis.objects.count()
+        devis_a_traiter = Devis.objects.filter(
+            statut__in=['nouveau', 'en_cours']).count()
+        devis_acceptes = Devis.objects.filter(statut='accepte').count()
+        total_ventes = Vente.objects.filter(erp_client__isnull=True).count()
+    except Exception:
+        total_devis = devis_a_traiter = devis_acceptes = total_ventes = 0
     if total_contacts:
         taux_reponse_label = "%d%% de réponse" % round(contacts_repondus * 100 / total_contacts)
     else:
@@ -3772,13 +3794,17 @@ def admin_dashboard_commercial(request):
         'contacts_repondus': contacts_repondus,
         'taux_reponse_label': taux_reponse_label,
         'total_candidatures': total_candidatures,
+        'total_devis': total_devis,
+        'devis_a_traiter': devis_a_traiter,
+        'devis_acceptes': devis_acceptes,
+        'total_ventes': total_ventes,
     })
 
 
 @role_required('Comptable', 'SuperAdmin', 'Admin')
 def admin_dashboard_comptable(request):
-    from django.db.models import Sum
-    from .models import CommandeECommerce
+    from django.db.models import F, Sum
+    from .models import CommandeECommerce, PreFacture, Vente
     # Statuts considérés comme « confirmés » (au-delà du panier / de l'attente).
     STATUTS_CONFIRMES = ['confirmee', 'preparation', 'expediee', 'livree']
     total_commandes = CommandeECommerce.objects.count()
@@ -3788,6 +3814,16 @@ def admin_dashboard_comptable(request):
             statut__in=STATUTS_CONFIRMES).aggregate(s=Sum('total_ttc'))['s'] or 0
     except Exception:
         montant = 0
+    try:
+        ventes_site = Vente.objects.filter(erp_client__isnull=True)
+        total_ventes = ventes_site.count()
+        montant_ventes = ventes_site.aggregate(
+            s=Sum(F('quantite') * F('prix_unitaire')))['s'] or 0
+        total_prefactures = PreFacture.objects.count()
+        prefactures_a_traiter = PreFacture.objects.filter(
+            statut='brouillon').count()
+    except Exception:
+        total_ventes = montant_ventes = total_prefactures = prefactures_a_traiter = 0
     if total_commandes:
         taux_paiement_label = "%d%% confirmées" % round(payees * 100 / total_commandes)
     else:
@@ -3815,6 +3851,10 @@ def admin_dashboard_comptable(request):
         'livrees': CommandeECommerce.objects.filter(statut='livree').count(),
         'montant_encaisse': "{:,.2f}".format(montant).replace(',', ' '),
         'taux_paiement_label': taux_paiement_label,
+        'total_ventes': total_ventes,
+        'montant_ventes': montant_ventes,
+        'total_prefactures': total_prefactures,
+        'prefactures_a_traiter': prefactures_a_traiter,
     })
 
 @role_required('Editeur', 'SuperAdmin', 'Admin')
@@ -3836,13 +3876,22 @@ def admin_dashboard_editeur(request):
 
 @role_required('SuperAdmin')
 def admin_dashboard_superadmin(request):
-    from .models import CommandeECommerce, ProjetContact, Produit, Candidature
+    from .models import (
+        CommandeECommerce, ProjetContact, Produit, Candidature, Devis,
+        PreFacture, Vente,
+    )
     commandes, commandes_page = _paginate(
         CommandeECommerce.objects.order_by('-date_commande'), 'page', request, 10)
     try:
         total_candidatures = Candidature.objects.count()
     except Exception:
         total_candidatures = 0
+    try:
+        total_devis = Devis.objects.count()
+        total_ventes = Vente.objects.filter(erp_client__isnull=True).count()
+        total_prefactures = PreFacture.objects.count()
+    except Exception:
+        total_devis = total_ventes = total_prefactures = 0
     return render(request, 'studio/admin_dashboard_superadmin.html', {
         'commandes': commandes,
         'commandes_page': commandes_page,
@@ -3851,6 +3900,9 @@ def admin_dashboard_superadmin(request):
         'total_contacts': ProjetContact.objects.count(),
         'total_produits': Produit.objects.count(),
         'total_candidatures': total_candidatures,
+        'total_devis': total_devis,
+        'total_ventes': total_ventes,
+        'total_prefactures': total_prefactures,
     })
 
 @role_required('Admin', 'SuperAdmin')

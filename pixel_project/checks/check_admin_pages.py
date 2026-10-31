@@ -449,11 +449,11 @@ check('style de la ligne cliquable present',
 # Un KPI dont le modele n'est pas resolu devient silencieusement un <div> :
 # on verifie donc que chaque tableau de bord expose bien tous ses KPI cliquables.
 for url, attendu_nb, client in [
-    ('/admin/receptions/', 5, cc),
-    ('/admin/dash/commercial/', 4, cc),
-    ('/admin/dash/comptable/', 5, cc),
+    ('/admin/receptions/', 8, cc),
+    ('/admin/dash/commercial/', 7, cc),
+    ('/admin/dash/comptable/', 7, cc),
     ('/admin/dash/editeur/', 3, cc),
-    ('/admin/dash/superadmin/', 5, login(superadmin)),
+    ('/admin/dash/superadmin/', 8, login(superadmin)),
     ('/admin/dash/admin/', 4, cc),
     ('/admin-bancaire/', 4, cc),
     ('/admin/roles/', 3, login(superadmin)),

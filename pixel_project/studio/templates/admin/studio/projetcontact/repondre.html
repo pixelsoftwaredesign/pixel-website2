@@ -30,6 +30,7 @@ L'équipe Pixel Software Design
     </fieldset>
     <div class="submit-row" style="margin-top:1rem">
       <input type="submit" value="Envoyer la réponse" class="default" name="_save">
+      <a class="button" href="{% url 'admin_devis_create' %}?projet={{ contact.id }}" style="margin-left:1rem">📝 Créer un devis structuré</a>
       <a href="{% url 'admin:studio_projetcontact_changelist' %}" style="margin-left:1rem">Retour à la liste</a>
     </div>
   </form>

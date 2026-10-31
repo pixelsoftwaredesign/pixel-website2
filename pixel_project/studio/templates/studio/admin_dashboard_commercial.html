@@ -10,9 +10,28 @@
   {% include "studio/admin/_stat.html" with label="Non répondues" value=contacts_non_repondus icon="⏳" accent="rose" hint="À relancer" model="studio.projetcontact" params="a_repondu__exact=0" %}
   {% include "studio/admin/_stat.html" with label="Répondues" value=contacts_repondus icon="✅" accent="emerald" hint=taux_reponse_label model="studio.projetcontact" params="a_repondu__exact=1" %}
   {% include "studio/admin/_stat.html" with label="Candidatures" value=total_candidatures icon="🧑‍💼" accent="violet" model="studio.candidature" %}
+  {% include "studio/admin/_stat.html" with label="Devis à traiter" value=devis_a_traiter icon="📝" accent="amber" hint="Nouveaux & en cours" url="/admin/devis/" %}
+  {% include "studio/admin/_stat.html" with label="Devis acceptés" value=devis_acceptes icon="✅" accent="emerald" url="/admin/devis/?statut=accepte" %}
+  {% include "studio/admin/_stat.html" with label="Ventes" value=total_ventes icon="🏷️" accent="cyan" hint="Site" url="/admin/ventes/" %}
 </div>
 
 <div class="pxadmin-links">
+  <a class="pxadmin-link" href="{% url 'admin_devis_list' %}">
+    <span class="pxadmin-link-icon">📝</span>
+    <span class="pxadmin-link-text"><strong>Devis structurés</strong><small>Produits & réponses</small></span>
+  </a>
+  <a class="pxadmin-link" href="{% url 'admin_ventes' %}">
+    <span class="pxadmin-link-icon">🏷️</span>
+    <span class="pxadmin-link-text"><strong>Ventes</strong><small>Conversion & CA</small></span>
+  </a>
+  <a class="pxadmin-link" href="{% url 'admin_produits' %}">
+    <span class="pxadmin-link-icon">📦</span>
+    <span class="pxadmin-link-text"><strong>Catalogue produits</strong><small>Prix & stock</small></span>
+  </a>
+  <a class="pxadmin-link" href="{% url 'admin_prefactures' %}">
+    <span class="pxadmin-link-icon">📑</span>
+    <span class="pxadmin-link-text"><strong>Préfactures</strong><small>Proformas</small></span>
+  </a>
   <a class="pxadmin-link" model="studio.projetcontact" >
     <span class="pxadmin-link-icon">📄</span>
     <span class="pxadmin-link-text"><strong>Demandes & devis</strong><small>ProjetContact</small></span>
@@ -20,10 +39,6 @@
   <a class="pxadmin-link" model="studio.candidature">
     <span class="pxadmin-link-icon">🧑‍💼</span>
     <span class="pxadmin-link-text"><strong>Candidatures</strong><small>Recrutement</small></span>
-  </a>
-  <a class="pxadmin-link" href="{% url 'admin:studio_produit_changelist' %}">
-    <span class="pxadmin-link-icon">📦</span>
-    <span class="pxadmin-link-text"><strong>Produits</strong><small>Catalogue</small></span>
   </a>
   <a class="pxadmin-link" href="{% url 'admin:studio_newslettersubscriber_changelist' %}">
     <span class="pxadmin-link-icon">📬</span>
@@ -54,7 +69,10 @@
               {% if c.a_repondu %}<span class="px-badge px-badge--success">Oui</span>
               {% else %}<span class="px-badge px-badge--warn">Non</span>{% endif %}
             </td>
-            <td class="cell-nowrap"><a class="pxadmin-btn pxadmin-btn--sm" href="{% url 'admin:studio_projetcontact_repondre' c.id %}">Répondre</a></td>
+            <td class="cell-nowrap">
+              <a class="pxadmin-btn pxadmin-btn--sm" href="{% url 'admin:studio_projetcontact_repondre' c.id %}">Répondre</a>
+              <a class="pxadmin-btn pxadmin-btn--sm pxadmin-btn--accent" href="{% url 'admin_devis_create' %}?projet={{ c.id }}">📝 Devis</a>
+            </td>
           </tr>
           {% empty %}
           <tr><td colspan="6"><div class="pxadmin-empty"><span class="pxadmin-empty-icon">✉️</span><p>Aucune demande pour le moment</p></div></td></tr>

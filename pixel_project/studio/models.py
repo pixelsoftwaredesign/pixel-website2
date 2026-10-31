@@ -1,6 +1,21 @@
 import uuid
+from decimal import Decimal
+
 from django.db import models
 from django.contrib.auth.models import User
+
+
+def generer_reference(prefix, model, field='reference'):
+    """Référence lisible et unique : PREFIX-AAAAMMJJ-XXXX."""
+    from django.utils import timezone
+
+    for _ in range(20):
+        valeur = '%s-%s-%s' % (
+            prefix, timezone.localdate().strftime('%Y%m%d'),
+            uuid.uuid4().hex[:4].upper())
+        if not model.objects.filter(**{field: valeur}).exists():
+            return valeur
+    return '%s-%s' % (prefix, uuid.uuid4().hex[:12].upper())
 
 
 def token_desabonnement_default():
@@ -36,6 +51,105 @@ class ProjetContact(models.Model):
 
     def __str__(self):
         return f"Projet de {self.nom} - {self.date_reception.strftime('%d/%m/%Y')}"
+
+
+class Devis(models.Model):
+    """Devis structuré : demande client, lignes de produits et réponse."""
+
+    STATUTS = [
+        ('nouveau', 'Nouveau'),
+        ('en_cours', 'En cours'),
+        ('envoye', 'Envoyé'),
+        ('accepte', 'Accepté'),
+        ('refuse', 'Refusé'),
+        ('converti', 'Converti en vente'),
+    ]
+
+    reference = models.CharField(max_length=50, unique=True, blank=True,
+                                 verbose_name="Référence")
+    projet = models.ForeignKey(
+        ProjetContact, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='devis', verbose_name="Demande d'origine")
+    client_nom = models.CharField(max_length=150, verbose_name="Nom du client")
+    client_email = models.EmailField(verbose_name="Email")
+    client_tel = models.CharField(max_length=30, blank=True, verbose_name="Téléphone")
+    client_adresse = models.TextField(blank=True, verbose_name="Adresse")
+    sujet = models.CharField(max_length=200, blank=True, verbose_name="Sujet")
+    message = models.TextField(blank=True, verbose_name="Message / conditions")
+    statut = models.CharField(max_length=20, choices=STATUTS, default='nouveau')
+    date_creation = models.DateTimeField(auto_now_add=True, verbose_name="Créé le")
+    date_envoi = models.DateTimeField(null=True, blank=True, verbose_name="Envoyé le")
+    date_acceptation = models.DateTimeField(null=True, blank=True,
+                                             verbose_name="Accepté le")
+    montant_ht = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                     verbose_name="Montant HT (TND)")
+    tva = models.DecimalField(max_digits=4, decimal_places=2, default=19,
+                              verbose_name="TVA %")
+    montant_ttc = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                      verbose_name="Montant TTC (TND)")
+    notes = models.TextField(blank=True, verbose_name="Notes internes")
+    cree_par = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='devis_crees', verbose_name="Créé par")
+
+    class Meta:
+        verbose_name = "Devis"
+        verbose_name_plural = "Devis"
+        ordering = ['-date_creation']
+
+    def __str__(self):
+        return f"{self.reference} — {self.client_nom}"
+
+    def save(self, *args, **kwargs):
+        if not self.reference:
+            self.reference = generer_reference('DEV', Devis)
+        super().save(*args, **kwargs)
+
+    def recalculer_totaux(self, save=True):
+        total = sum((ligne.total for ligne in self.lignes.all()), Decimal('0.00'))
+        self.montant_ht = total.quantize(Decimal('0.01'))
+        taux = Decimal('1') + (self.tva or 0) / Decimal('100')
+        self.montant_ttc = (self.montant_ht * taux).quantize(Decimal('0.01'))
+        if save:
+            self.save(update_fields=['montant_ht', 'montant_ttc'])
+        return self.montant_ttc
+
+    def convertir_en_vente(self):
+        """Crée une vente par ligne produit. Retourne le nombre de ventes."""
+        if self.ventes.exists():
+            return 0
+        lignes = [ligne for ligne in self.lignes.all() if ligne.produit_id]
+        if not lignes:
+            return 0
+        for ligne in lignes:
+            Vente.objects.create(
+                erp_client=None, produit=ligne.produit,
+                quantite=ligne.quantite, prix_unitaire=ligne.prix_unitaire,
+                client_nom=(self.client_nom or '')[:100], devis=self)
+        self.statut = 'converti'
+        self.save(update_fields=['statut'])
+        return len(lignes)
+
+    def creer_prefacture(self, utilisateur=None):
+        """Crée une préfacture (proforma) en copiant les lignes du devis."""
+        from datetime import timedelta
+        from django.utils import timezone
+
+        prefacture = PreFacture.objects.create(
+            devis=self, client_nom=self.client_nom, client_email=self.client_email,
+            client_adresse=self.client_adresse, tva=self.tva,
+            statut='brouillon',
+            date_validite=timezone.localdate() + timedelta(days=30),
+            cree_par=utilisateur or self.cree_par)
+        for ligne in self.lignes.all():
+            PreFactureLigne.objects.create(
+                prefacture=prefacture, produit=ligne.produit,
+                designation=ligne.designation, quantite=ligne.quantite,
+                prix_unitaire=ligne.prix_unitaire, remise=ligne.remise,
+                ordre=ligne.ordre)
+        prefacture.recalculer_totaux()
+        return prefacture
+
 
 class AtelierProfile(models.Model):
     ROLE_CHOICES = [
@@ -476,6 +590,41 @@ class Produit(models.Model):
     class Meta: verbose_name = "Produit"; verbose_name_plural = "Produits"
     def __str__(self): return self.nom
 
+class DevisLigne(models.Model):
+    devis = models.ForeignKey(Devis, on_delete=models.CASCADE, related_name='lignes')
+    produit = models.ForeignKey(
+        Produit, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='lignes_devis')
+    designation = models.CharField(max_length=200, blank=True)
+    quantite = models.PositiveIntegerField(default=1)
+    prix_unitaire = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    remise = models.DecimalField(max_digits=5, decimal_places=2, default=0,
+                                 verbose_name="Remise (%)")
+    ordre = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        verbose_name = "Ligne de devis"
+        verbose_name_plural = "Lignes de devis"
+        ordering = ['ordre', 'id']
+
+    def __str__(self):
+        return self.designation or (self.produit.nom if self.produit else "Ligne")
+
+    def save(self, *args, **kwargs):
+        if self.produit:
+            if not self.designation:
+                self.designation = self.produit.nom
+            if not self.prix_unitaire:
+                self.prix_unitaire = self.produit.prix_vente
+        super().save(*args, **kwargs)
+
+    @property
+    def total(self):
+        base = (self.prix_unitaire or Decimal('0')) * (self.quantite or 0)
+        remise = (self.remise or Decimal('0')) / Decimal('100')
+        return (base * (Decimal('1') - remise)).quantize(Decimal('0.01'))
+
+
 class Vente(models.Model):
     erp_client = models.ForeignKey(
         'ERPClient', on_delete=models.CASCADE, null=True, blank=True,
@@ -485,8 +634,122 @@ class Vente(models.Model):
     prix_unitaire = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     date_vente = models.DateTimeField(auto_now_add=True)
     client_nom = models.CharField(max_length=100, blank=True)
+    devis = models.ForeignKey(
+        Devis, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='ventes', verbose_name="Devis d'origine")
     class Meta: verbose_name = "Vente"; verbose_name_plural = "Ventes"; ordering = ['-date_vente']
     def __str__(self): return f"{self.produit.nom} x{self.quantite}"
+
+    @property
+    def total(self):
+        return (self.prix_unitaire or Decimal('0')) * (self.quantite or 0)
+
+
+class PreFacture(models.Model):
+    """Préfacture / facture proforma, imprimable et convertible en facture."""
+
+    STATUTS = [
+        ('brouillon', 'Brouillon'),
+        ('envoyee', 'Envoyée'),
+        ('acceptee', 'Acceptée'),
+        ('refusee', 'Refusée'),
+        ('convertie', 'Convertie en facture'),
+    ]
+
+    numero = models.CharField(max_length=50, unique=True, blank=True,
+                              verbose_name="Numéro")
+    devis = models.ForeignKey(
+        Devis, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='prefactures', verbose_name="Devis d'origine")
+    vente = models.ForeignKey(
+        Vente, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='prefactures', verbose_name="Vente d'origine")
+    client_nom = models.CharField(max_length=150, verbose_name="Nom du client")
+    client_email = models.EmailField(blank=True, verbose_name="Email")
+    client_adresse = models.TextField(blank=True, verbose_name="Adresse")
+    date_creation = models.DateField(auto_now_add=True, verbose_name="Créée le")
+    date_validite = models.DateField(null=True, blank=True,
+                                     verbose_name="Valable jusqu'au")
+    montant_ht = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                     verbose_name="Montant HT (TND)")
+    tva = models.DecimalField(max_digits=4, decimal_places=2, default=19,
+                              verbose_name="TVA %")
+    montant_ttc = models.DecimalField(max_digits=12, decimal_places=2, default=0,
+                                      verbose_name="Montant TTC (TND)")
+    statut = models.CharField(max_length=20, choices=STATUTS, default='brouillon')
+    notes = models.TextField(blank=True, verbose_name="Notes / conditions")
+    cree_par = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='prefactures_creees', verbose_name="Créée par")
+
+    class Meta:
+        verbose_name = "Préfacture"
+        verbose_name_plural = "Préfactures"
+        ordering = ['-date_creation']
+
+    def __str__(self):
+        return f"{self.numero} — {self.client_nom}"
+
+    def save(self, *args, **kwargs):
+        if not self.numero:
+            self.numero = generer_reference('PRE', PreFacture, 'numero')
+        super().save(*args, **kwargs)
+
+    def recalculer_totaux(self, save=True):
+        total = sum((ligne.total for ligne in self.lignes.all()), Decimal('0.00'))
+        self.montant_ht = total.quantize(Decimal('0.01'))
+        taux = Decimal('1') + (self.tva or 0) / Decimal('100')
+        self.montant_ttc = (self.montant_ht * taux).quantize(Decimal('0.01'))
+        if save:
+            self.save(update_fields=['montant_ht', 'montant_ttc'])
+        return self.montant_ttc
+
+    def convertir_en_facture(self):
+        facture = Facture.objects.create(
+            erp_client=None,
+            numero=generer_reference('FAC', Facture, 'numero'),
+            client_nom=(self.client_nom or '')[:100],
+            montant_ht=self.montant_ht, tva=self.tva,
+            montant_ttc=self.montant_ttc)
+        self.statut = 'convertie'
+        self.save(update_fields=['statut'])
+        return facture
+
+
+class PreFactureLigne(models.Model):
+    prefacture = models.ForeignKey(
+        PreFacture, on_delete=models.CASCADE, related_name='lignes')
+    produit = models.ForeignKey(
+        Produit, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='lignes_prefacture')
+    designation = models.CharField(max_length=200, blank=True)
+    quantite = models.PositiveIntegerField(default=1)
+    prix_unitaire = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    remise = models.DecimalField(max_digits=5, decimal_places=2, default=0,
+                                 verbose_name="Remise (%)")
+    ordre = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        verbose_name = "Ligne de préfacture"
+        verbose_name_plural = "Lignes de préfacture"
+        ordering = ['ordre', 'id']
+
+    def __str__(self):
+        return self.designation or (self.produit.nom if self.produit else "Ligne")
+
+    def save(self, *args, **kwargs):
+        if self.produit:
+            if not self.designation:
+                self.designation = self.produit.nom
+            if not self.prix_unitaire:
+                self.prix_unitaire = self.produit.prix_vente
+        super().save(*args, **kwargs)
+
+    @property
+    def total(self):
+        base = (self.prix_unitaire or Decimal('0')) * (self.quantite or 0)
+        remise = (self.remise or Decimal('0')) / Decimal('100')
+        return (base * (Decimal('1') - remise)).quantize(Decimal('0.01'))
 
 
 # ─── Juridique (Avocat) ─────────────────────────────────────

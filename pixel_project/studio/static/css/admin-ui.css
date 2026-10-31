@@ -478,11 +478,110 @@ a.stat-card:focus-visible { outline-offset: 3px; }
   width: 100%;
 }
 .pxadmin-field textarea { resize: vertical; }
-.pxadmin-field input:hover, .pxadmin-field textarea:hover { border-color: var(--px-border-strong); }
-.pxadmin-field input:focus, .pxadmin-field textarea:focus {
+.pxadmin-field select,
+.pxadmin-input {
+  padding: 8px 10px;
+  border-radius: 9px;
+  border: 1px solid var(--px-border);
+  background: rgba(255, 255, 255, .05);
+  color: var(--px-text);
+  font: inherit;
+  font-size: .84rem;
+  width: 100%;
+}
+.pxadmin-field input:hover, .pxadmin-field textarea:hover,
+.pxadmin-field select:hover { border-color: var(--px-border-strong); }
+.pxadmin-field input:focus, .pxadmin-field textarea:focus,
+.pxadmin-field select:focus {
   outline: none;
   border-color: rgba(56, 189, 248, .6);
   background: rgba(56, 189, 248, .07);
+}
+.errorlist {
+  margin: 0;
+  padding-left: 1.1rem;
+  color: #fda4af;
+  font-size: .78rem;
+}
+.errorlist.nonfield { margin-bottom: 8px; }
+.pxadmin-field--full { flex: 1 1 100%; }
+
+/* ── Devis / préfactures ─────────────────────────────────── */
+.devis-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 18px;
+  align-items: start;
+}
+.devis-lines input,
+.devis-lines select {
+  width: 100%;
+  min-width: 70px;
+  padding: 6px 8px;
+  border-radius: 7px;
+  border: 1px solid var(--px-border);
+  background: rgba(255, 255, 255, .05);
+  color: var(--px-text);
+  font: inherit;
+  font-size: .8rem;
+}
+.devis-lines input[type="checkbox"] { width: auto; min-width: 0; }
+.devis-lines .line-total {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.devis-lines td { padding: 8px 8px; }
+.devis-lines th { padding: 10px 8px; }
+.devis-catalogue .panel-body { display: flex; flex-direction: column; gap: 10px; }
+.devis-produits { display: flex; flex-direction: column; gap: 6px; max-height: 460px; overflow: auto; }
+.devis-produit {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  padding: 9px 11px;
+  border-radius: 9px;
+  border: 1px solid var(--px-border);
+  background: rgba(255, 255, 255, .035);
+  color: var(--px-text);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+.devis-produit:hover { border-color: rgba(56, 189, 248, .45); background: rgba(56, 189, 248, .08); }
+.devis-produit strong { font-size: .82rem; font-weight: 600; }
+.devis-produit small { color: var(--px-muted); font-size: .72rem; }
+.devis-totaux {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  padding: 12px 18px;
+  border-top: 1px solid var(--px-border);
+  font-size: .86rem;
+}
+.devis-totaux .total { font-size: 1.05rem; font-weight: 700; color: #6ee7b7; }
+.devis-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.devis-origin {
+  padding: 12px 15px;
+  border-radius: 12px;
+  border: 1px solid var(--px-border);
+  background: rgba(255, 255, 255, .03);
+  color: var(--px-muted);
+  font-size: .82rem;
+}
+.devis-origin blockquote {
+  margin: 8px 0 0;
+  padding-left: 10px;
+  border-left: 3px solid var(--px-sky);
+  color: var(--px-text);
+  white-space: pre-wrap;
+}
+@media (max-width: 980px) {
+  .devis-layout { grid-template-columns: 1fr; }
+  .devis-catalogue .panel-body { max-height: none; }
 }
 .cell-mono { font-family: 'Space Mono', ui-monospace, monospace; font-size: .8rem; letter-spacing: .04em; }
 

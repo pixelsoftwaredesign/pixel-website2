@@ -1,0 +1,194 @@
+{% extends 'studio/admin_base.html' %}
+{% load static %}
+{% block title %}{% if mode == 'create' %}Nouvelle préfacture{% else %}Préfacture {{ prefacture.numero }}{% endif %} — Espace admin{% endblock %}
+{% block admin_title %}{% if mode == 'create' %}📑 Nouvelle préfacture{% else %}📑 {{ prefacture.numero }}{% endif %}{% endblock %}
+{% block admin_subtitle %}{% if mode == 'create' %}Document proforma à partir d'un devis, d'une vente ou en saisie libre{% else %}{{ prefacture.client_nom }} · {{ prefacture.get_statut_display }}{% endif %}{% endblock %}
+
+{% block admin_content %}
+
+<div class="devis-layout">
+  <div class="pxadmin-grid">
+    {% if devis %}
+    <div class="devis-origin">
+      <strong>Depuis le devis <a href="{% url 'admin_devis_detail' devis.id %}">{{ devis.reference }}</a></strong>
+      <span class="cell-muted"> · {{ devis.client_nom }}</span>
+    </div>
+    {% elif vente %}
+    <div class="devis-origin">
+      <strong>Depuis la vente #{{ vente.id }}</strong>
+      <span class="cell-muted"> · {{ vente.produit.nom }} × {{ vente.quantite }}</span>
+    </div>
+    {% endif %}
+
+    <form method="post" class="panel" id="prefacture-form">
+      {% csrf_token %}
+      <input type="hidden" name="devis" value="{{ devis.id|default:'' }}">
+      <input type="hidden" name="vente" value="{{ vente.id|default:'' }}">
+      {{ formset.management_form }}
+
+      <div class="panel-head">
+        <div class="panel-head-main">
+          <h2>Informations de la préfacture</h2>
+          <span class="panel-sub">Document imprimable, valable jusqu'à la date indiquée.</span>
+        </div>
+        {% if mode == 'edit' %}
+        <div class="panel-head-tools">
+          <a class="pxadmin-btn pxadmin-btn--sm pxadmin-btn--ghost" href="{% url 'admin_prefacture_print' prefacture.id %}" target="_blank" rel="noopener">🖨️ Imprimer</a>
+          <button class="pxadmin-btn pxadmin-btn--sm pxadmin-btn--danger" type="submit" name="action" value="supprimer" onclick="return confirm('Supprimer définitivement cette préfacture ?');">Supprimer</button>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="panel-body pxadmin-form">
+        {{ form.non_field_errors }}
+        <div class="pxadmin-form-row">
+          <label class="pxadmin-field">
+            <span>Nom du client *</span>
+            {{ form.client_nom }}{{ form.client_nom.errors }}
+          </label>
+          <label class="pxadmin-field">
+            <span>Email</span>
+            {{ form.client_email }}{{ form.client_email.errors }}
+          </label>
+          <label class="pxadmin-field">
+            <span>Statut</span>
+            {{ form.statut }}{{ form.statut.errors }}
+          </label>
+        </div>
+        <div class="pxadmin-form-row">
+          <label class="pxadmin-field pxadmin-field--full">
+            <span>Adresse</span>
+            {{ form.client_adresse }}{{ form.client_adresse.errors }}
+          </label>
+        </div>
+        <div class="pxadmin-form-row">
+          <label class="pxadmin-field">
+            <span>Valable jusqu'au</span>
+            {{ form.date_validite }}{{ form.date_validite.errors }}
+          </label>
+          <label class="pxadmin-field">
+            <span>TVA (%)</span>
+            {{ form.tva }}{{ form.tva.errors }}
+          </label>
+        </div>
+        <div class="pxadmin-form-row">
+          <label class="pxadmin-field pxadmin-field--full">
+            <span>Notes / conditions</span>
+            {{ form.notes }}{{ form.notes.errors }}
+          </label>
+        </div>
+      </div>
+
+      <div class="panel-head" style="border-top:1px solid var(--px-border);border-bottom:1px solid var(--px-border)">
+        <div class="panel-head-main">
+          <h2>Lignes de la préfacture</h2>
+          <span class="panel-sub">Les lignes sont copiées depuis le devis ou la vente, puis restent modifiables.</span>
+        </div>
+        <button class="pxadmin-btn pxadmin-btn--sm" type="button" id="prefacture-add-line">➕ Ajouter une ligne</button>
+      </div>
+
+      <div class="panel-body panel-body--flush">
+        <div class="table-responsive">
+          <table class="pxadmin-table devis-lines">
+            <thead>
+              <tr>
+                <th style="min-width:190px">Produit</th>
+                <th style="min-width:150px">Désignation</th>
+                <th>Qté</th>
+                <th>Prix unit.</th>
+                <th>Remise %</th>
+                <th>Total TND</th>
+                <th>Suppr.</th>
+              </tr>
+            </thead>
+            <tbody id="prefacture-lines">
+              {% for line in formset %}
+              <tr data-line>
+                <td>{{ line.id }}{{ line.produit }}{{ line.produit.errors }}</td>
+                <td>{{ line.designation }}{{ line.designation.errors }}</td>
+                <td>{{ line.quantite }}{{ line.quantite.errors }}</td>
+                <td>{{ line.prix_unitaire }}{{ line.prix_unitaire.errors }}</td>
+                <td>{{ line.remise }}{{ line.remise.errors }}</td>
+                <td class="line-total">0.00</td>
+                <td>{{ line.DELETE }}</td>
+              </tr>
+              {% if line.errors %}
+              <tr><td colspan="7">{{ line.errors }}</td></tr>
+              {% endif %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <template id="prefacture-empty-form">
+          <tr data-line>
+            <td>{{ formset.empty_form.id }}{{ formset.empty_form.produit }}</td>
+            <td>{{ formset.empty_form.designation }}</td>
+            <td>{{ formset.empty_form.quantite }}</td>
+            <td>{{ formset.empty_form.prix_unitaire }}</td>
+            <td>{{ formset.empty_form.remise }}</td>
+            <td class="line-total">0.00</td>
+            <td>{{ formset.empty_form.DELETE }}</td>
+          </tr>
+        </template>
+
+        <div class="devis-totaux">
+          <div>Total HT : <strong id="prefacture-total-ht">{% if prefacture %}{{ prefacture.montant_ht|floatformat:2 }}{% else %}0.00{% endif %}</strong> TND</div>
+          <div class="total">Total TTC : <strong id="prefacture-total-ttc">{% if prefacture %}{{ prefacture.montant_ttc|floatformat:2 }}{% else %}0.00{% endif %}</strong> TND</div>
+        </div>
+      </div>
+
+      <div class="panel-body devis-actions">
+        <button class="pxadmin-btn pxadmin-btn--accent" type="submit" name="action" value="save">💾 Enregistrer</button>
+        {% if mode == 'edit' and prefacture.statut != 'convertie' %}
+        <button class="pxadmin-btn" type="submit" name="action" value="convertir" onclick="return confirm('Créer une facture à partir de cette préfacture ?');">📑 Convertir en facture</button>
+        {% endif %}
+        <a class="pxadmin-btn pxadmin-btn--ghost" href="{% url 'admin_prefactures' %}">← Retour aux préfactures</a>
+      </div>
+    </form>
+  </div>
+
+  <aside class="panel devis-catalogue">
+    <div class="panel-head">
+      <h2>📦 Catalogue produits</h2>
+    </div>
+    <div class="panel-body">
+      <input class="pxadmin-input" type="search" id="produit-filter" placeholder="Filtrer les produits…" aria-label="Filtrer le catalogue">
+      <div class="devis-produits">
+        {% for p in produits %}
+        <button class="devis-produit" type="button" data-catalogue-produit
+                data-produit-id="{{ p.id }}" data-search="{{ p.nom|lower }} {{ p.categorie.nom|default:''|lower }}">
+          <strong>{{ p.nom }}</strong>
+          <small>{{ p.prix_vente|floatformat:2 }} TND · stock {{ p.stock_actuel }}</small>
+        </button>
+        {% empty %}
+        <p class="pxadmin-hint">Aucun produit actif.</p>
+        {% endfor %}
+      </div>
+      <a class="pxadmin-btn pxadmin-btn--sm pxadmin-btn--ghost" href="{% url 'admin_produits' %}">Gérer le catalogue ↗</a>
+    </div>
+  </aside>
+</div>
+
+{{ produits_json|json_script:"produits-data" }}
+{% endblock %}
+
+{% block admin_scripts %}
+<script src="{% static 'js/admin-devis.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  PixelLineEditor.init({
+    tableId: 'prefacture-lines',
+    templateId: 'prefacture-empty-form',
+    totalFormsName: '{{ formset.prefix }}-TOTAL_FORMS',
+    addButtonId: 'prefacture-add-line',
+    productsDataId: 'produits-data',
+    totalHtId: 'prefacture-total-ht',
+    totalTtcId: 'prefacture-total-ttc',
+    tvaId: 'id_tva',
+    catalogueSelector: '[data-catalogue-produit]',
+    filterId: 'produit-filter'
+  });
+});
+</script>
+{% endblock %}

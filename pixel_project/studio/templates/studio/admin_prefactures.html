@@ -1,0 +1,93 @@
+{% extends 'studio/admin_base.html' %}
+{% block title %}Préfactures — Espace admin{% endblock %}
+{% block admin_title %}📑 Préfactures{% endblock %}
+{% block admin_subtitle %}Factures proforma générées depuis un devis ou une vente{% endblock %}
+
+{% block admin_content %}
+
+<div class="pxadmin-stats">
+  {% include "studio/admin/_stat.html" with label="Préfactures" value=stats.total icon="📑" accent="sky" url="/admin/prefactures/" %}
+  {% include "studio/admin/_stat.html" with label="Brouillons" value=stats.brouillon icon="✏️" accent="amber" url="/admin/prefactures/?statut=brouillon" %}
+  {% include "studio/admin/_stat.html" with label="Envoyées" value=stats.envoyees icon="✉️" accent="violet" url="/admin/prefactures/?statut=envoyee" %}
+  {% include "studio/admin/_stat.html" with label="Montant total" value=stats.montant icon="💰" accent="emerald" hint="TND" url="/admin/prefactures/" %}
+</div>
+
+<div class="pxadmin-links">
+  <a class="pxadmin-link" href="{% url 'admin_prefacture_create' %}">
+    <span class="pxadmin-link-icon">➕</span>
+    <span class="pxadmin-link-text"><strong>Nouvelle préfacture</strong><small>Saisie ou depuis un devis</small></span>
+  </a>
+  <a class="pxadmin-link" href="{% url 'admin_devis_list' %}">
+    <span class="pxadmin-link-icon">📝</span>
+    <span class="pxadmin-link-text"><strong>Devis</strong><small>Créer une préfacture</small></span>
+  </a>
+  <a class="pxadmin-link" href="{% url 'admin_ventes' %}">
+    <span class="pxadmin-link-icon">🏷️</span>
+    <span class="pxadmin-link-text"><strong>Ventes</strong><small>Depuis une vente</small></span>
+  </a>
+  {% if request.user.is_superuser %}
+  <a class="pxadmin-link" href="{% url 'admin:studio_facture_changelist' %}">
+    <span class="pxadmin-link-icon">📑</span>
+    <span class="pxadmin-link-text"><strong>Factures</strong><small>Après acceptation</small></span>
+  </a>
+  {% endif %}
+</div>
+
+<section class="panel">
+  <div class="panel-head">
+    <div class="panel-head-main">
+      <h2>📑 Toutes les préfactures</h2>
+      <span class="panel-sub">{{ stats.total }} document(s)</span>
+    </div>
+    <div class="panel-head-tools">
+      <form class="pxadmin-search" method="get">
+        {% if statut %}<input type="hidden" name="statut" value="{{ statut }}">{% endif %}
+        <input type="search" name="q" value="{{ q }}" placeholder="Numéro, client…" aria-label="Rechercher une préfacture">
+      </form>
+      <a class="pxadmin-btn pxadmin-btn--sm pxadmin-btn--accent" href="{% url 'admin_prefacture_create' %}">➕ Nouvelle préfacture</a>
+    </div>
+  </div>
+
+  <div class="pxadmin-filters" role="group" aria-label="Filtrer les préfactures par statut">
+    <a class="px-pill{% if not statut %} is-on{% endif %}" href="?{% if q %}q={{ q|urlencode }}{% endif %}">Toutes ({{ stats.total }})</a>
+    {% for s in statut_counts %}
+    <a class="px-pill{% if statut == s.value %} is-on{% endif %}" href="?statut={{ s.value }}{% if q %}&q={{ q|urlencode }}{% endif %}">{{ s.label }} ({{ s.count }})</a>
+    {% endfor %}
+  </div>
+
+  <div class="panel-body panel-body--flush">
+    <div class="table-responsive">
+      <table class="pxadmin-table">
+        <thead>
+          <tr><th>Numéro</th><th>Client</th><th>Origine</th><th>Total TTC</th><th>Statut</th><th>Validité</th><th>Créée le</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for p in prefactures %}
+          <tr data-href="{% url 'admin_prefacture_detail' p.id %}">
+            <td class="cell-strong"><a href="{% url 'admin_prefacture_detail' p.id %}">{{ p.numero }}</a></td>
+            <td>{{ p.client_nom }}<br><span class="cell-muted">{{ p.client_email|default:"" }}</span></td>
+            <td class="cell-muted">
+              {% if p.devis %}<a href="{% url 'admin_devis_detail' p.devis.id %}">{{ p.devis.reference }}</a>
+              {% elif p.vente %}Vente #{{ p.vente.id }}
+              {% else %}—{% endif %}
+            </td>
+            <td class="cell-money">{{ p.montant_ttc|floatformat:2 }} <span class="cell-muted">TND</span></td>
+            <td><span class="px-badge px-badge--{% if p.statut == 'acceptee' or p.statut == 'convertie' %}success{% elif p.statut == 'refusee' %}danger{% elif p.statut == 'envoyee' %}info{% else %}warn{% endif %}">{{ p.get_statut_display }}</span></td>
+            <td class="cell-nowrap cell-muted">{{ p.date_validite|date:"d/m/Y"|default:"—" }}</td>
+            <td class="cell-nowrap cell-muted">{{ p.date_creation|date:"d/m/Y" }}</td>
+            <td class="cell-nowrap">
+              <a class="pxadmin-btn pxadmin-btn--sm" href="{% url 'admin_prefacture_detail' p.id %}">Ouvrir</a>
+              <a class="pxadmin-btn pxadmin-btn--sm pxadmin-btn--ghost" href="{% url 'admin_prefacture_print' p.id %}" target="_blank" rel="noopener">🖨️</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="8"><div class="pxadmin-empty"><span class="pxadmin-empty-icon">📑</span><p>Aucune préfacture pour ce filtre.</p></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% include "studio/admin/_pager.html" with pager=pager %}
+  </div>
+</section>
+
+{% endblock %}

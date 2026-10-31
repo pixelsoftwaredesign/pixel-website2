@@ -1,0 +1,122 @@
+{% extends 'studio/admin_base.html' %}
+{% block title %}Ventes — Espace admin{% endblock %}
+{% block admin_title %}🏷️ Ventes{% endblock %}
+{% block admin_subtitle %}Ventes du site, conversion des devis et suivi du chiffre d'affaires{% endblock %}
+
+{% block admin_content %}
+
+<div class="pxadmin-stats">
+  {% include "studio/admin/_stat.html" with label="Ventes" value=stats.total icon="🏷️" accent="sky" url="/admin/ventes/" %}
+  {% include "studio/admin/_stat.html" with label="Montant total" value=stats.montant icon="💰" accent="emerald" hint="TND" url="/admin/ventes/" %}
+  {% include "studio/admin/_stat.html" with label="Ce mois" value=stats.mois icon="📅" accent="amber" url="/admin/ventes/" %}
+  {% include "studio/admin/_stat.html" with label="CA du mois" value=stats.montant_mois icon="📈" accent="violet" hint="TND" url="/admin/ventes/" %}
+</div>
+
+<div class="pxadmin-links">
+  <a class="pxadmin-link" href="{% url 'admin_devis_list' %}">
+    <span class="pxadmin-link-icon">📝</span>
+    <span class="pxadmin-link-text"><strong>Devis</strong><small>Convertir en vente</small></span>
+  </a>
+  <a class="pxadmin-link" href="{% url 'admin_prefactures' %}">
+    <span class="pxadmin-link-icon">📑</span>
+    <span class="pxadmin-link-text"><strong>Préfactures</strong><small>Documents proforma</small></span>
+  </a>
+  <a class="pxadmin-link" href="{% url 'admin_produits' %}">
+    <span class="pxadmin-link-icon">📦</span>
+    <span class="pxadmin-link-text"><strong>Produits</strong><small>Catalogue & prix</small></span>
+  </a>
+</div>
+
+<section class="panel">
+  <div class="panel-head">
+    <div class="panel-head-main">
+      <h2>➕ Enregistrer une vente</h2>
+      <span class="panel-sub">Saisie manuelle, ou conversion automatique depuis un devis.</span>
+    </div>
+  </div>
+  <div class="panel-body">
+    <form method="post" class="pxadmin-form">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="create">
+      {% if form.non_field_errors %}{{ form.non_field_errors }}{% endif %}
+      <div class="pxadmin-form-row">
+        <label class="pxadmin-field" style="flex:1 1 260px">
+          <span>Produit *</span>
+          {{ form.produit }}{{ form.produit.errors }}
+        </label>
+        <label class="pxadmin-field">
+          <span>Quantité *</span>
+          {{ form.quantite }}{{ form.quantite.errors }}
+        </label>
+        <label class="pxadmin-field">
+          <span>Prix unitaire (TND)</span>
+          {{ form.prix_unitaire }}{{ form.prix_unitaire.errors }}
+          <small class="pxadmin-hint">Vide = prix du produit</small>
+        </label>
+        <label class="pxadmin-field">
+          <span>Client</span>
+          {{ form.client_nom }}{{ form.client_nom.errors }}
+        </label>
+        <label class="pxadmin-field" style="flex:1 1 240px">
+          <span>Devis lié (facultatif)</span>
+          {{ form.devis }}{{ form.devis.errors }}
+        </label>
+      </div>
+      <div class="devis-actions">
+        <button class="pxadmin-btn pxadmin-btn--accent" type="submit">💾 Enregistrer la vente</button>
+        <a class="pxadmin-btn pxadmin-btn--ghost" href="{% url 'admin_devis_list' %}">Convertir un devis plutôt ↗</a>
+      </div>
+    </form>
+  </div>
+</section>
+
+<section class="panel">
+  <div class="panel-head">
+    <div class="panel-head-main">
+      <h2>🏷️ Ventes enregistrées</h2>
+      <span class="panel-sub">{{ stats.total }} vente(s) · {{ stats.montant|floatformat:2 }} TND</span>
+    </div>
+    <form class="pxadmin-search" method="get">
+      <input type="search" name="q" value="{{ q }}" placeholder="Client, produit, devis…" aria-label="Rechercher une vente">
+    </form>
+  </div>
+
+  <div class="panel-body panel-body--flush">
+    <div class="table-responsive">
+      <table class="pxadmin-table">
+        <thead>
+          <tr><th>Produit</th><th>Client</th><th>Qté</th><th>Prix unit.</th><th>Total</th><th>Devis</th><th>Date</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for v in ventes %}
+          <tr>
+            <td class="cell-strong">{{ v.produit.nom }}</td>
+            <td>{{ v.client_nom|default:"—" }}</td>
+            <td>{{ v.quantite }}</td>
+            <td class="cell-money">{{ v.prix_unitaire|floatformat:2 }} <span class="cell-muted">TND</span></td>
+            <td class="cell-money">{{ v.total|floatformat:2 }} <span class="cell-muted">TND</span></td>
+            <td>{% if v.devis %}<a href="{% url 'admin_devis_detail' v.devis.id %}">{{ v.devis.reference }}</a>{% else %}<span class="cell-muted">—</span>{% endif %}</td>
+            <td class="cell-nowrap cell-muted">{{ v.date_vente|date:"d/m/Y H:i" }}</td>
+            <td class="cell-nowrap">
+              {% if not v.prefactures.exists %}
+              <a class="pxadmin-btn pxadmin-btn--sm pxadmin-btn--ghost" href="{% url 'admin_prefacture_create' %}?vente={{ v.id }}">📑 Préfacture</a>
+              {% endif %}
+              <form method="post" style="display:inline" onsubmit="return confirm('Supprimer cette vente ?');">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="supprimer">
+                <input type="hidden" name="vente_id" value="{{ v.id }}">
+                <button class="pxadmin-btn pxadmin-btn--sm pxadmin-btn--danger" type="submit">Supprimer</button>
+              </form>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="8"><div class="pxadmin-empty"><span class="pxadmin-empty-icon">🏷️</span><p>Aucune vente pour le moment.</p></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% include "studio/admin/_pager.html" with pager=pager %}
+  </div>
+</section>
+
+{% endblock %}

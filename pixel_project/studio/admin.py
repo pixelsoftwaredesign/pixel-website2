@@ -7,7 +7,7 @@ from django.urls import path, reverse
 from django.utils import timezone
 from .emailing import envoyer_email
 import csv, re
-from .models import UserProfile, ProjetContact, AtelierProfile, PortfolioProject, CodeRepository, GraphismeResource, ERPClient, ERPModule, ERPSubscription, ERPDemoRecord, Moniteur, Candidat, Vehicule, Lecon, Examen, Medecin, Patient, Lit, RendezVous, FacturationSante, ClientHotel, Chambre, ReservationHotel, ServiceHotel, Categorie, Fournisseur, Produit, Vente, ClientJuridique, DossierJuridique, Audience, JournalComptable, EcritureComptable, Facture, DeclarationFiscale, Employe, Contrat, FichePaie, Conge, Formation, MenuItem, TableRestaurant, SoftCodeModule, StudioProject3D, PatisserieRecipe, PatisserieProduct, PlanAbonnement, SouscriptionClient, Paiement, CleActivation, ConfigurationBancaire, ConfigurationPaiementEnLigne, Candidature, MouvementStock, CommandeECommerce, CommandeECommerceItem, Temoignage, PixMailAccount, PixMailContact, PixMailMessage, PixMailAttachment, PixMailFolder, PixMailSignature, SocialProfile, Follow, Post, Like, Comment, Notification, Conversation, ConversationMember, EncryptedMessage, Wallet, Transaction, TwoFactorAuth, Referral, KYCVerification, NewsletterSubscriber, NewsletterCampaign
+from .models import UserProfile, ProjetContact, AtelierProfile, PortfolioProject, CodeRepository, GraphismeResource, ERPClient, ERPModule, ERPSubscription, ERPDemoRecord, Moniteur, Candidat, Vehicule, Lecon, Examen, Medecin, Patient, Lit, RendezVous, FacturationSante, ClientHotel, Chambre, ReservationHotel, ServiceHotel, Categorie, Fournisseur, Produit, Devis, DevisLigne, Vente, PreFacture, PreFactureLigne, ClientJuridique, DossierJuridique, Audience, JournalComptable, EcritureComptable, Facture, DeclarationFiscale, Employe, Contrat, FichePaie, Conge, Formation, MenuItem, TableRestaurant, SoftCodeModule, StudioProject3D, PatisserieRecipe, PatisserieProduct, PlanAbonnement, SouscriptionClient, Paiement, CleActivation, ConfigurationBancaire, ConfigurationPaiementEnLigne, Candidature, MouvementStock, CommandeECommerce, CommandeECommerceItem, Temoignage, PixMailAccount, PixMailContact, PixMailMessage, PixMailAttachment, PixMailFolder, PixMailSignature, SocialProfile, Follow, Post, Like, Comment, Notification, Conversation, ConversationMember, EncryptedMessage, Wallet, Transaction, TwoFactorAuth, Referral, KYCVerification, NewsletterSubscriber, NewsletterCampaign
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
@@ -308,7 +308,52 @@ class FournisseurAdmin(admin.ModelAdmin): list_display = ('nom','telephone','ema
 @admin.register(Produit)
 class ProduitAdmin(admin.ModelAdmin): list_display = ('nom','categorie','prix_vente','stock_actuel','actif')
 @admin.register(Vente)
-class VenteAdmin(admin.ModelAdmin): list_display = ('produit','quantite','prix_unitaire','date_vente')
+class VenteAdmin(admin.ModelAdmin):
+    list_display = ('produit','quantite','prix_unitaire','client_nom','devis','date_vente')
+    list_filter = ('date_vente',)
+    search_fields = ('produit__nom','client_nom','devis__reference')
+
+
+class DevisLigneInline(admin.TabularInline):
+    model = DevisLigne
+    extra = 1
+    fields = ('produit', 'designation', 'quantite', 'prix_unitaire', 'remise', 'ordre')
+
+
+@admin.register(Devis)
+class DevisAdmin(admin.ModelAdmin):
+    list_display = ('reference', 'client_nom', 'statut', 'montant_ttc',
+                    'date_creation')
+    list_filter = ('statut', 'date_creation')
+    search_fields = ('reference', 'client_nom', 'client_email', 'sujet')
+    readonly_fields = ('reference', 'date_creation', 'date_envoi',
+                       'date_acceptation', 'montant_ht', 'montant_ttc')
+    inlines = [DevisLigneInline]
+
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        form.instance.recalculer_totaux()
+
+
+class PreFactureLigneInline(admin.TabularInline):
+    model = PreFactureLigne
+    extra = 1
+    fields = ('produit', 'designation', 'quantite', 'prix_unitaire',
+              'remise', 'ordre')
+
+
+@admin.register(PreFacture)
+class PreFactureAdmin(admin.ModelAdmin):
+    list_display = ('numero', 'client_nom', 'statut', 'montant_ttc',
+                    'date_creation', 'date_validite')
+    list_filter = ('statut', 'date_creation')
+    search_fields = ('numero', 'client_nom', 'client_email')
+    readonly_fields = ('numero', 'date_creation', 'montant_ht', 'montant_ttc')
+    inlines = [PreFactureLigneInline]
+
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        form.instance.recalculer_totaux()
 
 # ─── Juridique ───
 @admin.register(ClientJuridique)

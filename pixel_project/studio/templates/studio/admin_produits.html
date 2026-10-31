@@ -1,0 +1,92 @@
+{% extends 'studio/admin_base.html' %}
+{% block title %}Produits — Espace admin{% endblock %}
+{% block admin_title %}📦 Catalogue produits{% endblock %}
+{% block admin_subtitle %}Prix de vente et stock disponibles pour les devis et préfactures{% endblock %}
+
+{% block admin_content %}
+
+<div class="pxadmin-stats">
+  {% include "studio/admin/_stat.html" with label="Produits" value=stats.total icon="📦" accent="sky" url="/admin/produits/" %}
+  {% include "studio/admin/_stat.html" with label="Actifs" value=stats.actifs icon="✅" accent="emerald" url="/admin/produits/?actif=1" %}
+  {% include "studio/admin/_stat.html" with label="Alertes stock" value=stats.alertes icon="⚠️" accent="amber" hint="Stock ≤ minimum" url="/admin/produits/" %}
+</div>
+
+<div class="pxadmin-links">
+  <a class="pxadmin-link" href="{% url 'admin_devis_create' %}">
+    <span class="pxadmin-link-icon">📝</span>
+    <span class="pxadmin-link-text"><strong>Nouveau devis</strong><small>Ajouter des produits</small></span>
+  </a>
+  {% if request.user.is_superuser %}
+  <a class="pxadmin-link" href="{% url 'admin:studio_produit_changelist' %}">
+    <span class="pxadmin-link-icon">🛠️</span>
+    <span class="pxadmin-link-text"><strong>Gérer les produits</strong><small>Administration Django</small></span>
+  </a>
+  <a class="pxadmin-link" href="{% url 'admin:studio_categorie_changelist' %}">
+    <span class="pxadmin-link-icon">🗂️</span>
+    <span class="pxadmin-link-text"><strong>Catégories</strong><small>Organisation du catalogue</small></span>
+  </a>
+  {% endif %}
+</div>
+
+<section class="panel">
+  <div class="panel-head">
+    <div class="panel-head-main">
+      <h2>📦 Tous les produits</h2>
+      <span class="panel-sub">{{ stats.total }} produit(s) · {{ stats.alertes }} alerte(s) de stock</span>
+    </div>
+    <form class="pxadmin-search" method="get">
+      {% if actif %}<input type="hidden" name="actif" value="{{ actif }}">{% endif %}
+      <input type="search" name="q" value="{{ q }}" placeholder="Nom, catégorie, code-barres…" aria-label="Rechercher un produit">
+    </form>
+  </div>
+
+  <div class="pxadmin-filters" role="group" aria-label="Filtrer les produits">
+    <a class="px-pill{% if not actif %} is-on{% endif %}" href="?{% if q %}q={{ q|urlencode }}{% endif %}">Tous</a>
+    <a class="px-pill{% if actif == '1' %} is-on{% endif %}" href="?actif=1{% if q %}&q={{ q|urlencode }}{% endif %}">Actifs</a>
+    <a class="px-pill{% if actif == '0' %} is-on{% endif %}" href="?actif=0{% if q %}&q={{ q|urlencode }}{% endif %}">Inactifs</a>
+  </div>
+
+  <div class="panel-body panel-body--flush">
+    <div class="table-responsive">
+      <table class="pxadmin-table">
+        <thead>
+          <tr><th>Produit</th><th>Catégorie</th><th>Prix de vente</th><th>Stock</th><th>Statut</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for p in produits %}
+          <tr>
+            <td class="cell-strong">
+              {{ p.nom }}
+              {% if p.code_barre %}<br><span class="cell-muted cell-mono">{{ p.code_barre }}</span>{% endif %}
+            </td>
+            <td class="cell-muted">{{ p.categorie.nom|default:"—" }}</td>
+            <td class="cell-money">{{ p.prix_vente|floatformat:2 }} <span class="cell-muted">TND</span></td>
+            <td>
+              {% if p.stock_actuel <= p.stock_minimum %}
+              <span class="px-badge px-badge--warn">{{ p.stock_actuel }} / min {{ p.stock_minimum }}</span>
+              {% else %}
+              <span class="cell-money">{{ p.stock_actuel }}</span>
+              {% endif %}
+            </td>
+            <td>
+              {% if p.actif %}<span class="px-badge px-badge--success">Actif</span>
+              {% else %}<span class="px-badge px-badge--neutral">Inactif</span>{% endif %}
+            </td>
+            <td class="cell-nowrap">
+              <a class="pxadmin-btn pxadmin-btn--sm pxadmin-btn--accent" href="{% url 'admin_devis_create' %}?produit={{ p.id }}">＋ Devis</a>
+              {% if request.user.is_superuser %}
+              <a class="pxadmin-btn pxadmin-btn--sm pxadmin-btn--ghost" href="{% url 'admin:studio_produit_change' p.id %}">Modifier</a>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6"><div class="pxadmin-empty"><span class="pxadmin-empty-icon">📦</span><p>Aucun produit pour ce filtre.</p></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% include "studio/admin/_pager.html" with pager=pager %}
+  </div>
+</section>
+
+{% endblock %}

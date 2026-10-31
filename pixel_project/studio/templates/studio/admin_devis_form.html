@@ -1,0 +1,202 @@
+{% extends 'studio/admin_base.html' %}
+{% load static %}
+{% block title %}{% if mode == 'create' %}Nouveau devis{% else %}Devis {{ devis.reference }}{% endif %} — Espace admin{% endblock %}
+{% block admin_title %}{% if mode == 'create' %}📝 Nouveau devis{% else %}📝 {{ devis.reference }}{% endif %}{% endblock %}
+{% block admin_subtitle %}{% if mode == 'create' %}Sélectionnez les produits et construisez la réponse{% else %}{{ devis.client_nom }} · {{ devis.get_statut_display }}{% endif %}{% endblock %}
+
+{% block admin_content %}
+
+<div class="devis-layout">
+  <div class="pxadmin-grid">
+    {% if projet %}
+    <div class="devis-origin">
+      <strong>Demande d'origine #{{ projet.id }} — {{ projet.nom }}</strong>
+      <span class="cell-muted"> · {{ projet.date_reception|date:"d/m/Y H:i" }}</span>
+      <blockquote>{{ projet.message }}</blockquote>
+    </div>
+    {% endif %}
+
+    <form method="post" class="panel" id="devis-form">
+      {% csrf_token %}
+      {% if projet %}<input type="hidden" name="projet" value="{{ projet.id }}">{% endif %}
+      {{ formset.management_form }}
+
+      <div class="panel-head">
+        <div class="panel-head-main">
+          <h2>Informations du devis</h2>
+          <span class="panel-sub">Le client recevra ce document par email ou impression.</span>
+        </div>
+        {% if mode == 'edit' %}
+        <div class="panel-head-tools">
+          <a class="pxadmin-btn pxadmin-btn--sm pxadmin-btn--ghost" href="{% url 'admin_devis_print' devis.id %}" target="_blank" rel="noopener">🖨️ Imprimer</a>
+          <button class="pxadmin-btn pxadmin-btn--sm pxadmin-btn--danger" type="submit" name="action" value="supprimer" onclick="return confirm('Supprimer définitivement ce devis ?');">Supprimer</button>
+        </div>
+        {% endif %}
+      </div>
+
+      <div class="panel-body pxadmin-form">
+        {{ form.non_field_errors }}
+        <div class="pxadmin-form-row">
+          <label class="pxadmin-field">
+            <span>Nom du client *</span>
+            {{ form.client_nom }}{{ form.client_nom.errors }}
+          </label>
+          <label class="pxadmin-field">
+            <span>Email *</span>
+            {{ form.client_email }}{{ form.client_email.errors }}
+          </label>
+          <label class="pxadmin-field">
+            <span>Téléphone</span>
+            {{ form.client_tel }}{{ form.client_tel.errors }}
+          </label>
+        </div>
+        <div class="pxadmin-form-row">
+          <label class="pxadmin-field pxadmin-field--full">
+            <span>Adresse</span>
+            {{ form.client_adresse }}{{ form.client_adresse.errors }}
+          </label>
+        </div>
+        <div class="pxadmin-form-row">
+          <label class="pxadmin-field">
+            <span>Sujet</span>
+            {{ form.sujet }}{{ form.sujet.errors }}
+          </label>
+          <label class="pxadmin-field">
+            <span>Statut</span>
+            {{ form.statut }}{{ form.statut.errors }}
+          </label>
+          <label class="pxadmin-field">
+            <span>TVA (%)</span>
+            {{ form.tva }}{{ form.tva.errors }}
+          </label>
+        </div>
+        <div class="pxadmin-form-row">
+          <label class="pxadmin-field pxadmin-field--full">
+            <span>Message / conditions</span>
+            {{ form.message }}{{ form.message.errors }}
+          </label>
+        </div>
+        <div class="pxadmin-form-row">
+          <label class="pxadmin-field pxadmin-field--full">
+            <span>Notes internes</span>
+            {{ form.notes }}{{ form.notes.errors }}
+          </label>
+        </div>
+      </div>
+
+      <div class="panel-head" style="border-top:1px solid var(--px-border);border-bottom:1px solid var(--px-border)">
+        <div class="panel-head-main">
+          <h2>Lignes du devis</h2>
+          <span class="panel-sub">Choisissez un produit du catalogue ou saisissez une prestation libre.</span>
+        </div>
+        <button class="pxadmin-btn pxadmin-btn--sm" type="button" id="devis-add-line">➕ Ajouter une ligne</button>
+      </div>
+
+      <div class="panel-body panel-body--flush">
+        <div class="table-responsive">
+          <table class="pxadmin-table devis-lines">
+            <thead>
+              <tr>
+                <th style="min-width:190px">Produit</th>
+                <th style="min-width:150px">Désignation</th>
+                <th>Qté</th>
+                <th>Prix unit.</th>
+                <th>Remise %</th>
+                <th>Total TND</th>
+                <th>Suppr.</th>
+              </tr>
+            </thead>
+            <tbody id="devis-lines">
+              {% for line in formset %}
+              <tr data-line>
+                <td>{{ line.id }}{{ line.produit }}{{ line.produit.errors }}</td>
+                <td>{{ line.designation }}{{ line.designation.errors }}</td>
+                <td>{{ line.quantite }}{{ line.quantite.errors }}</td>
+                <td>{{ line.prix_unitaire }}{{ line.prix_unitaire.errors }}</td>
+                <td>{{ line.remise }}{{ line.remise.errors }}</td>
+                <td class="line-total">0.00</td>
+                <td>{{ line.DELETE }}</td>
+              </tr>
+              {% if line.errors %}
+              <tr><td colspan="7">{{ line.errors }}</td></tr>
+              {% endif %}
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <template id="devis-empty-form">
+          <tr data-line>
+            <td>{{ formset.empty_form.id }}{{ formset.empty_form.produit }}</td>
+            <td>{{ formset.empty_form.designation }}</td>
+            <td>{{ formset.empty_form.quantite }}</td>
+            <td>{{ formset.empty_form.prix_unitaire }}</td>
+            <td>{{ formset.empty_form.remise }}</td>
+            <td class="line-total">0.00</td>
+            <td>{{ formset.empty_form.DELETE }}</td>
+          </tr>
+        </template>
+
+        <div class="devis-totaux">
+          <div>Total HT : <strong id="devis-total-ht">{% if devis %}{{ devis.montant_ht|floatformat:2 }}{% else %}0.00{% endif %}</strong> TND</div>
+          <div class="total">Total TTC : <strong id="devis-total-ttc">{% if devis %}{{ devis.montant_ttc|floatformat:2 }}{% else %}0.00{% endif %}</strong> TND</div>
+        </div>
+      </div>
+
+      <div class="panel-body devis-actions">
+        <button class="pxadmin-btn pxadmin-btn--accent" type="submit" name="action" value="save">💾 Enregistrer</button>
+        {% if mode == 'edit' %}
+        <button class="pxadmin-btn" type="submit" name="action" value="envoyer">✉️ Enregistrer et envoyer</button>
+        <button class="pxadmin-btn" type="submit" name="action" value="accepter">✅ Marquer accepté</button>
+        <button class="pxadmin-btn" type="submit" name="action" value="convertir">🏷️ Convertir en vente</button>
+        <button class="pxadmin-btn" type="submit" name="action" value="prefacture">📑 Créer une préfacture</button>
+        {% endif %}
+        <a class="pxadmin-btn pxadmin-btn--ghost" href="{% url 'admin_devis_list' %}">← Retour aux devis</a>
+      </div>
+    </form>
+  </div>
+
+  <aside class="panel devis-catalogue">
+    <div class="panel-head">
+      <h2>📦 Catalogue produits</h2>
+    </div>
+    <div class="panel-body">
+      <input class="pxadmin-input" type="search" id="produit-filter" placeholder="Filtrer les produits…" aria-label="Filtrer le catalogue">
+      <div class="devis-produits">
+        {% for p in produits %}
+        <button class="devis-produit" type="button" data-catalogue-produit
+                data-produit-id="{{ p.id }}" data-search="{{ p.nom|lower }} {{ p.categorie.nom|default:''|lower }}">
+          <strong>{{ p.nom }}</strong>
+          <small>{{ p.prix_vente|floatformat:2 }} TND · stock {{ p.stock_actuel }}</small>
+        </button>
+        {% empty %}
+        <p class="pxadmin-hint">Aucun produit actif. Ajoutez des produits dans l'administration Django.</p>
+        {% endfor %}
+      </div>
+      <a class="pxadmin-btn pxadmin-btn--sm pxadmin-btn--ghost" href="{% url 'admin_produits' %}">Gérer le catalogue ↗</a>
+    </div>
+  </aside>
+</div>
+
+{{ produits_json|json_script:"produits-data" }}
+{% endblock %}
+
+{% block admin_scripts %}
+<script src="{% static 'js/admin-devis.js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  PixelLineEditor.init({
+    tableId: 'devis-lines',
+    templateId: 'devis-empty-form',
+    totalFormsName: '{{ formset.prefix }}-TOTAL_FORMS',
+    addButtonId: 'devis-add-line',
+    productsDataId: 'produits-data',
+    totalHtId: 'devis-total-ht',
+    totalTtcId: 'devis-total-ttc',
+    tvaId: 'id_tva',
+    catalogueSelector: '[data-catalogue-produit]',
+    filterId: 'produit-filter'
+  });
+});
+</script>
+{% endblock %}

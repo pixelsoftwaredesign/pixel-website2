@@ -11,9 +11,23 @@
   {% include "studio/admin/_stat.html" with label="Confirmées" value=payees icon="✅" accent="emerald" hint=taux_paiement_label model="studio.commandeecommerce" %}
   {% include "studio/admin/_stat.html" with label="Livrées" value=livrees icon="🚚" accent="cyan" model="studio.commandeecommerce" params="statut__exact=livree" %}
   {% include "studio/admin/_stat.html" with label="Montant encaissé" value=montant_encaisse icon="💰" accent="violet" hint="TND (commandes confirmées)" model="studio.commandeecommerce" %}
+  {% include "studio/admin/_stat.html" with label="Ventes" value=total_ventes icon="🏷️" accent="cyan" hint=montant_ventes|stringformat:"s"|add:" TND" url="/admin/ventes/" %}
+  {% include "studio/admin/_stat.html" with label="Préfactures à traiter" value=prefactures_a_traiter icon="📑" accent="amber" hint="Brouillons" url="/admin/prefactures/?statut=brouillon" %}
 </div>
 
 <div class="pxadmin-links">
+  <a class="pxadmin-link" href="{% url 'admin_ventes' %}">
+    <span class="pxadmin-link-icon">🏷️</span>
+    <span class="pxadmin-link-text"><strong>Ventes</strong><small>Conversion & CA</small></span>
+  </a>
+  <a class="pxadmin-link" href="{% url 'admin_prefactures' %}">
+    <span class="pxadmin-link-icon">📑</span>
+    <span class="pxadmin-link-text"><strong>Préfactures</strong><small>Proformas</small></span>
+  </a>
+  <a class="pxadmin-link" href="{% url 'admin_produits' %}">
+    <span class="pxadmin-link-icon">📦</span>
+    <span class="pxadmin-link-text"><strong>Catalogue produits</strong><small>Prix & stock</small></span>
+  </a>
   <a class="pxadmin-link" model="studio.commandeecommerce" >
     <span class="pxadmin-link-icon">🧾</span>
     <span class="pxadmin-link-text"><strong>Commandes</strong><small>E-commerce</small></span>

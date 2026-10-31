@@ -29,6 +29,10 @@ ROUTES = [
     ('/admin/dash/superadmin/', {'SuperAdmin'}),
     ('/admin/dash/admin/', {'Admin', 'SuperAdmin'}),
     ('/admin/roles/', {'Admin', 'SuperAdmin'}),
+    ('/admin/devis/', {'Commercial', 'Comptable', 'SuperAdmin', 'Admin'}),
+    ('/admin/ventes/', {'Commercial', 'Comptable', 'SuperAdmin', 'Admin'}),
+    ('/admin/prefactures/', {'Commercial', 'Comptable', 'SuperAdmin', 'Admin'}),
+    ('/admin/produits/', {'Commercial', 'Comptable', 'SuperAdmin', 'Admin'}),
 ]
 
 for g in ROLE_GROUPS:

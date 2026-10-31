@@ -1,0 +1,120 @@
+{% extends 'studio/admin_base.html' %}
+{% block title %}Devis — Espace admin{% endblock %}
+{% block admin_title %}📝 Devis{% endblock %}
+{% block admin_subtitle %}Réponses structurées, produits et conversion en vente{% endblock %}
+
+{% block admin_content %}
+
+<div class="pxadmin-stats">
+  {% include "studio/admin/_stat.html" with label="Devis" value=stats.total icon="📝" accent="sky" url="/admin/devis/" %}
+  {% include "studio/admin/_stat.html" with label="À traiter" value=stats.a_traiter icon="⏳" accent="amber" hint="Nouveaux & en cours" url="/admin/devis/?statut=nouveau" %}
+  {% include "studio/admin/_stat.html" with label="Acceptés" value=stats.acceptes icon="✅" accent="emerald" url="/admin/devis/?statut=accepte" %}
+  {% include "studio/admin/_stat.html" with label="Convertis" value=stats.convertis icon="🏷️" accent="violet" hint="En vente" url="/admin/devis/?statut=converti" %}
+  {% include "studio/admin/_stat.html" with label="Montant accepté" value=stats.montant icon="💰" accent="cyan" hint="TND" url="/admin/devis/" %}
+</div>
+
+<div class="pxadmin-links">
+  <a class="pxadmin-link" href="{% url 'admin_devis_create' %}">
+    <span class="pxadmin-link-icon">➕</span>
+    <span class="pxadmin-link-text"><strong>Nouveau devis</strong><small>Choisir les produits</small></span>
+  </a>
+  <a class="pxadmin-link" href="{% url 'admin_produits' %}">
+    <span class="pxadmin-link-icon">📦</span>
+    <span class="pxadmin-link-text"><strong>Catalogue produits</strong><small>Prix & stock</small></span>
+  </a>
+  <a class="pxadmin-link" href="{% url 'admin_ventes' %}">
+    <span class="pxadmin-link-icon">🏷️</span>
+    <span class="pxadmin-link-text"><strong>Ventes</strong><small>Depuis les devis</small></span>
+  </a>
+  <a class="pxadmin-link" href="{% url 'admin_prefactures' %}">
+    <span class="pxadmin-link-icon">📑</span>
+    <span class="pxadmin-link-text"><strong>Préfactures</strong><small>Proformas</small></span>
+  </a>
+  <a class="pxadmin-link" href="{% url 'admin_receptions_dashboard' %}">
+    <span class="pxadmin-link-icon">📄</span>
+    <span class="pxadmin-link-text"><strong>Demandes de projet</strong><small>Boîte de réception</small></span>
+  </a>
+</div>
+
+{% if projets_disponibles %}
+<section class="panel">
+  <div class="panel-head">
+    <div class="panel-head-main">
+      <h2>📄 Créer un devis depuis une demande</h2>
+      <span class="panel-sub">Le nom, l'email et le message du client seront pré-remplis.</span>
+    </div>
+  </div>
+  <div class="panel-body">
+    <form class="pxadmin-form-row" method="get" action="{% url 'admin_devis_create' %}">
+      <label class="pxadmin-field" style="flex:1 1 320px">
+        <span>Demande de projet</span>
+        <select class="pxadmin-select" name="projet" required>
+          <option value="">— Choisir une demande —</option>
+          {% for p in projets_disponibles %}
+          <option value="{{ p.id }}">{{ p.nom }} — {{ p.email }} — {{ p.date_reception|date:"d/m/Y" }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <div style="align-self:flex-end">
+        <button class="pxadmin-btn pxadmin-btn--accent" type="submit">Créer le devis</button>
+      </div>
+    </form>
+  </div>
+</section>
+{% endif %}
+
+<section class="panel">
+  <div class="panel-head">
+    <div class="panel-head-main">
+      <h2>📝 Tous les devis</h2>
+      <span class="panel-sub">{{ stats.total }} devis · {{ stats.a_traiter }} à traiter</span>
+    </div>
+    <div class="panel-head-tools">
+      <form class="pxadmin-search" method="get">
+        {% if statut %}<input type="hidden" name="statut" value="{{ statut }}">{% endif %}
+        <input type="search" name="q" value="{{ q }}" placeholder="Référence, client, email…" aria-label="Rechercher un devis">
+      </form>
+      <a class="pxadmin-btn pxadmin-btn--sm pxadmin-btn--accent" href="{% url 'admin_devis_create' %}">➕ Nouveau devis</a>
+    </div>
+  </div>
+
+  <div class="pxadmin-filters" role="group" aria-label="Filtrer les devis par statut">
+    <a class="px-pill{% if not statut %} is-on{% endif %}" href="?{% if q %}q={{ q|urlencode }}{% endif %}">Tous ({{ stats.total }})</a>
+    {% for s in statut_counts %}
+    <a class="px-pill{% if statut == s.value %} is-on{% endif %}" href="?statut={{ s.value }}{% if q %}&q={{ q|urlencode }}{% endif %}">{{ s.label }} ({{ s.count }})</a>
+    {% endfor %}
+  </div>
+
+  <div class="panel-body panel-body--flush">
+    <div class="table-responsive">
+      <table class="pxadmin-table">
+        <thead>
+          <tr><th>Référence</th><th>Client</th><th>Sujet</th><th>Total TTC</th><th>Statut</th><th>Créé le</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for d in devis %}
+          <tr data-href="{% url 'admin_devis_detail' d.id %}">
+            <td class="cell-strong"><a href="{% url 'admin_devis_detail' d.id %}">{{ d.reference }}</a>
+              {% if d.projet %}<br><span class="cell-muted">Demande #{{ d.projet.id }}</span>{% endif %}
+            </td>
+            <td>{{ d.client_nom }}<br><span class="cell-muted">{{ d.client_email }}</span></td>
+            <td class="cell-truncate cell-muted" title="{{ d.sujet }}">{{ d.sujet|default:"—" }}</td>
+            <td class="cell-money">{{ d.montant_ttc|floatformat:2 }} <span class="cell-muted">TND</span></td>
+            <td><span class="px-badge px-badge--{% if d.statut == 'accepte' or d.statut == 'converti' %}success{% elif d.statut == 'refuse' %}danger{% elif d.statut == 'envoye' %}info{% else %}warn{% endif %}">{{ d.get_statut_display }}</span></td>
+            <td class="cell-nowrap cell-muted">{{ d.date_creation|date:"d/m/Y H:i" }}</td>
+            <td class="cell-nowrap">
+              <a class="pxadmin-btn pxadmin-btn--sm" href="{% url 'admin_devis_detail' d.id %}">Ouvrir</a>
+              <a class="pxadmin-btn pxadmin-btn--sm pxadmin-btn--ghost" href="{% url 'admin_devis_print' d.id %}" target="_blank" rel="noopener">🖨️</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7"><div class="pxadmin-empty"><span class="pxadmin-empty-icon">📝</span><p>Aucun devis pour ce filtre.</p></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% include "studio/admin/_pager.html" with pager=pager %}
+  </div>
+</section>
+
+{% endblock %}

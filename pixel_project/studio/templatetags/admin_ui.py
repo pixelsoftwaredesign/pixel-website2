@@ -41,6 +41,42 @@ DASHBOARDS = [
         'group': 'Métiers',
     },
     {
+        'key': 'devis',
+        'label': 'Devis',
+        'desc': 'Réponses & produits',
+        'icon': '📝',
+        'url': '/admin/devis/',
+        'roles': ['Commercial', 'Comptable', 'SuperAdmin', 'Admin'],
+        'group': 'Métiers',
+    },
+    {
+        'key': 'ventes',
+        'label': 'Ventes',
+        'desc': 'Catalogue & chiffre',
+        'icon': '🏷️',
+        'url': '/admin/ventes/',
+        'roles': ['Commercial', 'Comptable', 'SuperAdmin', 'Admin'],
+        'group': 'Métiers',
+    },
+    {
+        'key': 'produits',
+        'label': 'Produits',
+        'desc': 'Catalogue & prix',
+        'icon': '📦',
+        'url': '/admin/produits/',
+        'roles': ['Commercial', 'Comptable', 'SuperAdmin', 'Admin'],
+        'group': 'Métiers',
+    },
+    {
+        'key': 'prefactures',
+        'label': 'Préfactures',
+        'desc': 'Proformas & documents',
+        'icon': '📑',
+        'url': '/admin/prefactures/',
+        'roles': ['Commercial', 'Comptable', 'SuperAdmin', 'Admin'],
+        'group': 'Métiers',
+    },
+    {
         'key': 'comptable',
         'label': 'Comptable',
         'desc': 'Commandes & paiements',
@@ -106,12 +142,23 @@ def _nav_counts():
     """
     counts = {}
     try:
-        from studio.models import CommandeECommerce, ProjetContact
+        from django.db.models import F
+
+        from studio.models import (
+            CommandeECommerce, Devis, PreFacture, Produit, ProjetContact,
+        )
         commandes = CommandeECommerce.objects.filter(statut='en_attente').count()
         contacts = ProjetContact.objects.filter(a_repondu=False).count()
         counts['receptions'] = commandes + contacts
         counts['commercial'] = contacts
         counts['comptable'] = commandes
+        counts['devis'] = Devis.objects.filter(
+            statut__in=['nouveau', 'en_cours']).count()
+        counts['prefactures'] = PreFacture.objects.filter(
+            statut='brouillon').count()
+        counts['produits'] = Produit.objects.filter(
+            erp_client__isnull=True, actif=True,
+            stock_actuel__lte=F('stock_minimum')).count()
     except Exception:
         return {}
     return counts
@@ -143,6 +190,11 @@ def admin_nav(user, current_path=''):
     if not user or not user.is_authenticated:
         return groups
     current = (current_path or '').rstrip('/')
+
+    def est_actif(url):
+        base = url.rstrip('/')
+        return current == base or current.startswith(base + '/')
+
     counts = _nav_counts()
     for d in DASHBOARDS:
         if not user_can(user, d):
@@ -153,7 +205,7 @@ def admin_nav(user, current_path=''):
             'desc': d['desc'],
             'icon': d['icon'],
             'url': d['url'],
-            'active': current == d['url'].rstrip('/'),
+            'active': est_actif(d['url']),
             'count': counts.get(d['key'], 0),
         }
         if not groups or groups[-1]['name'] != d['group']:
