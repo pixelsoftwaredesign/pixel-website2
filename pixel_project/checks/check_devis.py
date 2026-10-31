@@ -77,6 +77,8 @@ projet = ProjetContact.objects.create(
 def cleanup():
     try:
         Facture.objects.filter(client_nom__startswith='CHKD Client').delete()
+        Facture.objects.filter(
+            client_nom__startswith='CHK Tenant Facture').delete()
         PreFacture.objects.filter(client_nom__startswith='CHKD Client').delete()
         Devis.objects.filter(client_nom__startswith='CHKD Client').delete()
         Vente.objects.filter(client_nom__startswith='CHKD').delete()
@@ -351,6 +353,52 @@ if devis:
                   facture.montant_ttc == pf.montant_ttc, facture.montant_ttc)
             check('facture : numéro FAC généré',
                   facture.numero.startswith('FAC-'), facture.numero)
+            check('facture : préfacture liée',
+                  facture.prefacture_id == pf.id, facture.prefacture_id)
+            check('facture : deux lignes figées',
+                  facture.lignes.count() == 2, facture.lignes.count())
+            check('facture : email client repris',
+                  facture.client_email == pf.client_email)
+            check('facture : notes reprises', facture.notes == pf.notes)
+            check('conversion -> page facture personnalisée',
+                  r.url.endswith('/admin/factures/%d/' % facture.id), r.url)
+
+            r = c.get('/admin/factures/')
+            check('liste factures -> 200', r.status_code == 200, r.status_code)
+            body = r.content.decode()
+            check('liste factures : document visible', facture.numero in body)
+            check('liste factures : client visible', facture.client_nom in body)
+
+            r = c.get('/admin/factures/%d/' % facture.id)
+            check('détail facture -> 200', r.status_code == 200, r.status_code)
+            body = r.content.decode()
+            check('détail facture : numéro', facture.numero in body)
+            check('détail facture : lignes', p1.nom in body and p2.nom in body)
+            check('détail facture : total TTC',
+                  ('291,55' in body or '291.55' in body))
+
+            r = c.get('/admin/factures/%d/imprimer/' % facture.id)
+            check('impression facture -> 200', r.status_code == 200, r.status_code)
+            body = r.content.decode()
+            check('impression facture : titre', 'FACTURE' in body)
+            check('impression facture : client', facture.client_nom in body)
+            check('impression facture : total TTC',
+                  ('291,55' in body or '291.55' in body))
+
+            r = c.post('/admin/factures/%d/' % facture.id,
+                       {'action': 'marquer_payee'})
+            check('facture marquée payée -> 302', r.status_code == 302, r.status_code)
+            facture.refresh_from_db()
+            check('facture payée', facture.payee is True)
+            check('date de paiement renseignée',
+                  facture.date_paiement is not None)
+
+            r = c.post('/admin/factures/%d/' % facture.id,
+                       {'action': 'marquer_impayee'})
+            check('facture marquée impayée -> 302', r.status_code == 302, r.status_code)
+            facture.refresh_from_db()
+            check('facture impayée', facture.payee is False)
+            check('date de paiement effacée', facture.date_paiement is None)
 
 print('\n== 6. Liste des préfactures et catalogue produits ==')
 r = c.get('/admin/prefactures/')
@@ -367,14 +415,29 @@ check('catalogue : produit tenant absent', p_tenant.nom not in body)
 check('catalogue : alerte stock', 'min 2' in body)
 check('catalogue : lien devis', ('/admin/devis/nouveau/?produit=%d' % p1.id) in body)
 
+facture_tenant = Facture.objects.create(
+    erp_client=tenant, numero='FAC-TENANT-%s' % TAG,
+    client_nom='CHK Tenant Facture', montant_ht=Decimal('999.00'),
+    tva=Decimal('19'), montant_ttc=Decimal('1188.81'))
+r = c.get('/admin/factures/')
+check('liste factures : facture tenant exclue',
+      facture_tenant.numero not in r.content.decode())
+r = c.get('/admin/factures/%d/' % facture_tenant.id)
+check('détail facture tenant -> 404', r.status_code == 404, r.status_code)
+
 print('\n== 7. Navigation et cloisonnement ==')
 groupes = admin_nav(superuser, '/admin/devis/')
 urls = [i['url'] for g in groupes for i in g['items']]
 for url in ['/admin/devis/', '/admin/ventes/', '/admin/prefactures/',
-            '/admin/produits/']:
+            '/admin/factures/', '/admin/produits/']:
     check('nav : %s présent' % url, url in urls)
 actifs = [i['active'] for g in groupes for i in g['items'] if i['url'] == '/admin/devis/']
 check('nav : devis actif sur une sous-page', actifs == [True], actifs)
+groupes_facture = admin_nav(superuser, '/admin/factures/')
+actifs_facture = [i['active'] for g in groupes_facture
+                  for i in g['items'] if i['url'] == '/admin/factures/']
+check('nav : factures actives sur une sous-page', actifs_facture == [True],
+      actifs_facture)
 
 alertes_site = Produit.objects.filter(
     erp_client__isnull=True, actif=True,
@@ -386,7 +449,7 @@ check('nav : alerte stock tenant exclue',
 
 editeur_client = login(editeur)
 for url in ['/admin/devis/', '/admin/ventes/', '/admin/prefactures/',
-            '/admin/produits/']:
+            '/admin/factures/', '/admin/produits/']:
     check('rôle Editeur : %s -> 403' % url,
           editeur_client.get(url).status_code == 403,
           editeur_client.get(url).status_code)
@@ -396,5 +459,6 @@ check('commercial non-staff : devis -> 403',
       nonstaff_client.get('/admin/devis/').status_code == 403)
 check('anonyme : devis -> 302', anon.get('/admin/devis/').status_code == 302)
 check('anonyme : ventes -> 302', anon.get('/admin/ventes/').status_code == 302)
+check('anonyme : factures -> 302', anon.get('/admin/factures/').status_code == 302)
 
 raise SystemExit(report())

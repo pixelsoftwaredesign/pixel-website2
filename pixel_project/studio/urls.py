@@ -189,5 +189,8 @@ urlpatterns = [
     path('admin/prefactures/nouvelle/', views_devis.prefacture_create, name='admin_prefacture_create'),
     path('admin/prefactures/<int:pk>/', views_devis.prefacture_detail, name='admin_prefacture_detail'),
     path('admin/prefactures/<int:pk>/imprimer/', views_devis.prefacture_print, name='admin_prefacture_print'),
+    path('admin/factures/', views_devis.factures_list, name='admin_factures'),
+    path('admin/factures/<int:pk>/', views_devis.facture_detail, name='admin_facture_detail'),
+    path('admin/factures/<int:pk>/imprimer/', views_devis.facture_print, name='admin_facture_print'),
     path('admin/produits/', views_devis.produits_list, name='admin_produits'),
 ]

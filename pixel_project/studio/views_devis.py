@@ -16,7 +16,7 @@ from .forms_devis import (
     VenteForm,
 )
 from .models import (
-    Devis, PreFacture, Produit, ProjetContact, Vente,
+    Devis, Facture, PreFacture, Produit, ProjetContact, Vente,
 )
 from .views import _paginate, role_required
 
@@ -528,13 +528,10 @@ def prefacture_detail(request, pk):
             if prefacture.statut == 'convertie':
                 messages.info(request, "Cette préfacture est déjà convertie.")
                 return redirect('admin_prefacture_detail', pk=prefacture.pk)
-            facture = prefacture.convertir_en_facture()
+            facture = prefacture.convertir_en_facture(request.user)
             messages.success(
                 request, "Facture %s créée depuis la préfacture." % facture.numero)
-            if request.user.is_superuser:
-                return redirect(
-                    'admin:studio_facture_change', object_id=facture.pk)
-            return redirect('admin_prefacture_detail', pk=prefacture.pk)
+            return redirect('admin_facture_detail', pk=facture.pk)
 
         form = PreFactureForm(request.POST, instance=prefacture)
         formset = PreFactureLigneFormSet(
@@ -579,6 +576,79 @@ def prefacture_print(request, pk):
         'prefacture': prefacture,
         'lignes': prefacture.lignes.all(),
         'tva_montant': prefacture.montant_ttc - prefacture.montant_ht,
+        'societe': _societe(),
+    })
+
+
+@role_required(*ADMIN_ROLES)
+def factures_list(request):
+    qs = Facture.objects.filter(
+        erp_client__isnull=True).select_related('prefacture').order_by(
+            '-date_facture')
+    paiement = (request.GET.get('paiement') or '').strip()
+    if paiement == 'payee':
+        qs = qs.filter(payee=True)
+    elif paiement == 'impayee':
+        qs = qs.filter(payee=False)
+    else:
+        paiement = ''
+    q = (request.GET.get('q') or '').strip()
+    if q:
+        qs = qs.filter(
+            Q(numero__icontains=q) | Q(client_nom__icontains=q) |
+            Q(client_email__icontains=q))
+    factures, pager = _paginate(qs, 'page', request, 20)
+    site = Facture.objects.filter(erp_client__isnull=True)
+    return render(request, 'studio/admin_factures.html', {
+        'factures': factures,
+        'pager': pager,
+        'paiement': paiement,
+        'q': q,
+        'stats': {
+            'total': site.count(),
+            'payees': site.filter(payee=True).count(),
+            'impayees': site.filter(payee=False).count(),
+            'montant': site.aggregate(s=Sum('montant_ttc'))['s'] or 0,
+            'montant_impaye': site.filter(payee=False).aggregate(
+                s=Sum('montant_ttc'))['s'] or 0,
+        },
+    })
+
+
+@role_required(*ADMIN_ROLES)
+def facture_detail(request, pk):
+    facture = get_object_or_404(
+        Facture.objects.filter(erp_client__isnull=True).select_related(
+            'prefacture'), pk=pk)
+
+    if request.method == 'POST':
+        action = request.POST.get('action', '')
+        if action in ('marquer_payee', 'marquer_impayee'):
+            facture.payee = action == 'marquer_payee'
+            facture.date_paiement = (
+                timezone.localdate() if facture.payee else None)
+            facture.save(update_fields=['payee', 'date_paiement'])
+            messages.success(
+                request, "Facture %s marquée %s." % (
+                    facture.numero, 'payée' if facture.payee else 'impayée'))
+        return redirect('admin_facture_detail', pk=facture.pk)
+
+    return render(request, 'studio/admin_facture_detail.html', {
+        'facture': facture,
+        'lignes': facture.lignes.all(),
+        'tva_montant': facture.montant_ttc - facture.montant_ht,
+    })
+
+
+@role_required(*ADMIN_ROLES)
+def facture_print(request, pk):
+    facture = get_object_or_404(
+        Facture.objects.filter(erp_client__isnull=True).select_related(
+            'prefacture'), pk=pk)
+    return render(request, 'studio/admin_facture_print.html', {
+        'facture': facture,
+        'lignes': facture.lignes.all(),
+        'tva_montant': facture.montant_ttc - facture.montant_ht,
         'societe': _societe(),
     })
 

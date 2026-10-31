@@ -13,6 +13,7 @@
   {% include "studio/admin/_stat.html" with label="Devis à traiter" value=devis_a_traiter icon="📝" accent="amber" hint="Nouveaux & en cours" url="/admin/devis/" %}
   {% include "studio/admin/_stat.html" with label="Devis acceptés" value=devis_acceptes icon="✅" accent="emerald" url="/admin/devis/?statut=accepte" %}
   {% include "studio/admin/_stat.html" with label="Ventes" value=total_ventes icon="🏷️" accent="cyan" hint="Site" url="/admin/ventes/" %}
+  {% include "studio/admin/_stat.html" with label="Factures" value=total_factures icon="🧾" accent="violet" url="/admin/factures/" %}
 </div>
 
 <div class="pxadmin-links">
@@ -31,6 +32,10 @@
   <a class="pxadmin-link" href="{% url 'admin_prefactures' %}">
     <span class="pxadmin-link-icon">📑</span>
     <span class="pxadmin-link-text"><strong>Préfactures</strong><small>Proformas</small></span>
+  </a>
+  <a class="pxadmin-link" href="{% url 'admin_factures' %}">
+    <span class="pxadmin-link-icon">🧾</span>
+    <span class="pxadmin-link-text"><strong>Factures</strong><small>Documents & paiements</small></span>
   </a>
   <a class="pxadmin-link" model="studio.projetcontact" >
     <span class="pxadmin-link-icon">📄</span>

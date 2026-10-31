@@ -7,7 +7,7 @@ from django.urls import path, reverse
 from django.utils import timezone
 from .emailing import envoyer_email
 import csv, re
-from .models import UserProfile, ProjetContact, AtelierProfile, PortfolioProject, CodeRepository, GraphismeResource, ERPClient, ERPModule, ERPSubscription, ERPDemoRecord, Moniteur, Candidat, Vehicule, Lecon, Examen, Medecin, Patient, Lit, RendezVous, FacturationSante, ClientHotel, Chambre, ReservationHotel, ServiceHotel, Categorie, Fournisseur, Produit, Devis, DevisLigne, Vente, PreFacture, PreFactureLigne, ClientJuridique, DossierJuridique, Audience, JournalComptable, EcritureComptable, Facture, DeclarationFiscale, Employe, Contrat, FichePaie, Conge, Formation, MenuItem, TableRestaurant, SoftCodeModule, StudioProject3D, PatisserieRecipe, PatisserieProduct, PlanAbonnement, SouscriptionClient, Paiement, CleActivation, ConfigurationBancaire, ConfigurationPaiementEnLigne, Candidature, MouvementStock, CommandeECommerce, CommandeECommerceItem, Temoignage, PixMailAccount, PixMailContact, PixMailMessage, PixMailAttachment, PixMailFolder, PixMailSignature, SocialProfile, Follow, Post, Like, Comment, Notification, Conversation, ConversationMember, EncryptedMessage, Wallet, Transaction, TwoFactorAuth, Referral, KYCVerification, NewsletterSubscriber, NewsletterCampaign
+from .models import UserProfile, ProjetContact, AtelierProfile, PortfolioProject, CodeRepository, GraphismeResource, ERPClient, ERPModule, ERPSubscription, ERPDemoRecord, Moniteur, Candidat, Vehicule, Lecon, Examen, Medecin, Patient, Lit, RendezVous, FacturationSante, ClientHotel, Chambre, ReservationHotel, ServiceHotel, Categorie, Fournisseur, Produit, Devis, DevisLigne, Vente, PreFacture, PreFactureLigne, Facture, FactureLigne, ClientJuridique, DossierJuridique, Audience, JournalComptable, EcritureComptable, DeclarationFiscale, Employe, Contrat, FichePaie, Conge, Formation, MenuItem, TableRestaurant, SoftCodeModule, StudioProject3D, PatisserieRecipe, PatisserieProduct, PlanAbonnement, SouscriptionClient, Paiement, CleActivation, ConfigurationBancaire, ConfigurationPaiementEnLigne, Candidature, MouvementStock, CommandeECommerce, CommandeECommerceItem, Temoignage, PixMailAccount, PixMailContact, PixMailMessage, PixMailAttachment, PixMailFolder, PixMailSignature, SocialProfile, Follow, Post, Like, Comment, Notification, Conversation, ConversationMember, EncryptedMessage, Wallet, Transaction, TwoFactorAuth, Referral, KYCVerification, NewsletterSubscriber, NewsletterCampaign
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
@@ -368,8 +368,26 @@ class AudienceAdmin(admin.ModelAdmin): list_display = ('dossier','date_audience'
 class JournalComptableAdmin(admin.ModelAdmin): list_display = ('code','nom')
 @admin.register(EcritureComptable)
 class EcritureComptableAdmin(admin.ModelAdmin): list_display = ('date_ecriture','libelle','compte_debit','compte_credit','montant')
+class FactureLigneInline(admin.TabularInline):
+    model = FactureLigne
+    extra = 0
+    fields = ('produit', 'designation', 'quantite', 'prix_unitaire',
+              'remise', 'ordre')
+
+
 @admin.register(Facture)
-class FactureAdmin(admin.ModelAdmin): list_display = ('numero','client_nom','montant_ttc','payee')
+class FactureAdmin(admin.ModelAdmin):
+    list_display = ('numero', 'client_nom', 'montant_ttc', 'payee',
+                    'date_facture')
+    list_filter = ('payee', 'date_facture')
+    search_fields = ('numero', 'client_nom', 'client_email')
+    readonly_fields = ('numero', 'date_facture', 'montant_ht', 'montant_ttc')
+    inlines = [FactureLigneInline]
+
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        if form.instance.lignes.exists():
+            form.instance.recalculer_totaux()
 @admin.register(DeclarationFiscale)
 class DeclarationFiscaleAdmin(admin.ModelAdmin): list_display = ('type_declaration','periode','montant','soumise')
 

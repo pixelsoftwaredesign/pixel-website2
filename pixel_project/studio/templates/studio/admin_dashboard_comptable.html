@@ -13,6 +13,8 @@
   {% include "studio/admin/_stat.html" with label="Montant encaissé" value=montant_encaisse icon="💰" accent="violet" hint="TND (commandes confirmées)" model="studio.commandeecommerce" %}
   {% include "studio/admin/_stat.html" with label="Ventes" value=total_ventes icon="🏷️" accent="cyan" hint=montant_ventes|stringformat:"s"|add:" TND" url="/admin/ventes/" %}
   {% include "studio/admin/_stat.html" with label="Préfactures à traiter" value=prefactures_a_traiter icon="📑" accent="amber" hint="Brouillons" url="/admin/prefactures/?statut=brouillon" %}
+  {% include "studio/admin/_stat.html" with label="Factures" value=total_factures icon="🧾" accent="violet" hint="Site" url="/admin/factures/" %}
+  {% include "studio/admin/_stat.html" with label="Impayées" value=factures_impayees icon="⏳" accent="rose" hint="À encaisser" url="/admin/factures/?paiement=impayee" %}
 </div>
 
 <div class="pxadmin-links">
@@ -36,9 +38,9 @@
     <span class="pxadmin-link-icon">💳</span>
     <span class="pxadmin-link-text"><strong>Paiements</strong><small>Souscriptions</small></span>
   </a>
-  <a class="pxadmin-link" href="{% url 'admin:studio_facture_changelist' %}">
-    <span class="pxadmin-link-icon">📑</span>
-    <span class="pxadmin-link-text"><strong>Factures</strong><small>Documents</small></span>
+  <a class="pxadmin-link" href="{% url 'admin_factures' %}">
+    <span class="pxadmin-link-icon">🧾</span>
+    <span class="pxadmin-link-text"><strong>Factures</strong><small>Documents & paiements</small></span>
   </a>
   <a class="pxadmin-link" href="{% url 'admin:studio_transaction_changelist' %}">
     <span class="pxadmin-link-icon">🔁</span>

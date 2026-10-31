@@ -1,0 +1,141 @@
+{% extends 'studio/admin_base.html' %}
+{% block title %}Facture {{ facture.numero }} — Espace admin{% endblock %}
+{% block admin_title %}🧾 {{ facture.numero }}{% endblock %}
+{% block admin_subtitle %}{{ facture.client_nom }} · {% if facture.payee %}Payée{% else %}Impayée{% endif %}{% endblock %}
+
+{% block admin_content %}
+
+<div class="pxadmin-links">
+  <a class="pxadmin-link" href="{% url 'admin_factures' %}">
+    <span class="pxadmin-link-icon">←</span>
+    <span class="pxadmin-link-text"><strong>Retour aux factures</strong><small>Tous les documents</small></span>
+  </a>
+  {% if facture.prefacture %}
+  <a class="pxadmin-link" href="{% url 'admin_prefacture_detail' facture.prefacture.id %}">
+    <span class="pxadmin-link-icon">📑</span>
+    <span class="pxadmin-link-text"><strong>Préfacture d'origine</strong><small>{{ facture.prefacture.numero }}</small></span>
+  </a>
+  {% endif %}
+  <a class="pxadmin-link" href="{% url 'admin_facture_print' facture.id %}" target="_blank" rel="noopener">
+    <span class="pxadmin-link-icon">🖨️</span>
+    <span class="pxadmin-link-text"><strong>Imprimer</strong><small>Version PDF / papier</small></span>
+  </a>
+</div>
+
+<div class="pxadmin-grid">
+  <section class="panel">
+    <div class="panel-head">
+      <div class="panel-head-main">
+        <h2>Informations de la facture</h2>
+        <span class="panel-sub">Document définitif, lignes figées à la conversion.</span>
+      </div>
+      <div class="panel-head-tools">
+        <span class="px-badge px-badge--{% if facture.payee %}success{% else %}warn{% endif %}">{% if facture.payee %}Payée{% else %}Impayée{% endif %}</span>
+      </div>
+    </div>
+    <div class="panel-body pxadmin-form">
+      <div class="pxadmin-form-row">
+        <div class="pxadmin-field">
+          <span>Client</span>
+          <strong>{{ facture.client_nom }}</strong>
+        </div>
+        <div class="pxadmin-field">
+          <span>Email</span>
+          <strong>{{ facture.client_email|default:"—" }}</strong>
+        </div>
+        <div class="pxadmin-field">
+          <span>Date</span>
+          <strong>{{ facture.date_facture|date:"d/m/Y" }}</strong>
+        </div>
+      </div>
+      {% if facture.client_adresse %}
+      <div class="pxadmin-form-row">
+        <div class="pxadmin-field pxadmin-field--full">
+          <span>Adresse</span>
+          <p style="white-space:pre-wrap">{{ facture.client_adresse }}</p>
+        </div>
+      </div>
+      {% endif %}
+      {% if facture.notes %}
+      <div class="pxadmin-form-row">
+        <div class="pxadmin-field pxadmin-field--full">
+          <span>Notes / conditions</span>
+          <p style="white-space:pre-wrap">{{ facture.notes }}</p>
+        </div>
+      </div>
+      {% endif %}
+      <div class="pxadmin-form-row">
+        <div class="pxadmin-field">
+          <span>Préfacture d'origine</span>
+          {% if facture.prefacture %}
+          <a href="{% url 'admin_prefacture_detail' facture.prefacture.id %}">{{ facture.prefacture.numero }}</a>
+          {% else %}<strong>—</strong>{% endif %}
+        </div>
+        <div class="pxadmin-field">
+          <span>Date de paiement</span>
+          <strong>{{ facture.date_paiement|date:"d/m/Y"|default:"—" }}</strong>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div class="panel-head-main">
+        <h2>Paiement</h2>
+        <span class="panel-sub">Mise à jour du suivi comptable.</span>
+      </div>
+    </div>
+    <div class="panel-body">
+      <form method="post">
+        {% csrf_token %}
+        {% if facture.payee %}
+        <input type="hidden" name="action" value="marquer_impayee">
+        <button class="pxadmin-btn pxadmin-btn--danger" type="submit">Marquer comme impayée</button>
+        {% else %}
+        <input type="hidden" name="action" value="marquer_payee">
+        <button class="pxadmin-btn pxadmin-btn--accent" type="submit">✓ Marquer comme payée</button>
+        {% endif %}
+      </form>
+      <p class="pxadmin-hint" style="margin-top:1rem">Le statut de paiement ne modifie pas les montants de la facture.</p>
+    </div>
+  </section>
+</div>
+
+<section class="panel">
+  <div class="panel-head">
+    <div class="panel-head-main">
+      <h2>Lignes de la facture</h2>
+      <span class="panel-sub">{{ lignes|length }} ligne(s) copiée(s) depuis la préfacture.</span>
+    </div>
+  </div>
+  <div class="panel-body panel-body--flush">
+    <div class="table-responsive">
+      <table class="pxadmin-table">
+        <thead>
+          <tr><th>Désignation</th><th>Qté</th><th>Prix unit.</th><th>Remise</th><th>Total TND</th></tr>
+        </thead>
+        <tbody>
+          {% for ligne in lignes %}
+          <tr>
+            <td class="cell-strong">{{ ligne.designation|default:ligne.produit.nom|default:"Prestation" }}</td>
+            <td>{{ ligne.quantite }}</td>
+            <td class="cell-money">{{ ligne.prix_unitaire|floatformat:2 }} <span class="cell-muted">TND</span></td>
+            <td class="cell-muted">{% if ligne.remise %}{{ ligne.remise }} %{% else %}—{% endif %}</td>
+            <td class="cell-money">{{ ligne.total|floatformat:2 }} <span class="cell-muted">TND</span></td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5"><div class="pxadmin-empty"><span class="pxadmin-empty-icon">🧾</span><p>Aucune ligne détaillée pour cette facture.</p></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="devis-totaux">
+      <div>Total HT : <strong>{{ facture.montant_ht|floatformat:2 }}</strong> TND</div>
+      <div>TVA ({{ facture.tva }} %) : <strong>{{ tva_montant|floatformat:2 }}</strong> TND</div>
+      <div class="total">Total TTC : <strong>{{ facture.montant_ttc|floatformat:2 }}</strong> TND</div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

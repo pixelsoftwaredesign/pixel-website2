@@ -25,12 +25,10 @@
     <span class="pxadmin-link-icon">🏷️</span>
     <span class="pxadmin-link-text"><strong>Ventes</strong><small>Depuis une vente</small></span>
   </a>
-  {% if request.user.is_superuser %}
-  <a class="pxadmin-link" href="{% url 'admin:studio_facture_changelist' %}">
-    <span class="pxadmin-link-icon">📑</span>
+  <a class="pxadmin-link" href="{% url 'admin_factures' %}">
+    <span class="pxadmin-link-icon">🧾</span>
     <span class="pxadmin-link-text"><strong>Factures</strong><small>Après acceptation</small></span>
   </a>
-  {% endif %}
 </div>
 
 <section class="panel">

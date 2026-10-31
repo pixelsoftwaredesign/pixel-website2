@@ -1,0 +1,89 @@
+{% extends 'studio/admin_base.html' %}
+{% block title %}Factures — Espace admin{% endblock %}
+{% block admin_title %}🧾 Factures{% endblock %}
+{% block admin_subtitle %}Factures définitives, impressions et suivi des paiements{% endblock %}
+
+{% block admin_content %}
+
+<div class="pxadmin-stats">
+  {% include "studio/admin/_stat.html" with label="Factures" value=stats.total icon="🧾" accent="sky" url="/admin/factures/" %}
+  {% include "studio/admin/_stat.html" with label="Payées" value=stats.payees icon="✅" accent="emerald" url="/admin/factures/?paiement=payee" %}
+  {% include "studio/admin/_stat.html" with label="Impayées" value=stats.impayees icon="⏳" accent="amber" url="/admin/factures/?paiement=impayee" %}
+  {% include "studio/admin/_stat.html" with label="Montant impayé" value=stats.montant_impaye icon="💰" accent="violet" hint="TND" url="/admin/factures/?paiement=impayee" %}
+</div>
+
+<div class="pxadmin-links">
+  <a class="pxadmin-link" href="{% url 'admin_prefactures' %}">
+    <span class="pxadmin-link-icon">📑</span>
+    <span class="pxadmin-link-text"><strong>Préfactures</strong><small>Convertir en facture</small></span>
+  </a>
+  <a class="pxadmin-link" href="{% url 'admin_devis_list' %}">
+    <span class="pxadmin-link-icon">📝</span>
+    <span class="pxadmin-link-text"><strong>Devis</strong><small>Documents d'origine</small></span>
+  </a>
+  <a class="pxadmin-link" href="{% url 'admin_ventes' %}">
+    <span class="pxadmin-link-icon">🏷️</span>
+    <span class="pxadmin-link-text"><strong>Ventes</strong><small>Chiffre d'affaires</small></span>
+  </a>
+  <a class="pxadmin-link" href="{% url 'admin_produits' %}">
+    <span class="pxadmin-link-icon">📦</span>
+    <span class="pxadmin-link-text"><strong>Catalogue produits</strong><small>Prix & stock</small></span>
+  </a>
+</div>
+
+<section class="panel">
+  <div class="panel-head">
+    <div class="panel-head-main">
+      <h2>🧾 Toutes les factures</h2>
+      <span class="panel-sub">{{ stats.total }} document(s) · {{ stats.montant|floatformat:2 }} TND</span>
+    </div>
+    <div class="panel-head-tools">
+      <form class="pxadmin-search" method="get">
+        {% if paiement %}<input type="hidden" name="paiement" value="{{ paiement }}">{% endif %}
+        <input type="search" name="q" value="{{ q }}" placeholder="Numéro, client, email…" aria-label="Rechercher une facture">
+      </form>
+    </div>
+  </div>
+
+  <div class="pxadmin-filters" role="group" aria-label="Filtrer les factures par paiement">
+    <a class="px-pill{% if not paiement %} is-on{% endif %}" href="?{% if q %}q={{ q|urlencode }}{% endif %}">Toutes ({{ stats.total }})</a>
+    <a class="px-pill{% if paiement == 'payee' %} is-on{% endif %}" href="?paiement=payee{% if q %}&q={{ q|urlencode }}{% endif %}">Payées ({{ stats.payees }})</a>
+    <a class="px-pill{% if paiement == 'impayee' %} is-on{% endif %}" href="?paiement=impayee{% if q %}&q={{ q|urlencode }}{% endif %}">Impayées ({{ stats.impayees }})</a>
+  </div>
+
+  <div class="panel-body panel-body--flush">
+    <div class="table-responsive">
+      <table class="pxadmin-table">
+        <thead>
+          <tr><th>Numéro</th><th>Client</th><th>Origine</th><th>Total TTC</th><th>Paiement</th><th>Date</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for f in factures %}
+          <tr data-href="{% url 'admin_facture_detail' f.id %}">
+            <td class="cell-strong"><a href="{% url 'admin_facture_detail' f.id %}">{{ f.numero }}</a></td>
+            <td>{{ f.client_nom }}<br><span class="cell-muted">{{ f.client_email|default:"" }}</span></td>
+            <td class="cell-muted">
+              {% if f.prefacture %}
+              <a href="{% url 'admin_prefacture_detail' f.prefacture.id %}">{{ f.prefacture.numero }}</a>
+              {% if f.prefacture.devis %}<br><a href="{% url 'admin_devis_detail' f.prefacture.devis.id %}">{{ f.prefacture.devis.reference }}</a>{% endif %}
+              {% else %}—{% endif %}
+            </td>
+            <td class="cell-money">{{ f.montant_ttc|floatformat:2 }} <span class="cell-muted">TND</span></td>
+            <td><span class="px-badge px-badge--{% if f.payee %}success{% else %}warn{% endif %}">{% if f.payee %}Payée{% else %}Impayée{% endif %}</span></td>
+            <td class="cell-nowrap cell-muted">{{ f.date_facture|date:"d/m/Y" }}</td>
+            <td class="cell-nowrap">
+              <a class="pxadmin-btn pxadmin-btn--sm" href="{% url 'admin_facture_detail' f.id %}">Ouvrir</a>
+              <a class="pxadmin-btn pxadmin-btn--sm pxadmin-btn--ghost" href="{% url 'admin_facture_print' f.id %}" target="_blank" rel="noopener">🖨️</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7"><div class="pxadmin-empty"><span class="pxadmin-empty-icon">🧾</span><p>Aucune facture pour ce filtre.</p></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% include "studio/admin/_pager.html" with pager=pager %}
+  </div>
+</section>
+
+{% endblock %}

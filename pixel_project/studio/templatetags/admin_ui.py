@@ -77,6 +77,15 @@ DASHBOARDS = [
         'group': 'Métiers',
     },
     {
+        'key': 'factures',
+        'label': 'Factures',
+        'desc': 'Documents & paiements',
+        'icon': '🧾',
+        'url': '/admin/factures/',
+        'roles': ['Commercial', 'Comptable', 'SuperAdmin', 'Admin'],
+        'group': 'Métiers',
+    },
+    {
         'key': 'comptable',
         'label': 'Comptable',
         'desc': 'Commandes & paiements',
@@ -145,7 +154,8 @@ def _nav_counts():
         from django.db.models import F
 
         from studio.models import (
-            CommandeECommerce, Devis, PreFacture, Produit, ProjetContact,
+            CommandeECommerce, Devis, Facture, PreFacture, Produit,
+            ProjetContact,
         )
         commandes = CommandeECommerce.objects.filter(statut='en_attente').count()
         contacts = ProjetContact.objects.filter(a_repondu=False).count()
@@ -156,6 +166,8 @@ def _nav_counts():
             statut__in=['nouveau', 'en_cours']).count()
         counts['prefactures'] = PreFacture.objects.filter(
             statut='brouillon').count()
+        counts['factures'] = Facture.objects.filter(
+            erp_client__isnull=True, payee=False).count()
         counts['produits'] = Produit.objects.filter(
             erp_client__isnull=True, actif=True,
             stock_actuel__lte=F('stock_minimum')).count()

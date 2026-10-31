@@ -3715,7 +3715,8 @@ def api_pixsoftpay_profile_photo(request):
 @staff_required
 def admin_receptions_dashboard(request):
     from .models import (
-        CommandeECommerce, ProjetContact, Candidature, Devis, PreFacture, Vente,
+        CommandeECommerce, ProjetContact, Candidature, Devis, Facture,
+        PreFacture, Vente,
     )
     try:
         total_candidatures = Candidature.objects.count()
@@ -3727,8 +3728,11 @@ def admin_receptions_dashboard(request):
             statut__in=['nouveau', 'en_cours']).count()
         total_ventes = Vente.objects.filter(erp_client__isnull=True).count()
         total_prefactures = PreFacture.objects.count()
+        total_factures = Facture.objects.filter(
+            erp_client__isnull=True).count()
     except Exception:
         total_devis = devis_a_traiter = total_ventes = total_prefactures = 0
+        total_factures = 0
     commandes, commandes_page = _paginate(
         CommandeECommerce.objects.order_by('-date_commande'), 'cpage', request, 10)
     contacts, contacts_page = _paginate(
@@ -3750,6 +3754,7 @@ def admin_receptions_dashboard(request):
         'devis_a_traiter': devis_a_traiter,
         'total_ventes': total_ventes,
         'total_prefactures': total_prefactures,
+        'total_factures': total_factures,
     }
     context = {
         'commandes': commandes,
@@ -3764,7 +3769,7 @@ def admin_receptions_dashboard(request):
 
 @role_required('Commercial', 'SuperAdmin', 'Admin')
 def admin_dashboard_commercial(request):
-    from .models import ProjetContact, Candidature, Devis, Vente
+    from .models import ProjetContact, Candidature, Devis, Facture, Vente
     total_contacts = ProjetContact.objects.count()
     contacts_non_repondus = ProjetContact.objects.filter(a_repondu=False).count()
     contacts_repondus = ProjetContact.objects.filter(a_repondu=True).count()
@@ -3778,8 +3783,11 @@ def admin_dashboard_commercial(request):
             statut__in=['nouveau', 'en_cours']).count()
         devis_acceptes = Devis.objects.filter(statut='accepte').count()
         total_ventes = Vente.objects.filter(erp_client__isnull=True).count()
+        total_factures = Facture.objects.filter(
+            erp_client__isnull=True).count()
     except Exception:
         total_devis = devis_a_traiter = devis_acceptes = total_ventes = 0
+        total_factures = 0
     if total_contacts:
         taux_reponse_label = "%d%% de réponse" % round(contacts_repondus * 100 / total_contacts)
     else:
@@ -3798,13 +3806,14 @@ def admin_dashboard_commercial(request):
         'devis_a_traiter': devis_a_traiter,
         'devis_acceptes': devis_acceptes,
         'total_ventes': total_ventes,
+        'total_factures': total_factures,
     })
 
 
 @role_required('Comptable', 'SuperAdmin', 'Admin')
 def admin_dashboard_comptable(request):
     from django.db.models import F, Sum
-    from .models import CommandeECommerce, PreFacture, Vente
+    from .models import CommandeECommerce, Facture, PreFacture, Vente
     # Statuts considérés comme « confirmés » (au-delà du panier / de l'attente).
     STATUTS_CONFIRMES = ['confirmee', 'preparation', 'expediee', 'livree']
     total_commandes = CommandeECommerce.objects.count()
@@ -3822,8 +3831,14 @@ def admin_dashboard_comptable(request):
         total_prefactures = PreFacture.objects.count()
         prefactures_a_traiter = PreFacture.objects.filter(
             statut='brouillon').count()
+        factures_site = Facture.objects.filter(erp_client__isnull=True)
+        total_factures = factures_site.count()
+        factures_impayees = factures_site.filter(payee=False).count()
+        montant_factures = factures_site.aggregate(
+            s=Sum('montant_ttc'))['s'] or 0
     except Exception:
         total_ventes = montant_ventes = total_prefactures = prefactures_a_traiter = 0
+        total_factures = factures_impayees = montant_factures = 0
     if total_commandes:
         taux_paiement_label = "%d%% confirmées" % round(payees * 100 / total_commandes)
     else:
@@ -3855,6 +3870,9 @@ def admin_dashboard_comptable(request):
         'montant_ventes': montant_ventes,
         'total_prefactures': total_prefactures,
         'prefactures_a_traiter': prefactures_a_traiter,
+        'total_factures': total_factures,
+        'factures_impayees': factures_impayees,
+        'montant_factures': montant_factures,
     })
 
 @role_required('Editeur', 'SuperAdmin', 'Admin')
@@ -3878,7 +3896,7 @@ def admin_dashboard_editeur(request):
 def admin_dashboard_superadmin(request):
     from .models import (
         CommandeECommerce, ProjetContact, Produit, Candidature, Devis,
-        PreFacture, Vente,
+        Facture, PreFacture, Vente,
     )
     commandes, commandes_page = _paginate(
         CommandeECommerce.objects.order_by('-date_commande'), 'page', request, 10)
@@ -3890,8 +3908,10 @@ def admin_dashboard_superadmin(request):
         total_devis = Devis.objects.count()
         total_ventes = Vente.objects.filter(erp_client__isnull=True).count()
         total_prefactures = PreFacture.objects.count()
+        total_factures = Facture.objects.filter(
+            erp_client__isnull=True).count()
     except Exception:
-        total_devis = total_ventes = total_prefactures = 0
+        total_devis = total_ventes = total_prefactures = total_factures = 0
     return render(request, 'studio/admin_dashboard_superadmin.html', {
         'commandes': commandes,
         'commandes_page': commandes_page,
@@ -3903,6 +3923,7 @@ def admin_dashboard_superadmin(request):
         'total_devis': total_devis,
         'total_ventes': total_ventes,
         'total_prefactures': total_prefactures,
+        'total_factures': total_factures,
     })
 
 @role_required('Admin', 'SuperAdmin')

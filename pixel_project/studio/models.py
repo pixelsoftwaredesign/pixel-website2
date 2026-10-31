@@ -704,13 +704,31 @@ class PreFacture(models.Model):
             self.save(update_fields=['montant_ht', 'montant_ttc'])
         return self.montant_ttc
 
-    def convertir_en_facture(self):
+    def convertir_en_facture(self, utilisateur=None):
+        """Crée une facture en copiant les lignes de la préfacture.
+
+        Les lignes sont figées : modifier la préfacture ensuite ne change
+        plus le document facture déjà émis.
+        """
         facture = Facture.objects.create(
             erp_client=None,
             numero=generer_reference('FAC', Facture, 'numero'),
             client_nom=(self.client_nom or '')[:100],
+            client_email=self.client_email,
+            client_adresse=self.client_adresse,
             montant_ht=self.montant_ht, tva=self.tva,
-            montant_ttc=self.montant_ttc)
+            montant_ttc=self.montant_ttc,
+            notes=self.notes,
+            prefacture=self,
+            cree_par=utilisateur)
+        for ligne in self.lignes.all():
+            FactureLigne.objects.create(
+                facture=facture, produit=ligne.produit,
+                designation=ligne.designation, quantite=ligne.quantite,
+                prix_unitaire=ligne.prix_unitaire, remise=ligne.remise,
+                ordre=ligne.ordre)
+        if facture.lignes.exists():
+            facture.recalculer_totaux()
         self.statut = 'convertie'
         self.save(update_fields=['statut'])
         return facture
@@ -833,6 +851,8 @@ class Facture(models.Model):
         verbose_name="Entreprise")
     numero = models.CharField(max_length=50)
     client_nom = models.CharField(max_length=100)
+    client_email = models.EmailField(blank=True, verbose_name="Email")
+    client_adresse = models.TextField(blank=True, verbose_name="Adresse")
     client_matricule = models.CharField(max_length=50, blank=True, verbose_name="Matricule fiscal")
     date_facture = models.DateField(auto_now_add=True)
     montant_ht = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Montant HT (TND)")
@@ -840,11 +860,62 @@ class Facture(models.Model):
     montant_ttc = models.DecimalField(max_digits=12, decimal_places=2, verbose_name="Montant TTC (TND)")
     payee = models.BooleanField(default=False)
     date_paiement = models.DateField(null=True, blank=True)
+    notes = models.TextField(blank=True, verbose_name="Notes / conditions")
+    prefacture = models.OneToOneField(
+        PreFacture, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='facture', verbose_name="Préfacture d'origine")
+    cree_par = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='factures_creees', verbose_name="Créée par")
     created_at = models.DateTimeField(auto_now_add=True)
     class Meta:
         verbose_name = "Facture"; verbose_name_plural = "Factures"; ordering = ['-date_facture']
         unique_together = [('erp_client', 'numero')]
     def __str__(self): return f"Facture {self.numero} - {self.client_nom}"
+
+    def recalculer_totaux(self, save=True):
+        total = sum((ligne.total for ligne in self.lignes.all()), Decimal('0.00'))
+        self.montant_ht = total.quantize(Decimal('0.01'))
+        taux = Decimal('1') + (self.tva or 0) / Decimal('100')
+        self.montant_ttc = (self.montant_ht * taux).quantize(Decimal('0.01'))
+        if save:
+            self.save(update_fields=['montant_ht', 'montant_ttc'])
+        return self.montant_ttc
+
+
+class FactureLigne(models.Model):
+    facture = models.ForeignKey(Facture, on_delete=models.CASCADE, related_name='lignes')
+    produit = models.ForeignKey(
+        Produit, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='lignes_facture')
+    designation = models.CharField(max_length=200, blank=True)
+    quantite = models.PositiveIntegerField(default=1)
+    prix_unitaire = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    remise = models.DecimalField(max_digits=5, decimal_places=2, default=0,
+                                 verbose_name="Remise (%)")
+    ordre = models.PositiveIntegerField(default=0)
+
+    class Meta:
+        verbose_name = "Ligne de facture"
+        verbose_name_plural = "Lignes de facture"
+        ordering = ['ordre', 'id']
+
+    def __str__(self):
+        return self.designation or (self.produit.nom if self.produit else "Ligne")
+
+    def save(self, *args, **kwargs):
+        if self.produit:
+            if not self.designation:
+                self.designation = self.produit.nom
+            if not self.prix_unitaire:
+                self.prix_unitaire = self.produit.prix_vente
+        super().save(*args, **kwargs)
+
+    @property
+    def total(self):
+        base = (self.prix_unitaire or Decimal('0')) * (self.quantite or 0)
+        remise = (self.remise or Decimal('0')) / Decimal('100')
+        return (base * (Decimal('1') - remise)).quantize(Decimal('0.01'))
 
 class DeclarationFiscale(models.Model):
     type_declaration = models.CharField(max_length=50, choices=[('tva','TVA'),('cnss','CNSS'),('irpp','IRPP'),('resultat','Résultat fiscal')])
