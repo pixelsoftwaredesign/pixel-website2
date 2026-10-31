@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views, views_devis
+from . import views, views_catalogue, views_devis
 
 urlpatterns = [
     path('robots.txt', views.robots_txt, name='robots_txt'),
@@ -192,5 +192,10 @@ urlpatterns = [
     path('admin/factures/', views_devis.factures_list, name='admin_factures'),
     path('admin/factures/<int:pk>/', views_devis.facture_detail, name='admin_facture_detail'),
     path('admin/factures/<int:pk>/imprimer/', views_devis.facture_print, name='admin_facture_print'),
-    path('admin/produits/', views_devis.produits_list, name='admin_produits'),
+    path('admin/produits/', views_catalogue.produits_list, name='admin_produits'),
+    path('admin/produits/nouveau/', views_catalogue.produit_create, name='admin_produit_create'),
+    path('admin/produits/categories/', views_catalogue.categories_list, name='admin_categories'),
+    path('admin/produits/fournisseurs/', views_catalogue.fournisseurs_list, name='admin_fournisseurs'),
+    path('admin/produits/<int:pk>/', views_catalogue.produit_detail, name='admin_produit_detail'),
+    path('admin/produits/<int:pk>/modifier/', views_catalogue.produit_edit, name='admin_produit_edit'),
 ]

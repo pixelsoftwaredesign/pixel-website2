@@ -1,0 +1,126 @@
+{% extends 'studio/admin_base.html' %}
+{% block title %}Fournisseurs — Catalogue{% endblock %}
+{% block admin_title %}🚚 Fournisseurs{% endblock %}
+{% block admin_subtitle %}Contacts et coordonnées des fournisseurs du catalogue{% endblock %}
+
+{% block admin_content %}
+
+<div class="pxadmin-stats">
+  {% include "studio/admin/_stat.html" with label="Fournisseurs" value=stats.total icon="🚚" accent="sky" url="/admin/produits/fournisseurs/" %}
+  {% include "studio/admin/_stat.html" with label="Utilisés" value=stats.utilises icon="📦" accent="emerald" hint="Avec des produits" %}
+  {% include "studio/admin/_stat.html" with label="Sans produit" value=stats.vides icon="➖" accent="amber" %}
+</div>
+
+<div class="pxadmin-links">
+  <a class="pxadmin-link" href="{% url 'admin_produits' %}">
+    <span class="pxadmin-link-icon">←</span>
+    <span class="pxadmin-link-text"><strong>Retour au catalogue</strong><small>Tous les produits</small></span>
+  </a>
+  <a class="pxadmin-link" href="{% url 'admin_categories' %}">
+    <span class="pxadmin-link-icon">🗂️</span>
+    <span class="pxadmin-link-text"><strong>Catégories</strong><small>Organisation du catalogue</small></span>
+  </a>
+  {% if peut_gerer %}
+  <a class="pxadmin-link" href="{% url 'admin_produit_create' %}">
+    <span class="pxadmin-link-icon">➕</span>
+    <span class="pxadmin-link-text"><strong>Nouveau produit</strong><small>Créer une fiche</small></span>
+  </a>
+  {% endif %}
+</div>
+
+{% if peut_gerer %}
+<section class="panel">
+  <div class="panel-head">
+    <div class="panel-head-main">
+      <h2>{% if edit_fournisseur %}✏️ Modifier « {{ edit_fournisseur.nom }} »{% else %}➕ Nouveau fournisseur{% endif %}</h2>
+      <span class="panel-sub">Les fournisseurs sont proposés dans la fiche produit.</span>
+    </div>
+    {% if edit_fournisseur %}
+    <div class="panel-head-tools">
+      <a class="pxadmin-btn pxadmin-btn--sm pxadmin-btn--ghost" href="{% url 'admin_fournisseurs' %}">Annuler</a>
+    </div>
+    {% endif %}
+  </div>
+  <form method="post" class="panel-body pxadmin-form">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="{% if edit_fournisseur %}update{% else %}create{% endif %}">
+    {% if edit_fournisseur %}<input type="hidden" name="fournisseur_id" value="{{ edit_fournisseur.id }}">{% endif %}
+    {{ form.non_field_errors }}
+    <div class="pxadmin-form-row">
+      <label class="pxadmin-field">
+        <span>Nom *</span>
+        {{ form.nom }}{{ form.nom.errors }}
+      </label>
+      <label class="pxadmin-field">
+        <span>Contact</span>
+        {{ form.contact }}{{ form.contact.errors }}
+      </label>
+      <label class="pxadmin-field">
+        <span>Téléphone</span>
+        {{ form.telephone }}{{ form.telephone.errors }}
+      </label>
+      <label class="pxadmin-field">
+        <span>Email</span>
+        {{ form.email }}{{ form.email.errors }}
+      </label>
+    </div>
+    <div class="pxadmin-form-row">
+      <label class="pxadmin-field pxadmin-field--full">
+        <span>Adresse</span>
+        {{ form.adresse }}{{ form.adresse.errors }}
+      </label>
+    </div>
+    <div class="devis-actions">
+      <button class="pxadmin-btn pxadmin-btn--accent" type="submit">💾 {% if edit_fournisseur %}Mettre à jour{% else %}Créer le fournisseur{% endif %}</button>
+    </div>
+  </form>
+</section>
+{% endif %}
+
+<section class="panel">
+  <div class="panel-head">
+    <div class="panel-head-main">
+      <h2>🚚 Tous les fournisseurs</h2>
+      <span class="panel-sub">{{ stats.total }} fournisseur(s)</span>
+    </div>
+    <form class="pxadmin-search" method="get">
+      <input type="search" name="q" value="{{ q }}" placeholder="Nom, contact, email…" aria-label="Rechercher un fournisseur">
+    </form>
+  </div>
+  <div class="panel-body panel-body--flush">
+    <div class="table-responsive">
+      <table class="pxadmin-table">
+        <thead>
+          <tr><th>Fournisseur</th><th>Contact</th><th>Coordonnées</th><th>Produits</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for f in fournisseurs %}
+          <tr>
+            <td class="cell-strong">{{ f.nom }}<br><span class="cell-muted">{{ f.adresse|default:""|truncatechars:70 }}</span></td>
+            <td>{{ f.contact|default:"—" }}</td>
+            <td class="cell-muted">{{ f.telephone|default:"—" }}<br>{{ f.email|default:"" }}</td>
+            <td><span class="px-badge px-badge--{% if f.nb_produits %}success{% else %}neutral{% endif %}">{{ f.nb_produits }}</span></td>
+            <td class="cell-nowrap">
+              <a class="pxadmin-btn pxadmin-btn--sm" href="{% url 'admin_produits' %}?q={{ f.nom|urlencode }}">Voir les produits</a>
+              {% if peut_gerer %}
+              <a class="pxadmin-btn pxadmin-btn--sm pxadmin-btn--ghost" href="?edit={{ f.id }}">Modifier</a>
+              <form method="post" style="display:inline" onsubmit="return confirm('Supprimer ce fournisseur ?');">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="fournisseur_id" value="{{ f.id }}">
+                <button class="pxadmin-btn pxadmin-btn--sm pxadmin-btn--danger" type="submit" {% if f.nb_produits %}disabled title="Des produits utilisent ce fournisseur"{% endif %}>Supprimer</button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5"><div class="pxadmin-empty"><span class="pxadmin-empty-icon">🚚</span><p>Aucun fournisseur pour ce filtre.</p></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% include "studio/admin/_pager.html" with pager=pager %}
+  </div>
+</section>
+
+{% endblock %}

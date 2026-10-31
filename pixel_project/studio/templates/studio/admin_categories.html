@@ -1,0 +1,111 @@
+{% extends 'studio/admin_base.html' %}
+{% block title %}Catégories — Catalogue{% endblock %}
+{% block admin_title %}🗂️ Catégories{% endblock %}
+{% block admin_subtitle %}Organisation du catalogue produits du site{% endblock %}
+
+{% block admin_content %}
+
+<div class="pxadmin-stats">
+  {% include "studio/admin/_stat.html" with label="Catégories" value=stats.total icon="🗂️" accent="sky" url="/admin/produits/categories/" %}
+  {% include "studio/admin/_stat.html" with label="Utilisées" value=stats.utilisees icon="📦" accent="emerald" hint="Avec des produits" %}
+  {% include "studio/admin/_stat.html" with label="Vides" value=stats.vides icon="➖" accent="amber" hint="Sans produit" %}
+</div>
+
+<div class="pxadmin-links">
+  <a class="pxadmin-link" href="{% url 'admin_produits' %}">
+    <span class="pxadmin-link-icon">←</span>
+    <span class="pxadmin-link-text"><strong>Retour au catalogue</strong><small>Tous les produits</small></span>
+  </a>
+  <a class="pxadmin-link" href="{% url 'admin_fournisseurs' %}">
+    <span class="pxadmin-link-icon">🚚</span>
+    <span class="pxadmin-link-text"><strong>Fournisseurs</strong><small>Référentiel contacts</small></span>
+  </a>
+  {% if peut_gerer %}
+  <a class="pxadmin-link" href="{% url 'admin_produit_create' %}">
+    <span class="pxadmin-link-icon">➕</span>
+    <span class="pxadmin-link-text"><strong>Nouveau produit</strong><small>Créer une fiche</small></span>
+  </a>
+  {% endif %}
+</div>
+
+{% if peut_gerer %}
+<section class="panel">
+  <div class="panel-head">
+    <div class="panel-head-main">
+      <h2>{% if edit_categorie %}✏️ Modifier « {{ edit_categorie.nom }} »{% else %}➕ Nouvelle catégorie{% endif %}</h2>
+      <span class="panel-sub">Les catégories structurent le catalogue et les filtres produits.</span>
+    </div>
+    {% if edit_categorie %}
+    <div class="panel-head-tools">
+      <a class="pxadmin-btn pxadmin-btn--sm pxadmin-btn--ghost" href="{% url 'admin_categories' %}">Annuler</a>
+    </div>
+    {% endif %}
+  </div>
+  <form method="post" class="panel-body pxadmin-form">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="{% if edit_categorie %}update{% else %}create{% endif %}">
+    {% if edit_categorie %}<input type="hidden" name="categorie_id" value="{{ edit_categorie.id }}">{% endif %}
+    {{ form.non_field_errors }}
+    <div class="pxadmin-form-row">
+      <label class="pxadmin-field">
+        <span>Nom *</span>
+        {{ form.nom }}{{ form.nom.errors }}
+      </label>
+      <label class="pxadmin-field pxadmin-field--full">
+        <span>Description</span>
+        {{ form.description }}{{ form.description.errors }}
+      </label>
+    </div>
+    <div class="devis-actions">
+      <button class="pxadmin-btn pxadmin-btn--accent" type="submit">💾 {% if edit_categorie %}Mettre à jour{% else %}Créer la catégorie{% endif %}</button>
+    </div>
+  </form>
+</section>
+{% endif %}
+
+<section class="panel">
+  <div class="panel-head">
+    <div class="panel-head-main">
+      <h2>🗂️ Toutes les catégories</h2>
+      <span class="panel-sub">{{ stats.total }} catégorie(s)</span>
+    </div>
+    <form class="pxadmin-search" method="get">
+      <input type="search" name="q" value="{{ q }}" placeholder="Nom ou description…" aria-label="Rechercher une catégorie">
+    </form>
+  </div>
+  <div class="panel-body panel-body--flush">
+    <div class="table-responsive">
+      <table class="pxadmin-table">
+        <thead>
+          <tr><th>Catégorie</th><th>Description</th><th>Produits</th><th></th></tr>
+        </thead>
+        <tbody>
+          {% for c in categories %}
+          <tr>
+            <td class="cell-strong">{{ c.nom }}</td>
+            <td class="cell-muted">{{ c.description|default:"—"|truncatechars:100 }}</td>
+            <td><span class="px-badge px-badge--{% if c.nb_produits %}success{% else %}neutral{% endif %}">{{ c.nb_produits }}</span></td>
+            <td class="cell-nowrap">
+              <a class="pxadmin-btn pxadmin-btn--sm" href="{% url 'admin_produits' %}?q={{ c.nom|urlencode }}">Voir les produits</a>
+              {% if peut_gerer %}
+              <a class="pxadmin-btn pxadmin-btn--sm pxadmin-btn--ghost" href="?edit={{ c.id }}">Modifier</a>
+              <form method="post" style="display:inline" onsubmit="return confirm('Supprimer cette catégorie ?');">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="categorie_id" value="{{ c.id }}">
+                <button class="pxadmin-btn pxadmin-btn--sm pxadmin-btn--danger" type="submit" {% if c.nb_produits %}disabled title="Des produits utilisent cette catégorie"{% endif %}>Supprimer</button>
+              </form>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4"><div class="pxadmin-empty"><span class="pxadmin-empty-icon">🗂️</span><p>Aucune catégorie pour ce filtre.</p></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% include "studio/admin/_pager.html" with pager=pager %}
+  </div>
+</section>
+
+{% endblock %}

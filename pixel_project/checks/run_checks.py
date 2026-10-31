@@ -23,6 +23,7 @@ SUITES = [
     'check_admin_pages.py',
     'check_modules.py',
     'check_devis.py',
+    'check_catalogue.py',
 ]
 
 TOTAL_RE = re.compile(r'=== (\d+) OK / (\d+) FAIL ===')

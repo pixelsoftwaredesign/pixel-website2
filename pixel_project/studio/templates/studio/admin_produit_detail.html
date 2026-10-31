@@ -1,0 +1,185 @@
+{% extends 'studio/admin_base.html' %}
+{% block title %}{{ produit.nom }} — Catalogue{% endblock %}
+{% block admin_title %}📦 {{ produit.nom }}{% endblock %}
+{% block admin_subtitle %}{{ produit.categorie.nom|default:"Sans catégorie" }} · {{ produit.prix_vente|floatformat:2 }} TND{% endblock %}
+
+{% block admin_content %}
+
+<div class="pxadmin-stats">
+  {% include "studio/admin/_stat.html" with label="Prix de vente" value=produit.prix_vente|floatformat:2 icon="💰" accent="emerald" hint="TND" %}
+  {% include "studio/admin/_stat.html" with label="Stock actuel" value=produit.stock_actuel icon="📦" accent="sky" hint="Stock minimum" %}
+  {% include "studio/admin/_stat.html" with label="Valeur du stock" value=valeur_stock|floatformat:2 icon="📊" accent="violet" hint="TND" %}
+  {% include "studio/admin/_stat.html" with label="Statut" value=produit.actif|yesno:"Actif,Inactif" icon=produit.actif|yesno:"✅,🗄️" accent=produit.actif|yesno:"emerald,amber" %}
+</div>
+
+<div class="pxadmin-links">
+  <a class="pxadmin-link" href="{% url 'admin_produits' %}">
+    <span class="pxadmin-link-icon">←</span>
+    <span class="pxadmin-link-text"><strong>Retour au catalogue</strong><small>Tous les produits</small></span>
+  </a>
+  <a class="pxadmin-link" href="{% url 'admin_devis_create' %}?produit={{ produit.id }}">
+    <span class="pxadmin-link-icon">📝</span>
+    <span class="pxadmin-link-text"><strong>Nouveau devis</strong><small>Avec ce produit</small></span>
+  </a>
+  {% if peut_gerer %}
+  <a class="pxadmin-link" href="{% url 'admin_produit_edit' produit.id %}">
+    <span class="pxadmin-link-icon">✏️</span>
+    <span class="pxadmin-link-text"><strong>Modifier la fiche</strong><small>Prix, catégorie, statut</small></span>
+  </a>
+  {% endif %}
+  <a class="pxadmin-link" href="{% url 'admin_categories' %}">
+    <span class="pxadmin-link-icon">🗂️</span>
+    <span class="pxadmin-link-text"><strong>Catégories</strong><small>Référentiel produits</small></span>
+  </a>
+  <a class="pxadmin-link" href="{% url 'admin_fournisseurs' %}">
+    <span class="pxadmin-link-icon">🚚</span>
+    <span class="pxadmin-link-text"><strong>Fournisseurs</strong><small>Contacts & adresses</small></span>
+  </a>
+</div>
+
+<div class="pxadmin-grid">
+  <section class="panel">
+    <div class="panel-head">
+      <div class="panel-head-main">
+        <h2>Informations du produit</h2>
+        <span class="panel-sub">Fiche catalogue du site.</span>
+      </div>
+      <div class="panel-head-tools">
+        {% if produit.actif %}<span class="px-badge px-badge--success">Actif</span>
+        {% else %}<span class="px-badge px-badge--neutral">Inactif</span>{% endif %}
+      </div>
+    </div>
+    <div class="panel-body pxadmin-form">
+      <div class="pxadmin-form-row">
+        <div class="pxadmin-field">
+          <span>Catégorie</span>
+          <strong>{{ produit.categorie.nom|default:"—" }}</strong>
+        </div>
+        <div class="pxadmin-field">
+          <span>Fournisseur</span>
+          <strong>{{ produit.fournisseur.nom|default:"—" }}</strong>
+        </div>
+        <div class="pxadmin-field">
+          <span>Code-barres</span>
+          <strong class="cell-mono">{{ produit.code_barre|default:"—" }}</strong>
+        </div>
+      </div>
+      <div class="pxadmin-form-row">
+        <div class="pxadmin-field">
+          <span>Prix d'achat</span>
+          <strong>{{ produit.prix_achat|floatformat:2 }} TND</strong>
+        </div>
+        <div class="pxadmin-field">
+          <span>Prix de vente</span>
+          <strong>{{ produit.prix_vente|floatformat:2 }} TND</strong>
+        </div>
+        <div class="pxadmin-field">
+          <span>Stock minimum</span>
+          <strong>{{ produit.stock_minimum }}</strong>
+        </div>
+      </div>
+      <div class="pxadmin-form-row">
+        <div class="pxadmin-field">
+          <span>Créé le</span>
+          <strong>{{ produit.created_at|date:"d/m/Y H:i" }}</strong>
+        </div>
+        <div class="pxadmin-field">
+          <span>Utilisation</span>
+          <strong>{{ counts.devis }} devis · {{ counts.ventes }} ventes · {{ counts.commandes }} commandes · {{ counts.prefactures }} préfactures · {{ counts.factures }} factures</strong>
+        </div>
+      </div>
+    </div>
+    {% if peut_gerer %}
+    <div class="panel-body devis-actions">
+      <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="statut">
+        <button class="pxadmin-btn {% if produit.actif %}pxadmin-btn--danger{% else %}pxadmin-btn--accent{% endif %}" type="submit" onclick="return confirm('{% if produit.actif %}Archiver ce produit ? Il ne sera plus proposé dans les nouveaux devis.{% else %}Réactiver ce produit ?{% endif %}');">
+          {% if produit.actif %}🗄️ Archiver le produit{% else %}✓ Réactiver le produit{% endif %}
+        </button>
+      </form>
+    </div>
+    {% endif %}
+  </section>
+
+  <section class="panel">
+    <div class="panel-head">
+      <div class="panel-head-main">
+        <h2>Stock</h2>
+        <span class="panel-sub">Mouvements et ajustements d'inventaire.</span>
+      </div>
+      <div class="panel-head-tools">
+        {% if produit.stock_actuel <= produit.stock_minimum %}
+        <span class="px-badge px-badge--warn">Alerte stock</span>
+        {% else %}<span class="px-badge px-badge--success">Stock OK</span>{% endif %}
+      </div>
+    </div>
+    <div class="panel-body">
+      {% if peut_gerer %}
+      <form method="post" class="pxadmin-form">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="stock">
+        <div class="pxadmin-form-row">
+          <label class="pxadmin-field">
+            <span>Type</span>
+            {{ stock_form.type }}{{ stock_form.type.errors }}
+          </label>
+          <label class="pxadmin-field">
+            <span>Quantité</span>
+            {{ stock_form.quantite }}{{ stock_form.quantite.errors }}
+          </label>
+        </div>
+        <div class="pxadmin-form-row">
+          <label class="pxadmin-field">
+            <span>Référence</span>
+            {{ stock_form.reference }}{{ stock_form.reference.errors }}
+          </label>
+          <label class="pxadmin-field pxadmin-field--full">
+            <span>Notes</span>
+            {{ stock_form.notes }}{{ stock_form.notes.errors }}
+          </label>
+        </div>
+        <p class="pxadmin-hint">{{ stock_form.quantite.help_text }}</p>
+        <button class="pxadmin-btn pxadmin-btn--accent" type="submit">Enregistrer le mouvement</button>
+      </form>
+      {% else %}
+      <p class="pxadmin-hint">La modification du stock est réservée aux rôles Admin et SuperAdmin.</p>
+      {% endif %}
+    </div>
+  </section>
+</div>
+
+<section class="panel">
+  <div class="panel-head">
+    <div class="panel-head-main">
+      <h2>Historique des mouvements</h2>
+      <span class="panel-sub">25 derniers mouvements de ce produit.</span>
+    </div>
+  </div>
+  <div class="panel-body panel-body--flush">
+    <div class="table-responsive">
+      <table class="pxadmin-table">
+        <thead>
+          <tr><th>Date</th><th>Type</th><th>Quantité</th><th>Stock avant</th><th>Stock après</th><th>Référence</th><th>Par</th></tr>
+        </thead>
+        <tbody>
+          {% for m in mouvements %}
+          <tr>
+            <td class="cell-nowrap cell-muted">{{ m.date_mouvement|date:"d/m/Y H:i" }}</td>
+            <td><span class="px-badge px-badge--{% if m.type == 'entree' or m.type == 'retour' %}success{% elif m.type == 'sortie' %}danger{% else %}info{% endif %}">{{ m.get_type_display }}</span></td>
+            <td class="cell-money">{{ m.quantite }}</td>
+            <td class="cell-money">{{ m.stock_avant }}</td>
+            <td class="cell-money">{{ m.stock_apres }}</td>
+            <td class="cell-muted">{{ m.reference|default:"—" }}{% if m.notes %}<br><small>{{ m.notes }}</small>{% endif %}</td>
+            <td class="cell-muted">{{ m.cree_par|default:"—" }}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7"><div class="pxadmin-empty"><span class="pxadmin-empty-icon">📦</span><p>Aucun mouvement de stock enregistré.</p></div></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

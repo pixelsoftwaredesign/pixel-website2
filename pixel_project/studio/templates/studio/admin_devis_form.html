@@ -170,7 +170,7 @@
           <small>{{ p.prix_vente|floatformat:2 }} TND · stock {{ p.stock_actuel }}</small>
         </button>
         {% empty %}
-        <p class="pxadmin-hint">Aucun produit actif. Ajoutez des produits dans l'administration Django.</p>
+        <p class="pxadmin-hint">Aucun produit actif. Ajoutez des produits dans le catalogue.</p>
         {% endfor %}
       </div>
       <a class="pxadmin-btn pxadmin-btn--sm pxadmin-btn--ghost" href="{% url 'admin_produits' %}">Gérer le catalogue ↗</a>

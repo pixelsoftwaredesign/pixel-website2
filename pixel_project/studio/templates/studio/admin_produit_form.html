@@ -1,0 +1,113 @@
+{% extends 'studio/admin_base.html' %}
+{% block title %}{% if mode == 'create' %}Nouveau produit{% else %}Modifier {{ produit.nom }}{% endif %} — Espace admin{% endblock %}
+{% block admin_title %}{% if mode == 'create' %}📦 Nouveau produit{% else %}📦 Modifier {{ produit.nom }}{% endif %}{% endblock %}
+{% block admin_subtitle %}{% if mode == 'create' %}Créer une fiche du catalogue du site{% else %}Mettre à jour les informations du produit{% endif %}{% endblock %}
+
+{% block admin_content %}
+
+<div class="pxadmin-grid">
+  <form method="post" class="panel" id="produit-form">
+    {% csrf_token %}
+    <div class="panel-head">
+      <div class="panel-head-main">
+        <h2>Informations du produit</h2>
+        <span class="panel-sub">Le produit sera disponible dans les devis, ventes et préfactures.</span>
+      </div>
+    </div>
+
+    <div class="panel-body pxadmin-form">
+      {{ form.non_field_errors }}
+      <div class="pxadmin-form-row">
+        <label class="pxadmin-field pxadmin-field--full">
+          <span>Nom du produit *</span>
+          {{ form.nom }}{{ form.nom.errors }}
+        </label>
+      </div>
+      <div class="pxadmin-form-row">
+        <label class="pxadmin-field">
+          <span>Catégorie</span>
+          {{ form.categorie }}{{ form.categorie.errors }}
+        </label>
+        <label class="pxadmin-field">
+          <span>Fournisseur</span>
+          {{ form.fournisseur }}{{ form.fournisseur.errors }}
+        </label>
+        <label class="pxadmin-field">
+          <span>Code-barres</span>
+          {{ form.code_barre }}{{ form.code_barre.errors }}
+        </label>
+      </div>
+      <div class="pxadmin-form-row">
+        <label class="pxadmin-field">
+          <span>Prix d'achat (TND) *</span>
+          {{ form.prix_achat }}{{ form.prix_achat.errors }}
+        </label>
+        <label class="pxadmin-field">
+          <span>Prix de vente (TND) *</span>
+          {{ form.prix_vente }}{{ form.prix_vente.errors }}
+        </label>
+        <label class="pxadmin-field">
+          <span>Stock minimum *</span>
+          {{ form.stock_minimum }}{{ form.stock_minimum.errors }}
+        </label>
+      </div>
+      {% if mode == 'create' %}
+      <div class="pxadmin-form-row">
+        <label class="pxadmin-field">
+          <span>Stock initial</span>
+          {{ form.stock_initial }}{{ form.stock_initial.errors }}
+          <small class="pxadmin-hint">Un mouvement d'entrée « Stock initial » sera enregistré.</small>
+        </label>
+      </div>
+      {% else %}
+      <div class="pxadmin-form-row">
+        <div class="pxadmin-field pxadmin-field--full">
+          <span>Stock actuel</span>
+          <p><strong>{{ produit.stock_actuel }}</strong> unité(s) · minimum {{ produit.stock_minimum }}</p>
+          <small class="pxadmin-hint">Le stock se modifie depuis la fiche produit, via les mouvements de stock.</small>
+        </div>
+      </div>
+      {% endif %}
+      <div class="pxadmin-form-row">
+        <label class="pxadmin-field">
+          <span>Statut</span>
+          <span class="pxadmin-checkline">{{ form.actif }} Produit actif</span>
+          {{ form.actif.errors }}
+        </label>
+      </div>
+    </div>
+
+    <div class="panel-body devis-actions">
+      <button class="pxadmin-btn pxadmin-btn--accent" type="submit">💾 Enregistrer</button>
+      <a class="pxadmin-btn pxadmin-btn--ghost" href="{% if mode == 'edit' %}{% url 'admin_produit_detail' produit.id %}{% else %}{% url 'admin_produits' %}{% endif %}">← Annuler</a>
+    </div>
+  </form>
+
+  <aside class="panel">
+    <div class="panel-head">
+      <div class="panel-head-main">
+        <h2>Référentiels</h2>
+        <span class="panel-sub">Organisez le catalogue avant de créer les produits.</span>
+      </div>
+    </div>
+    <div class="panel-body">
+      <p class="pxadmin-hint">{{ categories }} catégorie(s) et {{ fournisseurs }} fournisseur(s) disponibles.</p>
+      <div class="pxadmin-links pxadmin-links--stack">
+        <a class="pxadmin-link" href="{% url 'admin_categories' %}">
+          <span class="pxadmin-link-icon">🗂️</span>
+          <span class="pxadmin-link-text"><strong>Gérer les catégories</strong><small>Créer ou modifier</small></span>
+        </a>
+        <a class="pxadmin-link" href="{% url 'admin_fournisseurs' %}">
+          <span class="pxadmin-link-icon">🚚</span>
+          <span class="pxadmin-link-text"><strong>Gérer les fournisseurs</strong><small>Contacts et adresses</small></span>
+        </a>
+        <a class="pxadmin-link" href="{% url 'admin_produits' %}">
+          <span class="pxadmin-link-icon">📦</span>
+          <span class="pxadmin-link-text"><strong>Retour au catalogue</strong><small>Tous les produits</small></span>
+        </a>
+      </div>
+    </div>
+  </aside>
+</div>
+
+{% endblock %}

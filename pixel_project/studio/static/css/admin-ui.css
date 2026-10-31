@@ -378,6 +378,7 @@ a.stat-card:focus-visible { outline-offset: 3px; }
 .pxadmin-link .pxadmin-link-text { display: flex; flex-direction: column; line-height: 1.25; min-width: 0; }
 .pxadmin-link .pxadmin-link-text strong { font-size: .9rem; font-weight: 600; }
 .pxadmin-link .pxadmin-link-text small { color: var(--px-muted); font-size: .74rem; }
+.pxadmin-links--stack { grid-template-columns: 1fr; }
 
 /* ── Bandeau d'info ──────────────────────────────────────── */
 .pxadmin-note {
@@ -505,6 +506,8 @@ a.stat-card:focus-visible { outline-offset: 3px; }
 }
 .errorlist.nonfield { margin-bottom: 8px; }
 .pxadmin-field--full { flex: 1 1 100%; }
+.pxadmin-checkline { display: inline-flex; align-items: center; gap: 8px; color: var(--px-text); font-size: .84rem; }
+.pxadmin-checkline input[type="checkbox"] { width: auto; min-width: 0; accent-color: var(--px-accent, #38bdf8); }
 
 /* ── Devis / préfactures ─────────────────────────────────── */
 .devis-layout {

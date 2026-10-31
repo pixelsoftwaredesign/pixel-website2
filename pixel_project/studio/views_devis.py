@@ -651,34 +651,3 @@ def facture_print(request, pk):
         'tva_montant': facture.montant_ttc - facture.montant_ht,
         'societe': _societe(),
     })
-
-
-@role_required(*ADMIN_ROLES)
-def produits_list(request):
-    qs = Produit.objects.filter(
-        erp_client__isnull=True).select_related('categorie').order_by('nom')
-    q = (request.GET.get('q') or '').strip()
-    if q:
-        qs = qs.filter(
-            Q(nom__icontains=q) | Q(categorie__nom__icontains=q) |
-            Q(code_barre__icontains=q))
-    actif = (request.GET.get('actif') or '').strip()
-    if actif == '1':
-        qs = qs.filter(actif=True)
-    elif actif == '0':
-        qs = qs.filter(actif=False)
-    produits, pager = _paginate(qs, 'page', request, 20)
-    return render(request, 'studio/admin_produits.html', {
-        'produits': produits,
-        'pager': pager,
-        'q': q,
-        'actif': actif,
-        'stats': {
-            'total': Produit.objects.filter(erp_client__isnull=True).count(),
-            'actifs': Produit.objects.filter(
-                actif=True, erp_client__isnull=True).count(),
-            'alertes': Produit.objects.filter(
-                actif=True, erp_client__isnull=True,
-                stock_actuel__lte=F('stock_minimum')).count(),
-        },
-    })
