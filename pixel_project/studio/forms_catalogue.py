@@ -50,6 +50,9 @@ class ProduitForm(forms.ModelForm):
             erp_client__isnull=True).order_by('nom')
         self.fields['fournisseur'].queryset = Fournisseur.objects.filter(
             erp_client__isnull=True).order_by('nom')
+        if not self.instance.pk:
+            self.fields['actif'].initial = True
+            self.fields['stock_minimum'].initial = 5
 
     def clean_nom(self):
         nom = (self.cleaned_data.get('nom') or '').strip()
