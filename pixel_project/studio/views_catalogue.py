@@ -76,7 +76,8 @@ def _contexte_produit(produit, user, stock_form=None):
         'produit': produit,
         'stock_form': stock_form or MouvementStockForm(),
         'mouvements': produit.mouvements.order_by('-date_mouvement')[:25],
-        'valeur_stock': produit.prix_vente * produit.stock_actuel,
+        'valeur_stock': (
+            0 if produit.est_service else produit.prix_vente * produit.stock_actuel),
         'counts': {
             'devis': produit.lignes_devis.count(),
             'ventes': produit.ventes.count(),
@@ -106,7 +107,7 @@ def produits_list(request):
         actif = ''
     produits, pager = _paginate(qs, 'page', request, 20)
     site = Produit.objects.filter(erp_client__isnull=True)
-    valeur_stock = site.aggregate(
+    valeur_stock = site.filter(est_service=False).aggregate(
         total=Sum(F('prix_vente') * F('stock_actuel')))['total'] or 0
     return render(request, 'studio/admin_produits.html', {
         'produits': produits,
@@ -118,7 +119,8 @@ def produits_list(request):
             'total': site.count(),
             'actifs': site.filter(actif=True).count(),
             'alertes': site.filter(
-                actif=True, stock_actuel__lte=F('stock_minimum')).count(),
+                actif=True, est_service=False,
+                stock_actuel__lte=F('stock_minimum')).count(),
             'valeur_stock': valeur_stock,
             'categories': Categorie.objects.filter(
                 erp_client__isnull=True).count(),

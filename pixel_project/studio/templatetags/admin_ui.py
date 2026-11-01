@@ -169,7 +169,7 @@ def _nav_counts():
         counts['factures'] = Facture.objects.filter(
             erp_client__isnull=True, payee=False).count()
         counts['produits'] = Produit.objects.filter(
-            erp_client__isnull=True, actif=True,
+            erp_client__isnull=True, actif=True, est_service=False,
             stock_actuel__lte=F('stock_minimum')).count()
     except Exception:
         return {}

@@ -55,9 +55,13 @@
 <div class="ecat">{{ p.categorie.nom|default:"Non catégorisé" }}</div>
 <div class="enom">{{ p.nom }}</div>
 <div class="eprix">{{ p.prix_vente }} TND</div>
+{% if p.est_service %}
+<div class="estock service">Service · licence</div>
+{% else %}
 <div class="estock {% if p.stock_actuel <= 0 %}rupture{% elif p.stock_actuel <= p.stock_minimum %}alert{% endif %}">
 {% if p.stock_actuel <= 0 %}Rupture de stock{% else %}{{ p.stock_actuel }} en stock{% endif %}
 </div>
+{% endif %}
 <a href="/ecommerce/ajouter/{{ p.id }}/" class="btn-s">Ajouter au panier →</a>
 </div>
 {% empty %}

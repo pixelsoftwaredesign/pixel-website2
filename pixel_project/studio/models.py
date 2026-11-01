@@ -584,6 +584,9 @@ class Produit(models.Model):
     prix_vente = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name="Prix de vente (TND)")
     stock_actuel = models.IntegerField(default=0)
     stock_minimum = models.IntegerField(default=5)
+    est_service = models.BooleanField(
+        default=False,
+        verbose_name="Service / logiciel sans gestion de stock")
     code_barre = models.CharField(max_length=50, blank=True)
     actif = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)

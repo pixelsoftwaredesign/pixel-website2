@@ -440,7 +440,7 @@ check('nav : factures actives sur une sous-page', actifs_facture == [True],
       actifs_facture)
 
 alertes_site = Produit.objects.filter(
-    erp_client__isnull=True, actif=True,
+    erp_client__isnull=True, actif=True, est_service=False,
     stock_actuel__lte=F('stock_minimum')).count()
 badges_produits = [i['count'] for g in groupes for i in g['items']
                    if i['url'] == '/admin/produits/']

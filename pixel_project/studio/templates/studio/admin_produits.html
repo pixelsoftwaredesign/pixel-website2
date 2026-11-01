@@ -72,7 +72,9 @@
             <td class="cell-muted">{{ p.categorie.nom|default:"—" }}</td>
             <td class="cell-money">{{ p.prix_vente|floatformat:2 }} <span class="cell-muted">TND</span></td>
             <td>
-              {% if p.stock_actuel <= p.stock_minimum %}
+              {% if p.est_service %}
+              <span class="px-badge px-badge--info">Service</span>
+              {% elif p.stock_actuel <= p.stock_minimum %}
               <span class="px-badge px-badge--warn">{{ p.stock_actuel }} / min {{ p.stock_minimum }}</span>
               {% else %}
               <span class="cell-money">{{ p.stock_actuel }}</span>

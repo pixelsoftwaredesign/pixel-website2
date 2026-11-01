@@ -7,8 +7,16 @@
 
 <div class="pxadmin-stats">
   {% include "studio/admin/_stat.html" with label="Prix de vente" value=produit.prix_vente|floatformat:2 icon="💰" accent="emerald" hint="TND" %}
+  {% if produit.est_service %}
+  {% include "studio/admin/_stat.html" with label="Stock" value="Service" icon="🧩" accent="violet" hint="Sans gestion de stock" %}
+  {% else %}
   {% include "studio/admin/_stat.html" with label="Stock actuel" value=produit.stock_actuel icon="📦" accent="sky" hint="Stock minimum" %}
+  {% endif %}
+  {% if produit.est_service %}
+  {% include "studio/admin/_stat.html" with label="Valeur du stock" value="0.00" icon="📊" accent="violet" hint="TND" %}
+  {% else %}
   {% include "studio/admin/_stat.html" with label="Valeur du stock" value=valeur_stock|floatformat:2 icon="📊" accent="violet" hint="TND" %}
+  {% endif %}
   {% include "studio/admin/_stat.html" with label="Statut" value=produit.actif|yesno:"Actif,Inactif" icon=produit.actif|yesno:"✅,🗄️" accent=produit.actif|yesno:"emerald,amber" %}
 </div>
 
@@ -109,13 +117,17 @@
         <span class="panel-sub">Mouvements et ajustements d'inventaire.</span>
       </div>
       <div class="panel-head-tools">
-        {% if produit.stock_actuel <= produit.stock_minimum %}
+        {% if produit.est_service %}
+        <span class="px-badge px-badge--info">Service</span>
+        {% elif produit.stock_actuel <= produit.stock_minimum %}
         <span class="px-badge px-badge--warn">Alerte stock</span>
         {% else %}<span class="px-badge px-badge--success">Stock OK</span>{% endif %}
       </div>
     </div>
     <div class="panel-body">
-      {% if peut_gerer %}
+      {% if produit.est_service %}
+      <p class="pxadmin-hint">Ce produit est un service : aucun mouvement de stock n'est géré.</p>
+      {% elif peut_gerer %}
       <form method="post" class="pxadmin-form">
         {% csrf_token %}
         <input type="hidden" name="action" value="stock">

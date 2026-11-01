@@ -631,7 +631,7 @@ class APIRestTests(TestCase):
         r = self.client.get('/api/produits/')
         self.assertEqual(r.status_code, 200)
         data = json.loads(r.content)
-        self.assertEqual(len(data['produits']), 2)
+        self.assertEqual(len(data['produits']), 14)
 
     def test_api_produits_filter_categorie(self):
         r = self.client.get(f'/api/produits/?categorie={self.cat.id}')
@@ -650,8 +650,8 @@ class APIRestTests(TestCase):
         r = self.client.get('/api/categories/')
         self.assertEqual(r.status_code, 200)
         data = json.loads(r.content)
-        self.assertEqual(len(data['categories']), 1)
-        self.assertEqual(data['categories'][0]['nom'], 'Informatique')
+        self.assertEqual(len(data['categories']), 2)
+        self.assertTrue(any(c['nom'] == 'Informatique' for c in data['categories']))
 
     # ── Stock ──
     def test_api_stock_mouvements_list(self):

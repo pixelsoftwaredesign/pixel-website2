@@ -26,7 +26,7 @@ class ProduitForm(forms.ModelForm):
         model = Produit
         fields = [
             'nom', 'categorie', 'fournisseur', 'prix_achat', 'prix_vente',
-            'stock_minimum', 'code_barre', 'actif',
+            'stock_minimum', 'code_barre', 'est_service', 'actif',
         ]
         widgets = {
             'nom': forms.TextInput(attrs=INPUT),
@@ -38,6 +38,7 @@ class ProduitForm(forms.ModelForm):
                 **INPUT, 'min': '0', 'step': '0.01'}),
             'stock_minimum': forms.NumberInput(attrs={
                 **INPUT, 'min': '0', 'step': '1'}),
+            'est_service': forms.CheckboxInput(attrs=CHECKBOX),
             'code_barre': forms.TextInput(attrs=INPUT),
             'actif': forms.CheckboxInput(attrs=CHECKBOX),
         }

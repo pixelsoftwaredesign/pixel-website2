@@ -1631,15 +1631,16 @@ def ecommerce_checkout(request):
                         nom_produit=p.nom, quantite=qte,
                         prix_unitaire=p.prix_vente,
                     )
-                    avant = p.stock_actuel
-                    p.stock_actuel -= qte
-                    p.save(update_fields=['stock_actuel'])
-                    MouvementStock.objects.create(
-                        produit=p, type='sortie', quantite=qte,
-                        stock_avant=avant, stock_apres=p.stock_actuel,
-                        reference=ref, notes='Commande e-commerce',
-                        cree_par='Boutique',
-                    )
+                    if not p.est_service:
+                        avant = p.stock_actuel
+                        p.stock_actuel -= qte
+                        p.save(update_fields=['stock_actuel'])
+                        MouvementStock.objects.create(
+                            produit=p, type='sortie', quantite=qte,
+                            stock_avant=avant, stock_apres=p.stock_actuel,
+                            reference=ref, notes='Commande e-commerce',
+                            cree_par='Boutique',
+                        )
         request.session['panier'] = {}
         notifier_confirmation_commande(commande)
         if methode == 'online':
@@ -1681,11 +1682,12 @@ def ecommerce_succes(request):
 
 @role_required('SuperAdmin', 'Admin')
 def gestion_stock(request):
-    produits = Produit.objects.filter(erp_client__isnull=True)
+    produits = Produit.objects.filter(
+        erp_client__isnull=True, est_service=False)
     mouvements = MouvementStock.objects.filter(
         produit__erp_client__isnull=True).select_related('produit')[:50]
     alerte_stock = Produit.objects.filter(
-        actif=True, erp_client__isnull=True,
+        actif=True, erp_client__isnull=True, est_service=False,
         stock_actuel__lte=models.F('stock_minimum'))
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -1931,7 +1933,7 @@ def dashboard(request):
         'candidatures_nouvelles': Candidature.objects.filter(statut='nouveau').count(),
         'total_candidatures': Candidature.objects.count(),
         'alerte_stock': Produit.objects.filter(
-            actif=True, erp_client__isnull=True,
+            actif=True, erp_client__isnull=True, est_service=False,
             stock_actuel__lte=models.F('stock_minimum')).count(),
         'total_produits_stock': Produit.objects.filter(
             erp_client__isnull=True).count(),
