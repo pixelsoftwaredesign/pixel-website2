@@ -1536,8 +1536,9 @@ def gestion_recrutement(request):
 
 # ─── E‑Commerce & Stock ────────────────────────────────────
 def ecommerce_index(request):
-    categories = Categorie.objects.all()
-    produits = Produit.objects.filter(actif=True).order_by('-created_at')[:50]
+    categories = Categorie.objects.filter(erp_client__isnull=True)
+    produits = Produit.objects.filter(
+        actif=True, erp_client__isnull=True).order_by('-created_at')[:50]
     panier = request.session.get('panier', {})
     nb_articles = sum(panier.values())
     return render(request, 'studio/ecommerce.html', {
@@ -1546,18 +1547,21 @@ def ecommerce_index(request):
     })
 
 def ecommerce_categorie(request, cat_id):
-    cat = get_object_or_404(Categorie, id=cat_id)
-    produits = Produit.objects.filter(categorie=cat, actif=True)
+    cat = get_object_or_404(Categorie, id=cat_id, erp_client__isnull=True)
+    produits = Produit.objects.filter(
+        categorie=cat, actif=True, erp_client__isnull=True)
     panier = request.session.get('panier', {})
     nb_articles = sum(panier.values())
     return render(request, 'studio/ecommerce.html', {
-        'categories': Categorie.objects.all(), 'produits': produits,
-        'categorie_active': cat, 'nb_articles': nb_articles,
+        'categories': Categorie.objects.filter(erp_client__isnull=True),
+        'produits': produits, 'categorie_active': cat,
+        'nb_articles': nb_articles,
     })
 
 def ecommerce_panier(request):
     panier_ids = request.session.get('panier', {})
-    produits = Produit.objects.filter(id__in=panier_ids.keys(), actif=True)
+    produits = Produit.objects.filter(
+        id__in=panier_ids.keys(), actif=True, erp_client__isnull=True)
     items = []
     total = 0
     for p in produits:
@@ -1570,7 +1574,8 @@ def ecommerce_panier(request):
     })
 
 def ecommerce_ajouter_panier(request, prod_id):
-    prod = get_object_or_404(Produit, id=prod_id, actif=True)
+    prod = get_object_or_404(
+        Produit, id=prod_id, actif=True, erp_client__isnull=True)
     panier = request.session.get('panier', {})
     key = str(prod.id)
     panier[key] = panier.get(key, 0) + 1
@@ -1587,7 +1592,11 @@ def ecommerce_checkout(request):
     panier_ids = request.session.get('panier', {})
     if not panier_ids:
         return redirect('ecommerce_index')
-    produits = Produit.objects.filter(id__in=panier_ids.keys(), actif=True)
+    produits = Produit.objects.filter(
+        id__in=panier_ids.keys(), actif=True, erp_client__isnull=True)
+    if not produits.exists():
+        request.session['panier'] = {}
+        return redirect('ecommerce_index')
     if request.method == 'POST':
         nom = request.POST.get('nom', '').strip()
         email = request.POST.get('email', '').strip()
@@ -1606,23 +1615,31 @@ def ecommerce_checkout(request):
         import uuid
         ref = f"EC-{uuid.uuid4().hex[:8].upper()}"
         total_ttc = sum(p.prix_vente * panier_ids.get(str(p.id), 0) for p in produits)
-        commande = CommandeECommerce.objects.create(
-            client_nom=nom, client_email=email, client_tel=tel,
-            client_adresse=adresse, client_ville=ville,
-            client_code_postal=cp, methode_paiement=methode,
-            total_ttc=total_ttc, reference=ref, notes=notes,
-            statut='en_attente',
-        )
-        for p in produits:
-            qte = panier_ids.get(str(p.id), 0)
-            if qte > 0:
-                CommandeECommerceItem.objects.create(
-                    commande=commande, produit=p,
-                    nom_produit=p.nom, quantite=qte,
-                    prix_unitaire=p.prix_vente,
-                )
-                p.stock_actuel -= qte
-                p.save()
+        with db_transaction.atomic():
+            commande = CommandeECommerce.objects.create(
+                client_nom=nom, client_email=email, client_tel=tel,
+                client_adresse=adresse, client_ville=ville,
+                client_code_postal=cp, methode_paiement=methode,
+                total_ttc=total_ttc, reference=ref, notes=notes,
+                statut='en_attente',
+            )
+            for p in produits.select_for_update():
+                qte = panier_ids.get(str(p.id), 0)
+                if qte > 0:
+                    CommandeECommerceItem.objects.create(
+                        commande=commande, produit=p,
+                        nom_produit=p.nom, quantite=qte,
+                        prix_unitaire=p.prix_vente,
+                    )
+                    avant = p.stock_actuel
+                    p.stock_actuel -= qte
+                    p.save(update_fields=['stock_actuel'])
+                    MouvementStock.objects.create(
+                        produit=p, type='sortie', quantite=qte,
+                        stock_avant=avant, stock_apres=p.stock_actuel,
+                        reference=ref, notes='Commande e-commerce',
+                        cree_par='Boutique',
+                    )
         request.session['panier'] = {}
         notifier_confirmation_commande(commande)
         if methode == 'online':
@@ -1662,36 +1679,49 @@ def ecommerce_succes(request):
     commande = get_object_or_404(CommandeECommerce, reference=ref)
     return render(request, 'studio/ecommerce_succes.html', {'commande': commande})
 
-@login_required
+@role_required('SuperAdmin', 'Admin')
 def gestion_stock(request):
-    produits = Produit.objects.all()
-    mouvements = MouvementStock.objects.all()[:50]
-    alerte_stock = Produit.objects.filter(actif=True, stock_actuel__lte=models.F('stock_minimum'))
+    produits = Produit.objects.filter(erp_client__isnull=True)
+    mouvements = MouvementStock.objects.filter(
+        produit__erp_client__isnull=True).select_related('produit')[:50]
+    alerte_stock = Produit.objects.filter(
+        actif=True, erp_client__isnull=True,
+        stock_actuel__lte=models.F('stock_minimum'))
     if request.method == 'POST':
         action = request.POST.get('action')
         if action == 'add_mouvement':
             pid = request.POST.get('produit_id')
             typ = request.POST.get('type')
-            qte = int(request.POST.get('quantite', 0))
+            try:
+                qte = int(request.POST.get('quantite', 0))
+            except (TypeError, ValueError):
+                qte = 0
             notes = request.POST.get('notes', '')
             reference = request.POST.get('reference', '')
-            prod = get_object_or_404(Produit, id=pid)
-            avant = prod.stock_actuel
-            if typ == 'entree':
-                prod.stock_actuel += qte
-            elif typ == 'retour':
-                prod.stock_actuel += qte
-            else:
-                prod.stock_actuel = max(0, prod.stock_actuel - qte)
-            prod.save()
-            MouvementStock.objects.create(
-                produit=prod, type=typ, quantite=qte,
-                stock_avant=avant, stock_apres=prod.stock_actuel,
-                reference=reference, notes=notes,
-            )
+            prod = get_object_or_404(
+                Produit, id=pid, erp_client__isnull=True)
+            if typ not in dict(MouvementStock.TYPES) or qte < 0:
+                return redirect('gestion_stock')
+            with db_transaction.atomic():
+                avant = prod.stock_actuel
+                if typ in ('entree', 'retour'):
+                    prod.stock_actuel += qte
+                elif typ == 'sortie':
+                    prod.stock_actuel = max(0, prod.stock_actuel - qte)
+                else:
+                    prod.stock_actuel = max(0, qte)
+                prod.save(update_fields=['stock_actuel'])
+                MouvementStock.objects.create(
+                    produit=prod, type=typ, quantite=qte,
+                    stock_avant=avant, stock_apres=prod.stock_actuel,
+                    reference=reference, notes=notes,
+                    cree_par=(request.user.get_full_name() or
+                              request.user.username)[:100],
+                )
         elif action == 'edit_produit':
             pid = request.POST.get('produit_id')
-            prod = get_object_or_404(Produit, id=pid)
+            prod = get_object_or_404(
+                Produit, id=pid, erp_client__isnull=True)
             prod.nom = request.POST.get('nom', prod.nom)
             prod.prix_achat = request.POST.get('prix_achat', prod.prix_achat)
             prod.prix_vente = request.POST.get('prix_vente', prod.prix_vente)
@@ -1700,8 +1730,9 @@ def gestion_stock(request):
         return redirect('gestion_stock')
     return render(request, 'studio/ecommerce_stock.html', {
         'produits': produits, 'mouvements': mouvements,
-        'alerte_stock': alerte_stock, 'categories': Categorie.objects.all(),
-        'fournisseurs': Fournisseur.objects.all(),
+        'alerte_stock': alerte_stock,
+        'categories': Categorie.objects.filter(erp_client__isnull=True),
+        'fournisseurs': Fournisseur.objects.filter(erp_client__isnull=True),
     })
 
 @login_required
@@ -1890,7 +1921,8 @@ def api_me(request):
 def dashboard(request):
     from django.db.models import Sum, Count
     stats = {
-        'produits': Produit.objects.filter(actif=True).count(),
+        'produits': Produit.objects.filter(
+            actif=True, erp_client__isnull=True).count(),
         'commandes': CommandeECommerce.objects.count(),
         'ca_total': CommandeECommerce.objects.filter(statut__in=['confirmee','livree','expediee']).aggregate(t=Sum('total_ttc'))['t'] or 0,
         'commandes_en_attente': CommandeECommerce.objects.filter(statut='en_attente').count(),
@@ -1898,8 +1930,11 @@ def dashboard(request):
         'total_souscriptions': SouscriptionClient.objects.count(),
         'candidatures_nouvelles': Candidature.objects.filter(statut='nouveau').count(),
         'total_candidatures': Candidature.objects.count(),
-        'alerte_stock': Produit.objects.filter(actif=True, stock_actuel__lte=models.F('stock_minimum')).count(),
-        'total_produits_stock': Produit.objects.count(),
+        'alerte_stock': Produit.objects.filter(
+            actif=True, erp_client__isnull=True,
+            stock_actuel__lte=models.F('stock_minimum')).count(),
+        'total_produits_stock': Produit.objects.filter(
+            erp_client__isnull=True).count(),
         'utilisateurs': User.objects.count(),
         'revenu_abonnements': Paiement.objects.filter(statut='confirme').aggregate(t=Sum('montant'))['t'] or 0,
     }
@@ -1931,13 +1966,14 @@ def facture_commande(request, cmd_id):
 def api_produits(request, prod_id=None):
     if request.method == 'GET':
         if prod_id:
-            p = get_object_or_404(Produit, id=prod_id, actif=True)
+            p = get_object_or_404(
+                Produit, id=prod_id, actif=True, erp_client__isnull=True)
             return JsonResponse({
                 'id': p.id, 'nom': p.nom, 'prix_vente': str(p.prix_vente),
                 'stock': p.stock_actuel, 'categorie': p.categorie.nom if p.categorie else None,
                 'code_barre': p.code_barre,
             })
-        qs = Produit.objects.filter(actif=True)
+        qs = Produit.objects.filter(actif=True, erp_client__isnull=True)
         cat = request.GET.get('categorie')
         if cat: qs = qs.filter(categorie_id=cat)
         data = [{
@@ -1950,14 +1986,16 @@ def api_produits(request, prod_id=None):
 @csrf_exempt
 def api_categories(request):
     if request.method == 'GET':
-        data = [{'id': c.id, 'nom': c.nom, 'description': c.description} for c in Categorie.objects.all()]
+        data = [{
+            'id': c.id, 'nom': c.nom, 'description': c.description,
+        } for c in Categorie.objects.filter(erp_client__isnull=True)]
         return JsonResponse({'categories': data})
     return JsonResponse({"error": "Méthode non autorisée"}, status=405)
 
-@csrf_exempt
 def api_stock_mouvements(request):
     if request.method == 'GET':
-        qs = MouvementStock.objects.all()
+        qs = MouvementStock.objects.filter(
+            produit__erp_client__isnull=True).select_related('produit')
         produit = request.GET.get('produit')
         if produit: qs = qs.filter(produit_id=produit)
         type_f = request.GET.get('type')
@@ -1971,25 +2009,47 @@ def api_stock_mouvements(request):
         } for m in qs]
         return JsonResponse({'mouvements': data})
     if request.method == 'POST':
+        user = request.user
+        autorise = user.is_authenticated and (
+            user.is_superuser or (
+                user.is_staff and
+                user.groups.filter(name__in=['Admin', 'SuperAdmin']).exists()
+            ))
+        if not autorise:
+            return JsonResponse(
+                {"error": "Réservé aux rôles Admin et SuperAdmin."},
+                status=403)
         try:
             body = json.loads(request.body)
-            prod = get_object_or_404(Produit, id=body.get('produit_id'))
             type_mvt = body.get('type', 'ajustement')
+            if type_mvt not in dict(MouvementStock.TYPES):
+                return JsonResponse(
+                    {"error": "Type de mouvement invalide."}, status=400)
             quantite = int(body.get('quantite', 0))
-            avant = prod.stock_actuel
-            if type_mvt == 'entree':
-                prod.stock_actuel += quantite
-            elif type_mvt == 'sortie':
-                prod.stock_actuel = max(0, prod.stock_actuel - quantite)
-            else:
-                prod.stock_actuel = max(0, quantite)
-            prod.save()
-            mvt = MouvementStock.objects.create(
-                produit=prod, type=type_mvt, quantite=quantite,
-                stock_avant=avant, stock_apres=prod.stock_actuel,
-                reference=body.get('reference', ''), notes=body.get('notes', ''),
-                cree_par=body.get('cree_par', ''),
-            )
+            if quantite < 0:
+                return JsonResponse(
+                    {"error": "La quantité ne peut pas être négative."},
+                    status=400)
+            with db_transaction.atomic():
+                prod = get_object_or_404(
+                    Produit.objects.select_for_update(),
+                    id=body.get('produit_id'), erp_client__isnull=True)
+                avant = prod.stock_actuel
+                if type_mvt in ('entree', 'retour'):
+                    prod.stock_actuel += quantite
+                elif type_mvt == 'sortie':
+                    prod.stock_actuel = max(0, prod.stock_actuel - quantite)
+                else:
+                    prod.stock_actuel = max(0, quantite)
+                prod.save(update_fields=['stock_actuel'])
+                mvt = MouvementStock.objects.create(
+                    produit=prod, type=type_mvt, quantite=quantite,
+                    stock_avant=avant, stock_apres=prod.stock_actuel,
+                    reference=body.get('reference', ''),
+                    notes=body.get('notes', ''),
+                    cree_par=(request.user.get_full_name() or
+                              request.user.username)[:100],
+                )
             return JsonResponse({'status': 'ok', 'id': mvt.id}, status=201)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
@@ -2046,7 +2106,9 @@ def api_commande_statut(request, cmd_id):
 def api_panier(request):
     panier = request.session.get('panier', {})
     if request.method == 'GET':
-        produits = Produit.objects.filter(id__in=[int(k) for k in panier.keys() if panier[k] > 0])
+        produits = Produit.objects.filter(
+            id__in=[int(k) for k in panier.keys() if panier[k] > 0],
+            erp_client__isnull=True)
         items = []
         total = 0
         for p in produits:
@@ -2065,7 +2127,8 @@ def api_panier(request):
 @csrf_exempt
 def api_panier_ajouter(request, prod_id):
     if request.method == 'POST':
-        prod = get_object_or_404(Produit, id=prod_id, actif=True)
+        prod = get_object_or_404(
+            Produit, id=prod_id, actif=True, erp_client__isnull=True)
         panier = request.session.get('panier', {})
         key = str(prod.id)
         panier[key] = panier.get(key, 0) + 1
@@ -3918,7 +3981,8 @@ def admin_dashboard_superadmin(request):
         'total_users': User.objects.count(),
         'total_commandes': CommandeECommerce.objects.count(),
         'total_contacts': ProjetContact.objects.count(),
-        'total_produits': Produit.objects.count(),
+        'total_produits': Produit.objects.filter(
+            erp_client__isnull=True).count(),
         'total_candidatures': total_candidatures,
         'total_devis': total_devis,
         'total_ventes': total_ventes,

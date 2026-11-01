@@ -297,7 +297,9 @@ class RecrutementTests(TestCase):
 class ECommerceTests(TestCase):
     def setUp(self):
         self.client = Client()
-        self.user = User.objects.create_user(username='ecomadmin', password='ecompass')
+        self.user = User.objects.create_superuser(
+            username='ecomadmin', password='ecompass',
+            email='ecomadmin@test.tn')
         self.cat = Categorie.objects.create(nom='Électronique')
         self.prod = Produit.objects.create(nom='Casque Audio', categorie=self.cat, prix_vente=150, stock_actuel=10, stock_minimum=3)
 
@@ -611,6 +613,9 @@ class VitrinePagesTests(TestCase):
 class APIRestTests(TestCase):
     def setUp(self):
         self.client = Client()
+        self.admin = User.objects.create_superuser(
+            username='apiadmin', password='apipass',
+            email='apiadmin@test.tn')
         self.cat = Categorie.objects.create(nom='Informatique', description='Matériel info')
         self.prod = Produit.objects.create(nom='Clavier Méca', prix_vente=150, stock_actuel=10, categorie=self.cat)
         self.prod2 = Produit.objects.create(nom='Souris', prix_vente=50, stock_actuel=20, categorie=self.cat)
@@ -657,6 +662,7 @@ class APIRestTests(TestCase):
         self.assertEqual(len(data['mouvements']), 1)
 
     def test_api_stock_mouvements_create(self):
+        self.client.force_login(self.admin)
         r = self.client.post('/api/stock/mouvements/', json.dumps({
             'produit_id': self.prod.id, 'type': 'entree', 'quantite': 5,
             'reference': 'BON-001', 'notes': 'Achat fournisseur', 'cree_par': 'Admin',

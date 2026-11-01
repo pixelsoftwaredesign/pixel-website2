@@ -5,9 +5,12 @@ Parcours vérifié :
 - création, modification et archivage d'un produit ;
 - mouvements de stock (entrée, sortie, ajustement) et historique ;
 - création/modification/suppression des catégories et fournisseurs ;
-- cloisonnement des produits, catégories et fournisseurs GestiActiv.
+- cloisonnement des produits, catégories et fournisseurs GestiActiv ;
+- isolation du catalogue sur la boutique publique, les API et l'ancienne page
+  de stock (lecture et écriture réservées aux rôles autorisés).
 """
 import atexit
+import json
 import time
 from decimal import Decimal
 
@@ -20,7 +23,7 @@ from django.test import Client
 
 from studio.forms_catalogue import ProduitForm
 from studio.models import (
-    Categorie, ERPClient, Fournisseur, Produit,
+    Categorie, CommandeECommerce, ERPClient, Fournisseur, Produit,
 )
 
 for name in ['SuperAdmin', 'Admin', 'Commercial', 'Comptable', 'Editeur']:
@@ -75,6 +78,8 @@ tenant_product = Produit.objects.create(
 
 def cleanup():
     try:
+        CommandeECommerce.objects.filter(
+            client_email__startswith='chk_cat_boutique_').delete()
         Produit.objects.filter(nom__startswith='CHK CAT Produit').delete()
         Categorie.objects.filter(nom__startswith='CHK CAT').delete()
         Fournisseur.objects.filter(nom__startswith='CHK CAT').delete()
@@ -417,7 +422,181 @@ check('commercial : fournisseur non créé',
       not Fournisseur.objects.filter(
           nom='CHK CAT Sup Interdit ' + TAG).exists())
 
-print('\n== 7. Cohérence finale ==')
+print('\n== 7. Isolation boutique, API et stock hérité ==')
+site_product = Produit.objects.create(
+    nom='CHK CAT Produit Site ' + TAG, categorie=site_cat,
+    fournisseur=site_supplier, prix_vente=Decimal('42.00'),
+    stock_actuel=5, stock_minimum=1, actif=True)
+
+r = anon.get('/ecommerce/')
+check('boutique publique -> 200', r.status_code == 200, r.status_code)
+body = r.content.decode()
+check('boutique : produit du site visible', site_product.nom in body)
+check('boutique : produit tenant absent', tenant_product.nom not in body)
+check('boutique : catégorie tenant absente', tenant_cat.nom not in body)
+
+r = anon.get('/ecommerce/categorie/%d/' % tenant_cat.id)
+check('boutique : catégorie tenant -> 404', r.status_code == 404, r.status_code)
+r = anon.get('/ecommerce/categorie/%d/' % site_cat.id)
+check('boutique : catégorie site -> 200', r.status_code == 200, r.status_code)
+check('boutique : produit de la catégorie site',
+      site_product.nom in r.content.decode())
+
+r = anon.get('/ecommerce/ajouter/%d/' % tenant_product.id)
+check('boutique : ajout produit tenant -> 404', r.status_code == 404, r.status_code)
+
+session = anon.session
+session['panier'] = {str(tenant_product.id): 2}
+session.save()
+r = anon.get('/ecommerce/panier/')
+check('panier public -> 200', r.status_code == 200, r.status_code)
+check('panier public : produit tenant absent',
+      tenant_product.nom not in r.content.decode())
+r = anon.get('/ecommerce/checkout/')
+check('checkout : panier tenant ignoré -> 302', r.status_code == 302, r.status_code)
+session = anon.session
+session['panier'] = {}
+session.save()
+
+r = anon.get('/api/produits/')
+check('api produits -> 200', r.status_code == 200, r.status_code)
+data = json.loads(r.content.decode())
+ids = {p['id'] for p in data.get('produits', [])}
+check('api produits : produit du site visible', site_product.id in ids)
+check('api produits : produit tenant absent', tenant_product.id not in ids)
+r = anon.get('/api/produits/%d/' % tenant_product.id)
+check('api produit tenant -> 404', r.status_code == 404, r.status_code)
+
+r = anon.get('/api/categories/')
+check('api catégories -> 200', r.status_code == 200, r.status_code)
+data = json.loads(r.content.decode())
+ids = {cat['id'] for cat in data.get('categories', [])}
+check('api catégories : catégorie du site visible', site_cat.id in ids)
+check('api catégories : catégorie tenant absente', tenant_cat.id not in ids)
+
+r = anon.get('/api/stock/mouvements/')
+check('api mouvements -> 200', r.status_code == 200, r.status_code)
+data = json.loads(r.content.decode())
+check('api mouvements : aucun mouvement tenant',
+      all(m['produit_id'] != tenant_product.id
+          for m in data.get('mouvements', [])))
+
+payload = json.dumps({
+    'produit_id': tenant_product.id, 'type': 'entree', 'quantite': 2,
+})
+avant = tenant_product.stock_actuel
+r = anon.post('/api/stock/mouvements/', data=payload,
+              content_type='application/json')
+check('api stock anonyme -> 403', r.status_code == 403, r.status_code)
+tenant_product.refresh_from_db()
+check('api stock anonyme : stock tenant inchangé',
+      tenant_product.stock_actuel == avant)
+
+payload = json.dumps({
+    'produit_id': site_product.id, 'type': 'entree', 'quantite': 1,
+})
+avant = site_product.stock_actuel
+r = cc.post('/api/stock/mouvements/', data=payload,
+            content_type='application/json')
+check('api stock commercial -> 403', r.status_code == 403, r.status_code)
+site_product.refresh_from_db()
+check('api stock commercial : stock inchangé',
+      site_product.stock_actuel == avant)
+
+payload = json.dumps({
+    'produit_id': site_product.id, 'type': 'entree', 'quantite': 2,
+    'reference': 'API-' + TAG,
+})
+r = c.post('/api/stock/mouvements/', data=payload,
+           content_type='application/json')
+check('api stock admin -> 201', r.status_code == 201, r.status_code)
+site_product.refresh_from_db()
+check('api stock : stock site 7', site_product.stock_actuel == 7)
+check('api stock : mouvement historisé',
+      site_product.mouvements.filter(reference='API-' + TAG).exists())
+
+payload = json.dumps({
+    'produit_id': tenant_product.id, 'type': 'entree', 'quantite': 2,
+})
+avant = tenant_product.stock_actuel
+r = c.post('/api/stock/mouvements/', data=payload,
+           content_type='application/json')
+check('api stock tenant -> 400', r.status_code == 400, r.status_code)
+tenant_product.refresh_from_db()
+check('api stock tenant : stock inchangé',
+      tenant_product.stock_actuel == avant)
+
+check('stock hérité : anonyme -> 302',
+      anon.get('/ecommerce/stock/').status_code == 302)
+check('stock hérité : commercial -> 403',
+      cc.get('/ecommerce/stock/').status_code == 403)
+r = c.get('/ecommerce/stock/')
+check('stock hérité : admin -> 200', r.status_code == 200, r.status_code)
+body = r.content.decode()
+check('stock hérité : produit du site visible', site_product.nom in body)
+check('stock hérité : produit tenant absent', tenant_product.nom not in body)
+
+avant = site_product.stock_actuel
+r = cc.post('/ecommerce/stock/', {
+    'action': 'add_mouvement', 'produit_id': site_product.id,
+    'type': 'entree', 'quantite': '1',
+})
+check('stock hérité : commercial interdit -> 403', r.status_code == 403)
+site_product.refresh_from_db()
+check('stock hérité : commercial sans effet',
+      site_product.stock_actuel == avant)
+
+avant = tenant_product.stock_actuel
+r = c.post('/ecommerce/stock/', {
+    'action': 'add_mouvement', 'produit_id': tenant_product.id,
+    'type': 'entree', 'quantite': '1',
+})
+check('stock hérité : produit tenant -> 404', r.status_code == 404, r.status_code)
+tenant_product.refresh_from_db()
+check('stock hérité : stock tenant inchangé',
+      tenant_product.stock_actuel == avant)
+
+r = c.post('/ecommerce/stock/', {
+    'action': 'add_mouvement', 'produit_id': site_product.id,
+    'type': 'entree', 'quantite': '1', 'reference': 'LEGACY-' + TAG,
+})
+check('stock hérité : entrée admin -> 302', r.status_code == 302, r.status_code)
+site_product.refresh_from_db()
+check('stock hérité : stock site 8', site_product.stock_actuel == 8)
+m = site_product.mouvements.filter(reference='LEGACY-' + TAG).first()
+check('stock hérité : mouvement historisé', m is not None)
+if m:
+    check('stock hérité : auteur', m.cree_par == admin_user.username)
+
+print('\n== 8. Commande boutique et stock ==')
+r = anon.get('/ecommerce/ajouter/%d/' % site_product.id)
+check('boutique : ajout panier -> 302', r.status_code == 302, r.status_code)
+r = anon.get('/ecommerce/ajouter/%d/' % site_product.id)
+check('boutique : deuxième ajout -> 302', r.status_code == 302, r.status_code)
+avant = site_product.stock_actuel
+email_boutique = 'chk_cat_boutique_%s@test.tn' % TAG
+r = anon.post('/ecommerce/checkout/', {
+    'nom': 'CHK CAT Client Boutique',
+    'email': email_boutique,
+    'telephone': '+216 00 000 000',
+    'adresse': 'Tunis',
+    'ville': 'Tunis',
+    'code_postal': '1000',
+    'methode_paiement': 'especes',
+    'notes': '',
+})
+check('checkout boutique -> 302', r.status_code == 302, r.status_code)
+commande = CommandeECommerce.objects.filter(
+    client_email=email_boutique).order_by('-id').first()
+check('commande boutique créée', commande is not None)
+site_product.refresh_from_db()
+check('commande boutique : stock décrémenté',
+      site_product.stock_actuel == avant - 2)
+check('commande boutique : mouvement de sortie',
+      bool(commande) and site_product.mouvements.filter(
+          reference=commande.reference, type='sortie', quantite=2).exists())
+
+print('\n== 9. Cohérence finale ==')
 if produit:
     check('produit : mouvements historisés',
           produit.mouvements.count() >= 4, produit.mouvements.count())
