@@ -1,0 +1,97 @@
+{% extends 'studio/espace_base.html' %}
+
+{% block title %}Espace client — Pixel Software Design{% endblock %}
+{% block nav_subtitle %}Espace client{% endblock %}
+{% block kicker %}ESPACE CLIENT{% endblock %}
+{% block heading %}Mon espace <span class="h1-grad">client</span>{% endblock %}
+{% block footer_name %}Espace client{% endblock %}
+
+{% block header_action %}
+  <a class="espace-switch" href="{% url 'espace_entreprise' %}">🏢 Espace entreprise →</a>
+{% endblock %}
+
+{% block tabs %}
+<div class="portail-tabs">
+  <button class="portail-tab active" onclick="switchTab('catalogue', this)">🛍️ Catalogue ({{ produits|length }})</button>
+  <button class="portail-tab" onclick="switchTab('commandes', this)">🛒 Commandes ({{ commandes|length }})</button>
+  <button class="portail-tab" onclick="switchTab('abonnements', this)">📋 Abonnements ({{ souscriptions|length }})</button>
+  <button class="portail-tab" onclick="switchTab('candidatures', this)">🤝 Candidatures ({{ candidatures|length }})</button>
+  <button class="portail-tab" onclick="switchTab('profil', this)">⚙️ Profil</button>
+</div>
+{% endblock %}
+
+{% block sections %}
+<div class="portail-section active" id="section-catalogue">
+  {% include 'studio/_espace_catalogue.html' %}
+</div>
+
+<div class="portail-section" id="section-commandes">
+  {% for cmd in commandes %}
+    <div class="portail-card">
+      <div class="p-top">
+        <div><div class="p-ref">{{ cmd.reference }}</div><div class="p-date">{{ cmd.date_commande|date:"d/m/Y H:i" }}</div></div>
+        <div><span class="p-total">{{ cmd.total_ttc }} TND</span></div>
+      </div>
+      <div class="p-detail">{{ cmd.get_methode_paiement_display }} — {{ cmd.client_adresse|truncatechars:60 }}</div>
+      <div style="margin-top:.4rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+        <span class="p-statut {% if cmd.statut == 'livree' or cmd.statut == 'confirmee' %}active{% elif cmd.statut == 'annulee' %}expired{% else %}pending{% endif %}">{{ cmd.get_statut_display }}</span>
+        <a href="{% url 'facture_commande' cmd.id %}" target="_blank" rel="noopener" style="font-size:.6rem;color:var(--accent);text-decoration:none;font-family:'Space Mono',monospace">📄 Facture</a>
+      </div>
+    </div>
+  {% empty %}
+    <div class="portail-empty">Aucune commande pour le moment. <a href="/ecommerce/" style="color:var(--accent);text-decoration:none">Découvrir la boutique →</a></div>
+  {% endfor %}
+</div>
+
+<div class="portail-section" id="section-abonnements">
+  {% for s in souscriptions %}
+    <div class="portail-card">
+      <div class="p-top">
+        <div><div class="p-ref">{{ s.plan.nom }}</div><div class="p-date">Du {{ s.date_debut|date:"d/m/Y" }} au {{ s.date_fin|date:"d/m/Y" }}</div></div>
+        <div><span class="p-total">{{ s.plan.prix }} TND</span></div>
+      </div>
+      <div class="p-detail">Plan {{ s.plan.categorie }}</div>
+      <div style="margin-top:.4rem"><span class="p-statut {% if s.status == 'actif' %}active{% elif s.status == 'expire' %}expired{% else %}pending{% endif %}">{{ s.get_status_display }}</span></div>
+    </div>
+  {% empty %}
+    <div class="portail-empty">Aucun abonnement. <a href="/abonnement/" style="color:var(--accent);text-decoration:none">Voir les offres →</a></div>
+  {% endfor %}
+</div>
+
+<div class="portail-section" id="section-candidatures">
+  {% for c in candidatures %}
+    <div class="portail-card">
+      <div class="p-top">
+        <div><div class="p-ref">{{ c.get_type_candidature_display }}</div><div class="p-date">{{ c.created_at|date:"d/m/Y" }}</div></div>
+        <div><span class="p-statut {% if c.statut == 'accepte' %}active{% elif c.statut == 'refuse' %}expired{% else %}pending{% endif %}">{{ c.get_statut_display }}</span></div>
+      </div>
+      <div class="p-detail">{{ c.poste|default:"—" }}{% if c.message %} — {{ c.message|truncatechars:60 }}{% endif %}</div>
+    </div>
+  {% empty %}
+    <div class="portail-empty">Aucune candidature. <a href="/recrutement/" style="color:var(--accent);text-decoration:none">Postuler →</a></div>
+  {% endfor %}
+</div>
+
+<div class="portail-section" id="section-profil">
+  <div class="portail-card portail-profile">
+    <form method="POST">{% csrf_token %}<input type="hidden" name="action" value="edit_profile">
+      <div class="form-row"><label>Identifiant</label><input value="{{ request.user.username }}" disabled style="opacity:.5"></div>
+      <div class="form-row"><label>Email</label><input value="{{ request.user.email }}" disabled style="opacity:.5"></div>
+      <div class="form-row"><label>Prénom</label><input name="prenom" value="{{ request.user.first_name }}" placeholder="Votre prénom"></div>
+      <div class="form-row"><label>Nom</label><input name="nom" value="{{ request.user.last_name }}" placeholder="Votre nom"></div>
+      <div class="form-row"><label>Entreprise</label><input name="entreprise" value="{{ profile.entreprise|default:'' }}" placeholder="Votre entreprise"></div>
+      <div class="form-row"><label>Téléphone</label><input name="telephone" value="{{ profile.telephone|default:'' }}" placeholder="+216 XX XXX XXX"></div>
+      <button type="submit" class="btn-p">Enregistrer →</button>
+    </form>
+  </div>
+  <div class="portail-card">
+    <div class="p-top">
+      <div>
+        <div class="p-ref">Compte entreprise</div>
+        <div class="p-detail">Vous représentez une société ? Gérez votre fiche, votre équipe et vos documents dans l'espace entreprise.</div>
+      </div>
+      <a class="espace-switch" href="{% url 'espace_entreprise' %}">🏢 Ouvrir l'espace entreprise →</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

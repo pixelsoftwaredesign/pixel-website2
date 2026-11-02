@@ -11,7 +11,7 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.utils import timezone
-from .models import UserProfile, ProjetContact, AtelierProfile, PortfolioProject, CodeRepository, GraphismeResource, ERPModule, ERPSubscription, ERPDemoRecord, ERPClient, ERPMembership, Moniteur, Candidat, Vehicule, Lecon, Examen, Medecin, Patient, Lit, RendezVous, FacturationSante, ClientHotel, Chambre, ReservationHotel, ServiceHotel, Categorie, Fournisseur, Produit, Vente, ClientJuridique, DossierJuridique, Audience, JournalComptable, EcritureComptable, Facture, DeclarationFiscale, Employe, Contrat, FichePaie, Conge, Formation, MenuItem, TableRestaurant, SoftCodeModule, StudioProject3D, PatisserieRecipe, PatisserieProduct, PlanAbonnement, SouscriptionClient, Paiement, CleActivation, ConfigurationBancaire, ConfigurationPaiementEnLigne, Candidature, MouvementStock, CommandeECommerce, CommandeECommerceItem, Temoignage, PixMailAccount, PixMailContact, PixMailMessage, PixMailAttachment, PixMailFolder, PixMailSignature, SocialProfile, Follow, Post, Like, Comment, Notification, Conversation, ConversationMember, EncryptedMessage, Wallet, Transaction, TwoFactorAuth, Referral, REFERRAL_BONUS_AMOUNT, REFERRAL_THRESHOLD, KYCVerification, NewsletterSubscriber, NewsletterCampaign
+from .models import Devis, PreFacture, UserProfile, ProjetContact, AtelierProfile, PortfolioProject, CodeRepository, GraphismeResource, ERPModule, ERPSubscription, ERPDemoRecord, ERPClient, ERPMembership, Moniteur, Candidat, Vehicule, Lecon, Examen, Medecin, Patient, Lit, RendezVous, FacturationSante, ClientHotel, Chambre, ReservationHotel, ServiceHotel, Categorie, Fournisseur, Produit, Vente, ClientJuridique, DossierJuridique, Audience, JournalComptable, EcritureComptable, Facture, DeclarationFiscale, Employe, Contrat, FichePaie, Conge, Formation, MenuItem, TableRestaurant, SoftCodeModule, StudioProject3D, PatisserieRecipe, PatisserieProduct, PlanAbonnement, SouscriptionClient, Paiement, CleActivation, ConfigurationBancaire, ConfigurationPaiementEnLigne, Candidature, MouvementStock, CommandeECommerce, CommandeECommerceItem, Temoignage, PixMailAccount, PixMailContact, PixMailMessage, PixMailAttachment, PixMailFolder, PixMailSignature, SocialProfile, Follow, Post, Like, Comment, Notification, Conversation, ConversationMember, EncryptedMessage, Wallet, Transaction, TwoFactorAuth, Referral, REFERRAL_BONUS_AMOUNT, REFERRAL_THRESHOLD, KYCVerification, NewsletterSubscriber, NewsletterCampaign
 from django.urls import NoReverseMatch, reverse
 from .services import notifier_activation_cle, notifier_confirmation_commande, notifier_statut_commande
 from .turnstile import verify_turnstile
@@ -1767,27 +1767,194 @@ def gestion_commandes(request):
         'commandes': commandes, 'statut_filtre': statut_filtre, 'stats': stats,
     })
 
-# ─── Portail client ──────────────────────────────────────────
+# ─── Espaces client & entreprise ─────────────────────────────
+def _catalogue_espaces():
+    """Catalogue du site uniquement (jamais les produits d'un tenant)."""
+    produits = (Produit.objects
+                .filter(
+                    models.Q(categorie__isnull=True) |
+                    models.Q(categorie__erp_client__isnull=True),
+                    actif=True, erp_client__isnull=True)
+                .select_related('categorie')
+                .order_by('categorie__nom', 'nom'))
+    categories = (Categorie.objects
+                  .filter(erp_client__isnull=True)
+                  .order_by('nom'))
+    return produits, categories
+
+
+def _email_espace(user):
+    return (user.email or '').strip()
+
+
+def _commandes_espace(email):
+    if not email:
+        return CommandeECommerce.objects.none()
+    return (CommandeECommerce.objects
+            .filter(client_email__iexact=email)
+            .order_by('-date_commande')[:20])
+
+
+def _souscriptions_espace(email):
+    if not email:
+        return SouscriptionClient.objects.none()
+    return (SouscriptionClient.objects
+            .filter(client_email__iexact=email)
+            .order_by('-created_at')[:20])
+
+
+def _maj_profil_utilisateur(request, profile):
+    """Champs de profil communs aux deux espaces."""
+    request.user.first_name = request.POST.get('prenom', '')
+    request.user.last_name = request.POST.get('nom', '')
+    request.user.save(update_fields=['first_name', 'last_name'])
+    if 'entreprise' in request.POST:
+        profile.entreprise = request.POST.get('entreprise', '').strip()
+    if 'telephone' in request.POST:
+        profile.telephone = request.POST.get('telephone', '').strip()
+    profile.save()
+
+
+@login_required
+def espace_client(request):
+    """Espace client : commandes, abonnements, candidatures et catalogue."""
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    email = _email_espace(request.user)
+    if request.method == 'POST':
+        if request.POST.get('action') == 'edit_profile':
+            _maj_profil_utilisateur(request, profile)
+            return redirect('espace_client')
+    produits, categories = _catalogue_espaces()
+    return render(request, 'studio/espace_client.html', {
+        'espace': 'client',
+        'profile': profile,
+        'produits': produits,
+        'categories': categories,
+        'commandes': _commandes_espace(email),
+        'souscriptions': _souscriptions_espace(email),
+        'candidatures': (Candidature.objects.filter(email__iexact=email)
+                         .order_by('-created_at')[:10]) if email else [],
+    })
+
+
 @login_required
 def portail(request):
-    email = request.user.email
-    commandes = CommandeECommerce.objects.filter(client_email=email).order_by('-date_commande')[:20]
-    souscriptions = SouscriptionClient.objects.filter(client_email=email).order_by('-created_at')[:20]
-    candidatures = Candidature.objects.filter(email=email).order_by('-created_at')[:10]
+    """Alias historique de l'espace client (`/portail/`)."""
+    return espace_client(request)
+
+
+@login_required
+def espace_entreprise(request):
+    """Espace entreprise : société, équipe, documents et catalogue.
+
+    L'entreprise s'appuie sur `ERPClient` / `ERPMembership`, déjà utilisés par
+    GestiActiv. Le catalogue présenté reste celui du site (`erp_client=None`).
+    """
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    membership = _erp_membership(request.user)
+    client = membership.client if membership else None
+    error = ''
+
     if request.method == 'POST':
         action = request.POST.get('action')
-        if action == 'edit_profile':
-            profile = request.user.profile
-            profile.entreprise = request.POST.get('entreprise', '')
-            profile.telephone = request.POST.get('telephone', '')
-            profile.save()
-            request.user.first_name = request.POST.get('prenom', '')
-            request.user.last_name = request.POST.get('nom', '')
-            request.user.save()
-            return redirect('portail')
-    return render(request, 'studio/portail.html', {
-        'commandes': commandes, 'souscriptions': souscriptions,
-        'candidatures': candidatures,
+        if action == 'creer_entreprise':
+            company = (request.POST.get('company') or '').strip()
+            activity = (request.POST.get('activity') or '').strip()
+            phone = (request.POST.get('phone') or '').strip()
+            address = (request.POST.get('address') or '').strip()
+            matricule = (request.POST.get('matricule') or '').strip()
+            contact_name = (request.POST.get('contact_name') or '').strip()
+            email = (request.POST.get('email') or request.user.email or '').strip()
+            if client is not None:
+                error = "Votre compte est déjà rattaché à une entreprise."
+            elif not company:
+                error = "Le nom de l'entreprise est obligatoire."
+            elif activity and activity not in GESTIACTIV_SLUGS:
+                error = "Choisissez une activité valide."
+            else:
+                client = ERPClient.objects.create(
+                    company_name=company,
+                    contact_name=contact_name or request.user.get_full_name() or request.user.username,
+                    email=email,
+                    phone=phone,
+                    matricule=matricule,
+                    address=address,
+                    activity=activity,
+                    owner=request.user,
+                )
+                ERPMembership.objects.create(
+                    user=request.user, client=client, role='owner')
+                profile.entreprise = company
+                if phone:
+                    profile.telephone = phone
+                profile.save()
+                if activity:
+                    module = ERPModule.objects.filter(slug=activity).first()
+                    if module:
+                        ERPSubscription.objects.get_or_create(
+                            client=client, module=module)
+                return redirect('espace_entreprise')
+        elif action == 'modifier_entreprise':
+            if client is None:
+                error = "Aucune entreprise n'est rattachée à votre compte."
+            elif membership.role not in ('owner', 'manager'):
+                error = "Seuls le propriétaire et le gestionnaire peuvent modifier l'entreprise."
+            else:
+                company = (request.POST.get('company') or '').strip()
+                activity = (request.POST.get('activity') or '').strip()
+                if not company:
+                    error = "Le nom de l'entreprise est obligatoire."
+                elif activity and activity not in GESTIACTIV_SLUGS:
+                    error = "Choisissez une activité valide."
+                else:
+                    client.company_name = company
+                    client.contact_name = (request.POST.get('contact_name') or '').strip() or client.contact_name
+                    client.email = (request.POST.get('email') or request.user.email or '').strip()
+                    client.phone = (request.POST.get('phone') or '').strip()
+                    client.matricule = (request.POST.get('matricule') or '').strip()
+                    client.address = (request.POST.get('address') or '').strip()
+                    client.activity = activity
+                    client.save()
+                    profile.entreprise = company
+                    profile.telephone = client.phone or profile.telephone
+                    profile.save()
+                    return redirect('espace_entreprise')
+        elif action == 'edit_profile':
+            _maj_profil_utilisateur(request, profile)
+            return redirect('espace_entreprise')
+
+    email = _email_espace(request.user)
+    produits, categories = _catalogue_espaces()
+    if email:
+        devis = Devis.objects.filter(client_email__iexact=email).order_by('-date_creation')[:20]
+        prefactures = PreFacture.objects.filter(client_email__iexact=email).order_by('-date_creation')[:20]
+        factures = (Facture.objects
+                    .filter(client_email__iexact=email, erp_client__isnull=True)
+                    .order_by('-date_facture')[:20])
+    else:
+        devis = Devis.objects.none()
+        prefactures = PreFacture.objects.none()
+        factures = Facture.objects.none()
+
+    return render(request, 'studio/espace_entreprise.html', {
+        'espace': 'entreprise',
+        'profile': profile,
+        'client': client,
+        'membership': membership,
+        'members': (client.memberships.select_related('user').order_by('created_at')
+                    if client else []),
+        'modules': GESTIACTIV_MODULES,
+        'activity_label': (GESTIACTIV_LABELS.get(client.activity, '—')
+                           if client else '—'),
+        'produits': produits,
+        'categories': categories,
+        'commandes': _commandes_espace(email),
+        'souscriptions': _souscriptions_espace(email),
+        'devis': devis,
+        'prefactures': prefactures,
+        'factures': factures,
+        'error': error,
+        'form': request.POST if request.method == 'POST' else {},
     })
 
 # ─── Administration bancaire ─────────────────────────────────

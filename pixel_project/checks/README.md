@@ -34,6 +34,7 @@ cd pixel_project && python3 checks/check_links.py
 | `check_modules.py` | CRUD cloisonné des 9 modules métier (création, édition propriétaire + persistance, édition inter-entreprise 404, suppression inter-entreprise sans effet, suppression légitime) | 247 |
 | `check_devis.py` | Devis structurés (création depuis une demande, lignes produits, remises, totaux HT/TVA/TTC), envoi email simulé, acceptation, conversion en ventes, saisie/suppression manuelle, préfacture depuis un devis (impression, conversion en facture), **factures définitives** (lignes figées, impression, suivi payé/impayé), catalogue produits, navigation et cloisonnement des rôles | 125 |
 | `check_catalogue.py` | Gestion du catalogue : création/édition/archivage de produits, stock initial et mouvements audités (entrée, sortie, ajustement), historique, catégories et fournisseurs (CRUD avec garde de suppression), cloisonnement des données GestiActiv sur l'admin, la boutique publique, les API et l'ancienne page de stock, commande boutique avec décrément de stock historisé, lecture Commercial/Comptable et écriture Admin/SuperAdmin | 167 |
+| `check_espaces.py` | Espaces client et entreprise : accès authentifié, alias `/portail/`, catalogue du site dans les deux espaces sans produit GestiActiv, commandes/devis/préfactures/factures filtrés par client, création/modification de l'entreprise, équipe et permissions, profil | 56 |
 
 ## Conventions
 

@@ -49,7 +49,7 @@
 <script>
 function msg(t,c){var m=document.getElementById('regMsg');m.textContent=t;m.className='auth-msg '+c;m.style.display='block'}
 function executerInscription(){var u=document.getElementById('regUsername').value,e=document.getElementById('regEmail').value,p=document.getElementById('regPassword').value,ent=document.getElementById('regEntreprise').value,r=document.getElementById('regRole').value;if(!u||!e||!p){msg('Veuillez remplir tous les champs obligatoires.','error');return}
-fetch('/api/inscription/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},body:JSON.stringify({username:u,email:e,password:p,entreprise:ent,role:r})}).then(function(r){return r.json()}).then(function(d){if(d.status==='success'){msg(d.message,'success');setTimeout(function(){window.location.href='/portail/'},800)}else{msg(d.message,'error')}}).catch(function(){msg('Erreur de connexion au serveur.','error')})}
+fetch('/api/inscription/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':'{{ csrf_token }}'},body:JSON.stringify({username:u,email:e,password:p,entreprise:ent,role:r})}).then(function(r){return r.json()}).then(function(d){if(d.status==='success'){msg(d.message,'success');setTimeout(function(){window.location.href='/espace-client/'},800)}else{msg(d.message,'error')}}).catch(function(){msg('Erreur de connexion au serveur.','error')})}
 </script>
 </body>
 </html>

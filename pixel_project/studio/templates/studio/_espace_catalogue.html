@@ -1,0 +1,41 @@
+<div class="cat-intro">
+  <div>
+    <h2>🛍️ Catalogue Pixel</h2>
+    <p>Logiciels, applications et produits du site — disponibles pour vos commandes et vos projets.</p>
+  </div>
+  <a class="espace-switch" href="/ecommerce/">Voir la boutique →</a>
+</div>
+
+<div class="cat-filters">
+  <button type="button" class="cat-filter active" onclick="filterCatalogue('*', this)">Tout ({{ produits|length }})</button>
+  {% for c in categories %}
+    <button type="button" class="cat-filter" data-cat="{{ c.id }}" onclick="filterCatalogue('{{ c.id }}', this)">{{ c.nom }}</button>
+  {% endfor %}
+</div>
+
+<div class="cat-grid">
+  {% for p in produits %}
+    <article class="cat-card" data-cat="{{ p.categorie_id|default:'0' }}">
+      <div class="cat-top">
+        <span class="cat-badge{% if p.est_service %} service{% endif %}">{% if p.est_service %}Service{% else %}Produit{% endif %}</span>
+        <span class="cat-cat">{{ p.categorie.nom|default:"Catalogue" }}</span>
+      </div>
+      <h3>{{ p.nom }}</h3>
+      <div class="cat-meta">
+        {% if p.est_service %}
+          Licence / application — sans gestion de stock
+        {% elif p.stock_actuel > 0 %}
+          Stock : {{ p.stock_actuel }} disponible{{ p.stock_actuel|pluralize }}
+        {% else %}
+          Disponible sur commande
+        {% endif %}
+      </div>
+      <div class="cat-bottom">
+        <span class="cat-price">{{ p.prix_vente|floatformat:2 }} TND{% if p.est_service %} <small>/ licence</small>{% endif %}</span>
+        <a class="cat-btn" href="{% url 'ecommerce_ajouter_panier' p.id %}">Ajouter au panier</a>
+      </div>
+    </article>
+  {% empty %}
+    <div class="portail-empty">Le catalogue est en préparation. <a href="/contact/" style="color:var(--accent);text-decoration:none">Contactez-nous →</a></div>
+  {% endfor %}
+</div>

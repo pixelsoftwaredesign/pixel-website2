@@ -1,0 +1,201 @@
+{% extends 'studio/espace_base.html' %}
+
+{% block title %}Espace entreprise — Pixel Software Design{% endblock %}
+{% block nav_subtitle %}Espace entreprise{% endblock %}
+{% block kicker %}ESPACE ENTREPRISE{% endblock %}
+{% block heading %}Mon espace <span class="h1-grad">entreprise</span>{% endblock %}
+{% block footer_name %}Espace entreprise{% endblock %}
+
+{% block header_action %}
+  <a class="espace-switch" href="{% url 'espace_client' %}">👤 Espace client →</a>
+{% endblock %}
+
+{% block tabs %}
+<div class="portail-tabs">
+  <button class="portail-tab active" onclick="switchTab('catalogue', this)">🛍️ Catalogue ({{ produits|length }})</button>
+  <button class="portail-tab" onclick="switchTab('commandes', this)">🛒 Commandes ({{ commandes|length }})</button>
+  <button class="portail-tab" onclick="switchTab('documents', this)">🧾 Devis & factures</button>
+  <button class="portail-tab" onclick="switchTab('abonnements', this)">📋 Abonnements ({{ souscriptions|length }})</button>
+  <button class="portail-tab" onclick="switchTab('entreprise', this)">🏢 Entreprise{% if client %} · {{ client.company_name|truncatechars:18 }}{% endif %}</button>
+  <button class="portail-tab" onclick="switchTab('profil', this)">⚙️ Profil</button>
+</div>
+{% endblock %}
+
+{% block sections %}
+<div class="portail-section active" id="section-catalogue">
+  {% include 'studio/_espace_catalogue.html' %}
+</div>
+
+<div class="portail-section" id="section-commandes">
+  {% for cmd in commandes %}
+    <div class="portail-card">
+      <div class="p-top">
+        <div><div class="p-ref">{{ cmd.reference }}</div><div class="p-date">{{ cmd.date_commande|date:"d/m/Y H:i" }}</div></div>
+        <div><span class="p-total">{{ cmd.total_ttc }} TND</span></div>
+      </div>
+      <div class="p-detail">{{ cmd.get_methode_paiement_display }} — {{ cmd.client_adresse|truncatechars:60 }}</div>
+      <div style="margin-top:.4rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+        <span class="p-statut {% if cmd.statut == 'livree' or cmd.statut == 'confirmee' %}active{% elif cmd.statut == 'annulee' %}expired{% else %}pending{% endif %}">{{ cmd.get_statut_display }}</span>
+        <a href="{% url 'facture_commande' cmd.id %}" target="_blank" rel="noopener" style="font-size:.6rem;color:var(--accent);text-decoration:none;font-family:'Space Mono',monospace">📄 Facture</a>
+      </div>
+    </div>
+  {% empty %}
+    <div class="portail-empty">Aucune commande entreprise pour le moment. <a href="/ecommerce/" style="color:var(--accent);text-decoration:none">Découvrir la boutique →</a></div>
+  {% endfor %}
+</div>
+
+<div class="portail-section" id="section-documents">
+  <div class="ent-card">
+    <h3>Devis</h3>
+    {% for d in devis %}
+      <div class="ent-member">
+        <div><strong>{{ d.reference }}</strong><br><span>{{ d.date_creation|date:"d/m/Y" }}{% if d.sujet %} · {{ d.sujet|truncatechars:40 }}{% endif %}</span></div>
+        <div style="text-align:right"><span class="p-total">{{ d.montant_ttc }} TND</span><br><span class="p-statut {% if d.statut == 'accepte' or d.statut == 'converti' %}active{% elif d.statut == 'refuse' %}expired{% else %}pending{% endif %}">{{ d.get_statut_display }}</span></div>
+      </div>
+    {% empty %}
+      <div class="portail-empty">Aucun devis pour le moment.</div>
+    {% endfor %}
+  </div>
+
+  <div class="ent-card">
+    <h3>Préfactures</h3>
+    {% for p in prefactures %}
+      <div class="ent-member">
+        <div><strong>{{ p.numero }}</strong><br><span>{{ p.date_creation|date:"d/m/Y" }}{% if p.date_validite %} · valable jusqu'au {{ p.date_validite|date:"d/m/Y" }}{% endif %}</span></div>
+        <div style="text-align:right"><span class="p-total">{{ p.montant_ttc }} TND</span><br><span class="p-statut {% if p.statut == 'acceptee' or p.statut == 'convertie' %}active{% elif p.statut == 'refusee' %}expired{% else %}pending{% endif %}">{{ p.get_statut_display }}</span></div>
+      </div>
+    {% empty %}
+      <div class="portail-empty">Aucune préfacture pour le moment.</div>
+    {% endfor %}
+  </div>
+
+  <div class="ent-card">
+    <h3>Factures</h3>
+    {% for f in factures %}
+      <div class="ent-member">
+        <div><strong>{{ f.numero }}</strong><br><span>{{ f.date_facture|date:"d/m/Y" }}{% if f.date_paiement %} · payée le {{ f.date_paiement|date:"d/m/Y" }}{% endif %}</span></div>
+        <div style="text-align:right"><span class="p-total">{{ f.montant_ttc }} TND</span><br><span class="p-statut {% if f.payee %}active{% else %}pending{% endif %}">{% if f.payee %}Payée{% else %}À régler{% endif %}</span></div>
+      </div>
+    {% empty %}
+      <div class="portail-empty">Aucune facture pour le moment.</div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="portail-section" id="section-abonnements">
+  {% for s in souscriptions %}
+    <div class="portail-card">
+      <div class="p-top">
+        <div><div class="p-ref">{{ s.plan.nom }}</div><div class="p-date">Du {{ s.date_debut|date:"d/m/Y" }} au {{ s.date_fin|date:"d/m/Y" }}</div></div>
+        <div><span class="p-total">{{ s.plan.prix }} TND</span></div>
+      </div>
+      <div class="p-detail">Plan {{ s.plan.categorie }}</div>
+      <div style="margin-top:.4rem"><span class="p-statut {% if s.status == 'actif' %}active{% elif s.status == 'expire' %}expired{% else %}pending{% endif %}">{{ s.get_status_display }}</span></div>
+    </div>
+  {% empty %}
+    <div class="portail-empty">Aucun abonnement. <a href="/abonnement/" style="color:var(--accent);text-decoration:none">Voir les offres →</a></div>
+  {% endfor %}
+</div>
+
+<div class="portail-section" id="section-entreprise">
+  {% if client %}
+    <div class="ent-card">
+      <div class="p-top">
+        <div>
+          <div class="p-ref">{{ client.company_name }}</div>
+          <div class="p-date">Espace entreprise · membre depuis {{ membership.created_at|date:"d/m/Y" }}</div>
+        </div>
+        <span class="p-statut active">{{ membership.get_role_display }}</span>
+      </div>
+      <div class="ent-grid">
+        <div><label>Activité</label><div>{{ activity_label }}</div></div>
+        <div><label>Contact</label><div>{{ client.contact_name }}</div></div>
+        <div><label>Email</label><div>{{ client.email }}</div></div>
+        <div><label>Téléphone</label><div>{{ client.phone|default:"—" }}</div></div>
+        <div><label>Matricule fiscal</label><div>{{ client.matricule|default:"—" }}</div></div>
+        <div><label>Adresse</label><div>{{ client.address|default:"—" }}</div></div>
+      </div>
+      <div class="ent-actions">
+        <a class="espace-switch" href="/gestiactiv/dashboard/">📊 Ouvrir le tableau de bord GestiActiv →</a>
+        <a class="espace-switch" href="/ecommerce/">🛍️ Boutique publique →</a>
+      </div>
+    </div>
+
+    <div class="ent-card">
+      <h3>Équipe ({{ members|length }})</h3>
+      {% for m in members %}
+        <div class="ent-member">
+          <div><strong>{{ m.user.get_full_name|default:m.user.username }}</strong><br><span>{{ m.user.email|default:m.user.username }}</span></div>
+          <span class="p-statut {% if m.role == 'owner' %}active{% else %}pending{% endif %}">{{ m.get_role_display }}</span>
+        </div>
+      {% empty %}
+        <div class="portail-empty">Aucun membre pour le moment.</div>
+      {% endfor %}
+    </div>
+
+    {% if membership.role == 'owner' or membership.role == 'manager' %}
+      <div class="ent-card espace-form">
+        <h3>Modifier la fiche entreprise</h3>
+        <form method="POST">{% csrf_token %}<input type="hidden" name="action" value="modifier_entreprise">
+          <div class="form-grid">
+            <div><label>Nom de l'entreprise</label><input name="company" value="{{ form.company|default:client.company_name }}" required></div>
+            <div><label>Contact</label><input name="contact_name" value="{{ form.contact_name|default:client.contact_name }}"></div>
+            <div><label>Email</label><input type="email" name="email" value="{{ form.email|default:client.email }}"></div>
+            <div><label>Téléphone</label><input name="phone" value="{{ form.phone|default:client.phone }}"></div>
+            <div><label>Matricule fiscal</label><input name="matricule" value="{{ form.matricule|default:client.matricule }}"></div>
+            <div>
+              <label>Activité</label>
+              <select name="activity">
+                <option value="">— Choisir —</option>
+                {% for m in modules %}
+                  <option value="{{ m.slug }}" {% if client.activity == m.slug %}selected{% endif %}>{{ m.icon }} {{ m.label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="full"><label>Adresse</label><textarea name="address" rows="2">{{ form.address|default:client.address }}</textarea></div>
+          </div>
+          <div class="ent-actions"><button type="submit" class="btn-p">Enregistrer →</button></div>
+        </form>
+      </div>
+    {% endif %}
+  {% else %}
+    <div class="ent-card ent-onboarding espace-form">
+      <h2>Créer votre espace entreprise</h2>
+      <p>Rattachez votre société à votre compte Pixel pour retrouver vos commandes, devis, factures, votre équipe et le catalogue au même endroit.</p>
+      <form method="POST">{% csrf_token %}<input type="hidden" name="action" value="creer_entreprise">
+        <div class="form-grid">
+          <div><label>Nom de l'entreprise *</label><input name="company" value="{{ form.company|default:profile.entreprise|default:'' }}" placeholder="Ma société" required></div>
+          <div><label>Contact</label><input name="contact_name" value="{{ form.contact_name|default:request.user.get_full_name }}" placeholder="Responsable"></div>
+          <div><label>Email</label><input type="email" name="email" value="{{ form.email|default:request.user.email }}"></div>
+          <div><label>Téléphone</label><input name="phone" value="{{ form.phone|default:profile.telephone|default:'' }}" placeholder="+216 XX XXX XXX"></div>
+          <div><label>Matricule fiscal</label><input name="matricule" value="{{ form.matricule|default:'' }}"></div>
+          <div>
+            <label>Activité</label>
+            <select name="activity">
+              <option value="">— Choisir —</option>
+              {% for m in modules %}
+                <option value="{{ m.slug }}" {% if form.activity == m.slug %}selected{% endif %}>{{ m.icon }} {{ m.label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="full"><label>Adresse</label><textarea name="address" rows="2">{{ form.address|default:'' }}</textarea></div>
+        </div>
+        <div class="ent-actions"><button type="submit" class="btn-p">Créer mon espace entreprise →</button></div>
+      </form>
+    </div>
+  {% endif %}
+</div>
+
+<div class="portail-section" id="section-profil">
+  <div class="portail-card portail-profile">
+    <form method="POST">{% csrf_token %}<input type="hidden" name="action" value="edit_profile">
+      <div class="form-row"><label>Identifiant</label><input value="{{ request.user.username }}" disabled style="opacity:.5"></div>
+      <div class="form-row"><label>Email</label><input value="{{ request.user.email }}" disabled style="opacity:.5"></div>
+      <div class="form-row"><label>Prénom</label><input name="prenom" value="{{ request.user.first_name }}" placeholder="Votre prénom"></div>
+      <div class="form-row"><label>Nom</label><input name="nom" value="{{ request.user.last_name }}" placeholder="Votre nom"></div>
+      <div class="form-row"><label>Téléphone</label><input name="telephone" value="{{ profile.telephone|default:'' }}" placeholder="+216 XX XXX XXX"></div>
+      <button type="submit" class="btn-p">Enregistrer →</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

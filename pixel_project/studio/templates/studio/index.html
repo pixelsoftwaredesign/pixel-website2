@@ -72,6 +72,8 @@
     <li class="dropdown">
       <a href="#" class="nav-link">Pages ▾</a>
       <ul class="dropdown-menu">
+        <li style="border-bottom:1px solid var(--border);margin-bottom:4px;padding-bottom:4px"><a href="/espace-client/">👤 Espace client</a></li>
+        <li style="border-bottom:1px solid var(--border);margin-bottom:4px;padding-bottom:4px"><a href="/espace-entreprise/">🏢 Espace entreprise</a></li>
         <li><a href="/a-propos/">À propos</a></li>
         <li><a href="/temoignages/">Témoignages</a></li>
         <li><a href="/prix/">Prix</a></li>
@@ -125,6 +127,10 @@
     <div id="authLogged" style="display:none">
       <h3>Bienvenue <span id="loggedUsername"></span> !</h3>
       <p style="color:var(--muted);margin:.5rem 0">Vous êtes connecté(e) à votre espace Pixel Software Design.</p>
+      <p style="display:flex;gap:.5rem;flex-wrap:wrap;margin:.8rem 0">
+        <a class="btn-p" href="/espace-client/">👤 Espace client</a>
+        <a class="btn-s" href="/espace-entreprise/">🏢 Espace entreprise</a>
+      </p>
       <button class="btn-s" onclick="executerDeconnexion()">Se déconnecter</button>
     </div>
   </div>
