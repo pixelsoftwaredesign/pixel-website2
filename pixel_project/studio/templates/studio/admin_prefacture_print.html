@@ -103,7 +103,7 @@ table tbody tr:last-child td{border-bottom:none}
 
 <div class="no-print" style="text-align:center;padding:20px;background:#f0f0f0;border-top:1px solid #ddd">
 <button onclick="window.print()" style="padding:10px 30px;background:#1EB482;color:#fff;border:none;border-radius:6px;cursor:pointer;font-family:'Space Grotesk',sans-serif;font-size:14px">🖨️ Télécharger / Imprimer</button>
-<a href="javascript:history.back()" style="display:inline-block;margin-left:10px;padding:10px 20px;background:#eee;color:#333;border-radius:6px;text-decoration:none;font-size:14px">← Retour</a>
+<a href="{% if retour_url %}{{ retour_url }}{% else %}javascript:history.back(){% endif %}" style="display:inline-block;margin-left:10px;padding:10px 20px;background:#eee;color:#333;border-radius:6px;text-decoration:none;font-size:14px">← Retour</a>
 </div>
 
 <script>window.onload=function(){setTimeout(function(){window.print()},500)}</script>

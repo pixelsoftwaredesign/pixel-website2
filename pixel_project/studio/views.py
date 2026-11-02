@@ -2026,6 +2026,7 @@ def espace_devis_print(request, pk):
         'lignes': devis.lignes.all(),
         'tva_montant': devis.montant_ttc - devis.montant_ht,
         'societe': _societe(),
+        'retour_url': '/espace-entreprise/',
     })
 
 
@@ -2038,6 +2039,7 @@ def espace_prefacture_print(request, pk):
         'lignes': prefacture.lignes.all(),
         'tva_montant': prefacture.montant_ttc - prefacture.montant_ht,
         'societe': _societe(),
+        'retour_url': '/espace-entreprise/',
     })
 
 
@@ -2051,6 +2053,7 @@ def espace_facture_print(request, pk):
         'lignes': facture.lignes.all(),
         'tva_montant': facture.montant_ttc - facture.montant_ht,
         'societe': _societe(),
+        'retour_url': '/espace-entreprise/',
     })
 
 # ─── Administration bancaire ─────────────────────────────────
