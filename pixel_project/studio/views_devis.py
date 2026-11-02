@@ -18,20 +18,9 @@ from .forms_devis import (
 from .models import (
     Devis, Facture, PreFacture, Produit, ProjetContact, Vente,
 )
-from .views import _paginate, role_required
+from .views import _paginate, _societe, role_required
 
 ADMIN_ROLES = ('Commercial', 'Comptable', 'SuperAdmin', 'Admin')
-
-
-def _societe():
-    return {
-        'nom': 'Pixel Software Design',
-        'slogan': "L'architecture de l'innovation",
-        'adresse': 'El Hamma, Gabès, Tunisie',
-        'email': 'pixelsoftwaredesign@gmail.com',
-        'tel': '+216 52 675 027',
-        'registre': 'Matricule: XXXXXXXX/X/X/XXX',
-    }
 
 
 def _produits_json(produits):

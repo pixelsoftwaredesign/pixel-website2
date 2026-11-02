@@ -537,7 +537,7 @@ class DashboardTests(TestCase):
 class FactureTests(TestCase):
     def setUp(self):
         self.client = Client()
-        self.user = User.objects.create_user(username='factadmin', password='factpass')
+        self.user = User.objects.create_user(username='factadmin', email='cf@test.com', password='factpass')
         self.client.force_login(self.user)
         self.cat = Categorie.objects.create(nom='Test')
         self.prod = Produit.objects.create(nom='Article Facture', categorie=self.cat, prix_vente=75, stock_actuel=10)
@@ -559,6 +559,12 @@ class FactureTests(TestCase):
         r = self.client.get(f'/ecommerce/facture/{self.cmd.id}/')
         self.assertContains(r, 'Article Facture')
         self.assertContains(r, '2')
+
+    def test_facture_autre_client_refusee(self):
+        self.user.email = 'autre@test.com'
+        self.user.save(update_fields=['email'])
+        r = self.client.get(f'/ecommerce/facture/{self.cmd.id}/')
+        self.assertEqual(r.status_code, 404)
 
 class VitrinePagesTests(TestCase):
     def setUp(self):

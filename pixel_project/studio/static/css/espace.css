@@ -226,6 +226,24 @@
 .cat-intro h2 { margin: 0 0 .25rem; font-size: 1.05rem; }
 .cat-intro p { margin: 0; color: var(--muted); font-size: .75rem; }
 
+.cat-search-row { margin-bottom: .7rem; }
+
+.cat-search {
+  width: 100%;
+  padding: .55rem .8rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--text);
+  font-family: inherit;
+  font-size: .74rem;
+}
+
+.cat-search:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
 .cat-filters {
   display: flex;
   gap: .45rem;
@@ -409,6 +427,51 @@
 .ent-member:last-child { border-bottom: none; }
 .ent-member strong { font-size: .78rem; }
 .ent-member span { color: var(--muted); font-size: .68rem; }
+
+.ent-doc-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: .55rem;
+  margin-top: .3rem;
+}
+
+.ent-doc-actions a {
+  color: var(--accent);
+  font-family: 'Space Mono', monospace;
+  font-size: .6rem;
+  text-decoration: none;
+}
+
+.ent-doc-actions a:hover { text-decoration: underline; }
+
+.ent-invite {
+  margin-top: .9rem;
+  padding-top: .9rem;
+  border-top: 1px dashed var(--border);
+}
+
+.ent-invite-row {
+  display: flex;
+  gap: .5rem;
+  flex-wrap: wrap;
+}
+
+.ent-invite-row input,
+.ent-invite-row select {
+  flex: 1 1 160px;
+  min-width: 0;
+  padding: .5rem .65rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, .03);
+  color: var(--text);
+  font-family: inherit;
+  font-size: .72rem;
+}
+
+.ent-invite-row button { flex: 0 0 auto; }
+.ent-hint { margin: .45rem 0 0; color: var(--muted); font-size: .6rem; }
 
 .ent-onboarding {
   max-width: 760px;

@@ -74,8 +74,17 @@ function filterCatalogue(cat, btn) {
   var button = _tabButton(btn);
   document.querySelectorAll('.cat-filter').forEach(function (b) { b.classList.remove('active'); });
   if (button) { button.classList.add('active'); }
+  applyCatalogueFilter();
+}
+function applyCatalogueFilter() {
+  var active = document.querySelector('.cat-filter.active');
+  var cat = active ? (active.getAttribute('data-cat') || '*') : '*';
+  var input = document.getElementById('catSearch');
+  var q = input ? input.value.trim().toLowerCase() : '';
   document.querySelectorAll('.cat-card').forEach(function (card) {
-    card.hidden = cat !== '*' && card.getAttribute('data-cat') !== cat;
+    var catMatch = cat === '*' || card.getAttribute('data-cat') === cat;
+    var textMatch = !q || card.textContent.toLowerCase().indexOf(q) !== -1;
+    card.hidden = !(catMatch && textMatch);
   });
 }
 </script>

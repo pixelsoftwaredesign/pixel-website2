@@ -6,6 +6,10 @@
   <a class="espace-switch" href="/ecommerce/">Voir la boutique →</a>
 </div>
 
+<div class="cat-search-row">
+  <input type="search" id="catSearch" class="cat-search" placeholder="Rechercher un produit ou un service…" oninput="applyCatalogueFilter()">
+</div>
+
 <div class="cat-filters">
   <button type="button" class="cat-filter active" onclick="filterCatalogue('*', this)">Tout ({{ produits|length }})</button>
   {% for c in categories %}

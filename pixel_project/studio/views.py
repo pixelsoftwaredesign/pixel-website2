@@ -4,8 +4,9 @@ from datetime import datetime, date
 from django.db import models
 from django.db import transaction as db_transaction
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
+from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
@@ -15,6 +16,18 @@ from .models import Devis, PreFacture, UserProfile, ProjetContact, AtelierProfil
 from django.urls import NoReverseMatch, reverse
 from .services import notifier_activation_cle, notifier_confirmation_commande, notifier_statut_commande
 from .turnstile import verify_turnstile
+
+
+def _societe():
+    """Coordonnées de l'émetteur, partagées par les documents imprimables."""
+    return {
+        'nom': 'Pixel Software Design',
+        'slogan': "L'architecture de l'innovation",
+        'adresse': 'El Hamma, Gabès, Tunisie',
+        'email': 'pixelsoftwaredesign@gmail.com',
+        'tel': '+216 52 675 027',
+        'registre': 'Matricule: XXXXXXXX/X/X/XXX',
+    }
 
 
 def _admin_login_redirect(request):
@@ -1919,6 +1932,42 @@ def espace_entreprise(request):
                     profile.telephone = client.phone or profile.telephone
                     profile.save()
                     return redirect('espace_entreprise')
+        elif action == 'inviter_membre':
+            if client is None:
+                error = "Créez d'abord votre espace entreprise."
+            elif membership.role not in ('owner', 'manager'):
+                error = "Seuls le propriétaire et le gestionnaire peuvent inviter un membre."
+            else:
+                invite_email = (request.POST.get('invite_email') or '').strip()
+                invite_role = (request.POST.get('invite_role') or 'employee').strip()
+                if invite_role not in ('manager', 'employee'):
+                    invite_role = 'employee'
+                invited = (User.objects
+                           .filter(email__iexact=invite_email)
+                           .order_by('id')
+                           .first()) if invite_email else None
+                if not invite_email:
+                    error = "Renseignez l'email du membre à inviter."
+                elif invited is None:
+                    error = ("Aucun compte Pixel n'utilise cet email. "
+                             "Le membre doit d'abord créer son compte.")
+                elif invited == request.user:
+                    error = "Vous faites déjà partie de cette entreprise."
+                elif ERPMembership.objects.filter(
+                        user=invited, client=client).exists():
+                    error = "Cette personne fait déjà partie de votre équipe."
+                elif ERPMembership.objects.filter(user=invited).exists():
+                    error = ("Cette personne est déjà rattachée à une autre "
+                             "entreprise.")
+                elif invite_role == 'manager' and membership.role != 'owner':
+                    error = "Seul le propriétaire peut nommer un gestionnaire."
+                else:
+                    ERPMembership.objects.create(
+                        user=invited, client=client, role=invite_role)
+                    messages.success(
+                        request, "%s a rejoint votre équipe." % (
+                            invited.get_full_name() or invited.username))
+                    return redirect('espace_entreprise')
         elif action == 'edit_profile':
             _maj_profil_utilisateur(request, profile)
             return redirect('espace_entreprise')
@@ -1955,6 +2004,53 @@ def espace_entreprise(request):
         'factures': factures,
         'error': error,
         'form': request.POST if request.method == 'POST' else {},
+    })
+
+
+def _document_espace(request, model, pk, **filters):
+    """Document du site appartenant à l'email du compte connecté."""
+    email = _email_espace(request.user)
+    if not email:
+        raise Http404("Aucun document rattaché à ce compte.")
+    return get_object_or_404(
+        model.objects.all(), pk=pk,
+        client_email__iexact=email, **filters)
+
+
+@login_required
+def espace_devis_print(request, pk):
+    """Impression d'un devis depuis l'espace entreprise."""
+    devis = _document_espace(request, Devis, pk)
+    return render(request, 'studio/admin_devis_print.html', {
+        'devis': devis,
+        'lignes': devis.lignes.all(),
+        'tva_montant': devis.montant_ttc - devis.montant_ht,
+        'societe': _societe(),
+    })
+
+
+@login_required
+def espace_prefacture_print(request, pk):
+    """Impression d'une préfacture depuis l'espace entreprise."""
+    prefacture = _document_espace(request, PreFacture, pk)
+    return render(request, 'studio/admin_prefacture_print.html', {
+        'prefacture': prefacture,
+        'lignes': prefacture.lignes.all(),
+        'tva_montant': prefacture.montant_ttc - prefacture.montant_ht,
+        'societe': _societe(),
+    })
+
+
+@login_required
+def espace_facture_print(request, pk):
+    """Impression d'une facture du site depuis l'espace entreprise."""
+    facture = _document_espace(
+        request, Facture, pk, erp_client__isnull=True)
+    return render(request, 'studio/admin_facture_print.html', {
+        'facture': facture,
+        'lignes': facture.lignes.all(),
+        'tva_montant': facture.montant_ttc - facture.montant_ht,
+        'societe': _societe(),
     })
 
 # ─── Administration bancaire ─────────────────────────────────
@@ -2116,18 +2212,13 @@ def dashboard(request):
 @login_required
 def facture_commande(request, cmd_id):
     commande = get_object_or_404(CommandeECommerce, id=cmd_id)
+    email = _email_espace(request.user)
+    if not (request.user.is_staff or (
+            email and (commande.client_email or '').lower() == email.lower())):
+        raise Http404("Facture introuvable.")
     items = commande.items.all()
-    from django.conf import settings
-    societe = {
-        'nom': 'Pixel Software Design',
-        'slogan': "L'architecture de l'innovation",
-        'adresse': 'El Hamma, Gabès, Tunisie',
-        'email': 'pixelsoftwaredesign@gmail.com',
-        'tel': '+216 52 675 027',
-        'registre': 'Matricule: XXXXXXXX/X/X/XXX',
-    }
     return render(request, 'studio/facture.html', {
-        'commande': commande, 'items': items, 'societe': societe,
+        'commande': commande, 'items': items, 'societe': _societe(),
     })
 
 # ─── API REST e‑commerce & stock ───────────────────────────

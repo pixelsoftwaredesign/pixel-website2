@@ -25,9 +25,11 @@ TAG = str(int(time.time()))[-7:]
 PREFIX = 'CHK ESP ' + TAG
 EMAIL_OWNER = 'chk_esp_owner_%s@test.tn' % TAG
 EMAIL_OTHER = 'chk_esp_other_%s@test.tn' % TAG
+EMAIL_MEMBER = 'chk_esp_member_%s@test.tn' % TAG
 
 # Nettoyage des executions precedentes.
-User.objects.filter(username__in=['chk_esp_owner', 'chk_esp_other']).delete()
+User.objects.filter(username__in=[
+    'chk_esp_owner', 'chk_esp_other', 'chk_esp_member']).delete()
 ERPClient.objects.filter(company_name__startswith='CHK ESP ').delete()
 Produit.objects.filter(nom__startswith='CHK ESP ').delete()
 Categorie.objects.filter(nom__startswith='CHK ESP ').delete()
@@ -52,6 +54,7 @@ def login(user):
 
 owner = mkuser('chk_esp_owner', EMAIL_OWNER)
 other = mkuser('chk_esp_other', EMAIL_OTHER)
+member = mkuser('chk_esp_member', EMAIL_MEMBER)
 
 tenant = ERPClient.objects.create(
     company_name=PREFIX + 'Tenant', contact_name='Tenant',
@@ -100,6 +103,7 @@ facture_tenant = Facture.objects.create(
 anon = Client(HTTP_HOST=APEX)
 owner_client = login(owner)
 other_client = login(other)
+member_client = login(member)
 
 print('\n== 1. Acces aux espaces ==')
 r = anon.get('/espace-client/')
@@ -149,6 +153,50 @@ check('entreprise : devis d\'un autre client masque', devis_other.reference not 
 check('entreprise : prefacture du client', prefacture_owner.numero in body)
 check('entreprise : facture du site', facture_owner.numero in body)
 check('entreprise : facture GestiActiv masquee', facture_tenant.numero not in body)
+check('entreprise : lien impression devis',
+      '/espace-entreprise/devis/%s/imprimer/' % devis_owner.id in body)
+check('entreprise : lien impression prefacture',
+      '/espace-entreprise/prefactures/%s/imprimer/' % prefacture_owner.id in body)
+check('entreprise : lien impression facture',
+      '/espace-entreprise/factures/%s/imprimer/' % facture_owner.id in body)
+
+print('\n== 3 bis. Impression securisee des documents ==')
+url_devis = '/espace-entreprise/devis/%s/imprimer/' % devis_owner.id
+url_prefacture = ('/espace-entreprise/prefactures/%s/imprimer/'
+                  % prefacture_owner.id)
+url_facture = '/espace-entreprise/factures/%s/imprimer/' % facture_owner.id
+r = anon.get(url_devis)
+check('impression anonyme -> 302 login',
+      r.status_code == 302 and '/login/' in r.headers.get('Location', ''),
+      r.headers.get('Location'))
+r = owner_client.get(url_devis)
+check('impression devis du client -> 200', r.status_code == 200, r.status_code)
+check('impression devis : reference', devis_owner.reference in r.content.decode())
+r = owner_client.get(url_prefacture)
+check('impression prefacture du client -> 200', r.status_code == 200,
+      r.status_code)
+check('impression prefacture : numero',
+      prefacture_owner.numero in r.content.decode())
+r = owner_client.get(url_facture)
+check('impression facture du client -> 200', r.status_code == 200,
+      r.status_code)
+check('impression facture : numero',
+      facture_owner.numero in r.content.decode())
+r = other_client.get(url_devis)
+check('impression devis d\'un autre client -> 404', r.status_code == 404,
+      r.status_code)
+r = other_client.get(url_facture)
+check('impression facture d\'un autre client -> 404', r.status_code == 404,
+      r.status_code)
+r = owner_client.get(
+    '/espace-entreprise/factures/%s/imprimer/' % facture_tenant.id)
+check('impression facture GestiActiv -> 404', r.status_code == 404,
+      r.status_code)
+r = other_client.get('/ecommerce/facture/%s/' % order_owner.id)
+check('facture commande d\'un autre client -> 404', r.status_code == 404,
+      r.status_code)
+r = owner_client.get('/ecommerce/facture/%s/' % order_owner.id)
+check('facture de sa commande -> 200', r.status_code == 200, r.status_code)
 
 print('\n== 4. Creation de l\'entreprise ==')
 body = owner_client.get('/espace-entreprise/').content.decode()
@@ -178,6 +226,49 @@ check('entreprise : nom affiche', PREFIX + 'Entreprise' in body)
 check('entreprise : equipe affichee', 'Équipe (1)' in body)
 check('entreprise : lien GestiActiv', 'href="/gestiactiv/dashboard/"' in body)
 check('entreprise : formulaire de modification', 'Modifier la fiche entreprise' in body)
+
+print('\n== 4 bis. Invitation de l\'equipe ==')
+r = owner_client.post('/espace-entreprise/', {
+    'action': 'inviter_membre',
+    'invite_email': EMAIL_MEMBER,
+    'invite_role': 'employee',
+})
+check('invitation membre -> 302', r.status_code == 302, r.status_code)
+check('invitation : rattachement cree',
+      ERPMembership.objects.filter(
+          user=member, client=company, role='employee').exists())
+body = member_client.get('/espace-entreprise/').content.decode()
+check('membre invite : entreprise visible', PREFIX + 'Entreprise' in body)
+check('membre invite : equipe a jour', 'Équipe (2)' in body)
+
+r = member_client.post('/espace-entreprise/', {
+    'action': 'inviter_membre',
+    'invite_email': EMAIL_OTHER,
+    'invite_role': 'employee',
+})
+check('employe : invitation refusee', r.status_code == 200)
+check('employe : message de permission',
+      'Seuls le propriétaire et le gestionnaire' in r.content.decode())
+check('employe : aucun rattachement cree',
+      not ERPMembership.objects.filter(user=other, client=company).exists())
+
+r = owner_client.post('/espace-entreprise/', {
+    'action': 'inviter_membre',
+    'invite_email': EMAIL_OWNER,
+    'invite_role': 'employee',
+})
+check('invitation de soi-meme refusee', r.status_code == 200)
+check('invitation de soi-meme : message',
+      'déjà partie de cette entreprise' in r.content.decode())
+
+r = owner_client.post('/espace-entreprise/', {
+    'action': 'inviter_membre',
+    'invite_email': 'inconnu_%s@test.tn' % TAG,
+    'invite_role': 'employee',
+})
+check('invitation email inconnu refusee', r.status_code == 200)
+check('invitation email inconnu : message',
+      "Aucun compte Pixel" in r.content.decode())
 
 print('\n== 5. Modification et permissions ==')
 r = owner_client.post('/espace-entreprise/', {
