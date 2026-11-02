@@ -1,0 +1,66 @@
+<div class="ent-card esp-panier">
+  <div class="p-top">
+    <div>
+      <h3>🛒 Mon panier</h3>
+      <p class="esp-panier-sub">
+        {{ panier_count }} article{{ panier_count|pluralize }} ·
+        panier commun aux deux espaces et à la boutique
+      </p>
+    </div>
+    <a class="espace-switch" href="/ecommerce/">Boutique →</a>
+  </div>
+
+  {% if panier_items %}
+    {% for item in panier_items %}
+      <div class="esp-panier-item">
+        <div class="esp-panier-info">
+          <strong>{{ item.produit.nom }}</strong>
+          <span>
+            {% if item.produit.categorie %}{{ item.produit.categorie.nom }}{% else %}Catalogue{% endif %}
+            {% if item.produit.est_service %} · Service{% endif %}
+            · {{ item.produit.prix_vente }} TND / unité
+          </span>
+        </div>
+
+        <div class="esp-panier-qty">
+          <form method="POST">{% csrf_token %}
+            <input type="hidden" name="action" value="panier_qte">
+            <input type="hidden" name="produit_id" value="{{ item.produit.id }}">
+            <input type="hidden" name="quantite" value="{{ item.quantite|add:'-1' }}">
+            <button type="submit" aria-label="Diminuer la quantité de {{ item.produit.nom }}" {% if item.quantite <= 1 %}disabled{% endif %}>−</button>
+          </form>
+          <span aria-live="polite">{{ item.quantite }}</span>
+          <form method="POST">{% csrf_token %}
+            <input type="hidden" name="action" value="panier_qte">
+            <input type="hidden" name="produit_id" value="{{ item.produit.id }}">
+            <input type="hidden" name="quantite" value="{{ item.quantite|add:'1' }}">
+            <button type="submit" aria-label="Augmenter la quantité de {{ item.produit.nom }}">+</button>
+          </form>
+        </div>
+
+        <div class="esp-panier-subtotal">{{ item.sous_total }} TND</div>
+
+        <form method="POST" class="esp-panier-remove-form">{% csrf_token %}
+          <input type="hidden" name="action" value="panier_retirer">
+          <input type="hidden" name="produit_id" value="{{ item.produit.id }}">
+          <button type="submit" class="esp-panier-remove">Retirer</button>
+        </form>
+      </div>
+    {% endfor %}
+
+    <div class="esp-panier-total">
+      <span>Total</span>
+      <strong>{{ panier_total }} TND</strong>
+    </div>
+
+    <div class="ent-actions">
+      <a class="btn-p" href="{% url 'ecommerce_checkout' %}">Commander →</a>
+      <a class="espace-switch" href="?onglet=catalogue">← Continuer mes achats</a>
+    </div>
+  {% else %}
+    <div class="portail-empty">
+      Votre panier est vide.
+      <a href="?onglet=catalogue" style="color:var(--accent);text-decoration:none">Parcourir le catalogue →</a>
+    </div>
+  {% endif %}
+</div>

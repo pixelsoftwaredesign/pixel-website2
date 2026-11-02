@@ -12,20 +12,25 @@
 
 {% block tabs %}
 <div class="portail-tabs">
-  <button class="portail-tab active" onclick="switchTab('catalogue', this)">🛍️ Catalogue ({{ produits|length }})</button>
-  <button class="portail-tab" onclick="switchTab('commandes', this)">🛒 Commandes ({{ commandes|length }})</button>
-  <button class="portail-tab" onclick="switchTab('abonnements', this)">📋 Abonnements ({{ souscriptions|length }})</button>
-  <button class="portail-tab" onclick="switchTab('candidatures', this)">🤝 Candidatures ({{ candidatures|length }})</button>
-  <button class="portail-tab" onclick="switchTab('profil', this)">⚙️ Profil</button>
+  <button class="portail-tab {% if onglet == 'catalogue' %}active{% endif %}" onclick="switchTab('catalogue', this)">🛍️ Catalogue ({{ produits|length }})</button>
+  <button class="portail-tab {% if onglet == 'panier' %}active{% endif %}" onclick="switchTab('panier', this)">🛒 Panier ({{ panier_count }})</button>
+  <button class="portail-tab {% if onglet == 'commandes' %}active{% endif %}" onclick="switchTab('commandes', this)">📦 Commandes ({{ commandes|length }})</button>
+  <button class="portail-tab {% if onglet == 'abonnements' %}active{% endif %}" onclick="switchTab('abonnements', this)">📋 Abonnements ({{ souscriptions|length }})</button>
+  <button class="portail-tab {% if onglet == 'candidatures' %}active{% endif %}" onclick="switchTab('candidatures', this)">🤝 Candidatures ({{ candidatures|length }})</button>
+  <button class="portail-tab {% if onglet == 'profil' %}active{% endif %}" onclick="switchTab('profil', this)">⚙️ Profil</button>
 </div>
 {% endblock %}
 
 {% block sections %}
-<div class="portail-section active" id="section-catalogue">
+<div class="portail-section {% if onglet == 'catalogue' %}active{% endif %}" id="section-catalogue">
   {% include 'studio/_espace_catalogue.html' %}
 </div>
 
-<div class="portail-section" id="section-commandes">
+<div class="portail-section {% if onglet == 'panier' %}active{% endif %}" id="section-panier">
+  {% include 'studio/_espace_panier.html' %}
+</div>
+
+<div class="portail-section {% if onglet == 'commandes' %}active{% endif %}" id="section-commandes">
   {% for cmd in commandes %}
     <div class="portail-card">
       <div class="p-top">
@@ -43,7 +48,7 @@
   {% endfor %}
 </div>
 
-<div class="portail-section" id="section-abonnements">
+<div class="portail-section {% if onglet == 'abonnements' %}active{% endif %}" id="section-abonnements">
   {% for s in souscriptions %}
     <div class="portail-card">
       <div class="p-top">
@@ -58,7 +63,7 @@
   {% endfor %}
 </div>
 
-<div class="portail-section" id="section-candidatures">
+<div class="portail-section {% if onglet == 'candidatures' %}active{% endif %}" id="section-candidatures">
   {% for c in candidatures %}
     <div class="portail-card">
       <div class="p-top">
@@ -72,7 +77,7 @@
   {% endfor %}
 </div>
 
-<div class="portail-section" id="section-profil">
+<div class="portail-section {% if onglet == 'profil' %}active{% endif %}" id="section-profil">
   <div class="portail-card portail-profile">
     <form method="POST">{% csrf_token %}<input type="hidden" name="action" value="edit_profile">
       <div class="form-row"><label>Identifiant</label><input value="{{ request.user.username }}" disabled style="opacity:.5"></div>

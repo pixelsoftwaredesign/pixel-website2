@@ -321,4 +321,107 @@ check('catalogue : produits du site sans tenant',
 check('catalogue : produit tenant actif mais isole',
       tenant_product.actif and tenant_product.erp_client_id == tenant.id)
 
+print('\n== 7. Panier dans les espaces ==')
+# Ajout depuis le catalogue de l'espace client.
+r = owner_client.get('/ecommerce/ajouter/%s/' % product.id,
+                     HTTP_REFERER='/espace-client/')
+check('ajout panier depuis espace -> 302', r.status_code == 302, r.status_code)
+check('panier : produit en session',
+      owner_client.session.get('panier', {}).get(str(product.id)) == 1,
+      owner_client.session.get('panier'))
+
+body = owner_client.get('/espace-client/?onglet=panier').content.decode()
+check('client : onglet panier actif', 'section-panier' in body)
+check('client : panier affiche le produit', product.nom in body)
+check('client : compteur du panier', 'Panier (1)' in body)
+check('client : formulaire de quantite', 'name="action" value="panier_qte"' in body)
+check('client : bouton retirer', 'name="action" value="panier_retirer"' in body)
+
+# Mise a jour de la quantite depuis l'espace client.
+r = owner_client.post('/espace-client/', {
+    'action': 'panier_qte', 'produit_id': product.id, 'quantite': 2,
+})
+check('client : quantite -> 302', r.status_code == 302, r.status_code)
+check('client : redirection vers le panier',
+      r.headers.get('Location', '').endswith('/espace-client/?onglet=panier'),
+      r.headers.get('Location'))
+check('panier : quantite mise a jour',
+      owner_client.session.get('panier', {}).get(str(product.id)) == 2,
+      owner_client.session.get('panier'))
+body = owner_client.get('/espace-client/?onglet=panier').content.decode()
+check('client : compteur apres mise a jour', 'Panier (2)' in body)
+
+# Le panier est partage avec l'espace entreprise.
+body = owner_client.get('/espace-entreprise/?onglet=panier').content.decode()
+check('entreprise : panier partage', product.nom in body)
+check('entreprise : compteur du panier', 'Panier (2)' in body)
+r = owner_client.post('/espace-entreprise/', {
+    'action': 'panier_qte', 'produit_id': product.id, 'quantite': 3,
+})
+check('entreprise : quantite -> 302', r.status_code == 302, r.status_code)
+check('panier : quantite depuis entreprise',
+      owner_client.session.get('panier', {}).get(str(product.id)) == 3,
+      owner_client.session.get('panier'))
+
+# Un autre client ne voit pas ce panier.
+body = other_client.get('/espace-client/?onglet=panier').content.decode()
+check('autre client : panier vide', 'Votre panier est vide' in body)
+
+# Les produits des entreprises GestiActiv restent inaccessibles.
+r = owner_client.get('/ecommerce/ajouter/%s/' % tenant_product.id)
+check('ajout produit GestiActiv au panier -> 404', r.status_code == 404,
+      r.status_code)
+r = owner_client.post('/espace-client/', {
+    'action': 'panier_qte', 'produit_id': tenant_product.id, 'quantite': 5,
+})
+check('panier : produit GestiActiv refuse',
+      str(tenant_product.id) not in owner_client.session.get('panier', {}))
+
+# Quantite zero = retrait de la ligne.
+r = owner_client.post('/espace-client/', {
+    'action': 'panier_qte', 'produit_id': product.id, 'quantite': 0,
+})
+check('panier : quantite zero retire', r.status_code == 302, r.status_code)
+check('panier : ligne retiree',
+      str(product.id) not in owner_client.session.get('panier', {}),
+      owner_client.session.get('panier'))
+
+# Retrait explicite depuis l'espace.
+owner_client.get('/ecommerce/ajouter/%s/' % service.id,
+                 HTTP_REFERER='/espace-client/')
+r = owner_client.post('/espace-client/', {
+    'action': 'panier_retirer', 'produit_id': service.id,
+})
+check('panier : retrait -> 302', r.status_code == 302, r.status_code)
+check('panier : service retire',
+      str(service.id) not in owner_client.session.get('panier', {}),
+      owner_client.session.get('panier'))
+
+print('\n== 8. Panier public ==')
+owner_client.get('/ecommerce/ajouter/%s/' % product.id,
+                 HTTP_REFERER='/ecommerce/')
+body = owner_client.get('/ecommerce/panier/').content.decode()
+check('panier public : page accessible', 'Votre panier' in body)
+check('panier public : produit affiche', product.nom in body)
+check('panier public : formulaire de quantite', 'name="action" value="panier_qte"' in body)
+r = owner_client.post('/ecommerce/panier/', {
+    'action': 'panier_qte', 'produit_id': product.id, 'quantite': 4,
+})
+check('panier public : mise a jour -> 302', r.status_code == 302, r.status_code)
+check('panier public : quantite en session',
+      owner_client.session.get('panier', {}).get(str(product.id)) == 4,
+      owner_client.session.get('panier'))
+body = owner_client.get('/ecommerce/panier/').content.decode()
+check('panier public : compteur mis a jour', 'Votre panier (4)' in body)
+r = owner_client.post('/ecommerce/panier/', {
+    'action': 'panier_retirer', 'produit_id': product.id,
+})
+check('panier public : retrait -> 302', r.status_code == 302, r.status_code)
+check('panier public : panier vide',
+      'Votre panier est vide' in owner_client.get(
+          '/ecommerce/panier/').content.decode())
+r = anon.get('/ecommerce/panier/')
+check('panier public : accessible sans connexion', r.status_code == 200,
+      r.status_code)
+
 raise SystemExit(report())

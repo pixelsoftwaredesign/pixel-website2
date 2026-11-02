@@ -1548,12 +1548,83 @@ def gestion_recrutement(request):
     return render(request, 'studio/gestion_recrutement.html', {'candidatures': candidatures})
 
 # ─── E‑Commerce & Stock ────────────────────────────────────
+def _panier_details(request):
+    """Lignes du panier session, limitées au catalogue du site."""
+    panier = request.session.get('panier', {})
+    if not isinstance(panier, dict):
+        panier = {}
+    items = []
+    total = Decimal('0.00')
+    count = 0
+    produits = (Produit.objects
+                .filter(id__in=panier.keys(), actif=True,
+                        erp_client__isnull=True)
+                .select_related('categorie')
+                .order_by('nom'))
+    for produit in produits:
+        try:
+            quantite = int(panier.get(str(produit.id), 0))
+        except (TypeError, ValueError):
+            quantite = 0
+        if quantite <= 0:
+            continue
+        sous_total = (produit.prix_vente or Decimal('0')) * quantite
+        items.append({
+            'produit': produit,
+            'quantite': quantite,
+            'sous_total': sous_total,
+        })
+        total += sous_total
+        count += quantite
+    return items, total.quantize(Decimal('0.01')), count
+
+
+def _modifier_panier(request):
+    """Met à jour le panier depuis un POST (quantité ou retrait).
+
+    Retourne True si l'action a été traitée, False sinon. Seuls les produits
+    actifs du site peuvent entrer dans le panier.
+    """
+    if request.method != 'POST':
+        return False
+    action = (request.POST.get('action') or '').strip()
+    if action not in ('panier_qte', 'panier_retirer'):
+        return False
+    try:
+        produit_id = int(request.POST.get('produit_id') or 0)
+    except (TypeError, ValueError):
+        produit_id = 0
+    key = str(produit_id) if produit_id else ''
+    panier = request.session.get('panier', {})
+    if not isinstance(panier, dict):
+        panier = {}
+
+    if action == 'panier_retirer':
+        if key:
+            panier.pop(key, None)
+    else:
+        try:
+            quantite = int(request.POST.get('quantite') or 0)
+        except (TypeError, ValueError):
+            quantite = 0
+        if not key or quantite <= 0:
+            if key:
+                panier.pop(key, None)
+        elif Produit.objects.filter(
+                id=produit_id, actif=True, erp_client__isnull=True).exists():
+            panier[key] = min(quantite, 999)
+        else:
+            panier.pop(key, None)
+
+    request.session['panier'] = panier
+    return True
+
+
 def ecommerce_index(request):
     categories = Categorie.objects.filter(erp_client__isnull=True)
     produits = Produit.objects.filter(
         actif=True, erp_client__isnull=True).order_by('-created_at')[:50]
-    panier = request.session.get('panier', {})
-    nb_articles = sum(panier.values())
+    _, _, nb_articles = _panier_details(request)
     return render(request, 'studio/ecommerce.html', {
         'categories': categories, 'produits': produits,
         'nb_articles': nb_articles,
@@ -1563,8 +1634,7 @@ def ecommerce_categorie(request, cat_id):
     cat = get_object_or_404(Categorie, id=cat_id, erp_client__isnull=True)
     produits = Produit.objects.filter(
         categorie=cat, actif=True, erp_client__isnull=True)
-    panier = request.session.get('panier', {})
-    nb_articles = sum(panier.values())
+    _, _, nb_articles = _panier_details(request)
     return render(request, 'studio/ecommerce.html', {
         'categories': Categorie.objects.filter(erp_client__isnull=True),
         'produits': produits, 'categorie_active': cat,
@@ -1572,31 +1642,33 @@ def ecommerce_categorie(request, cat_id):
     })
 
 def ecommerce_panier(request):
-    panier_ids = request.session.get('panier', {})
-    produits = Produit.objects.filter(
-        id__in=panier_ids.keys(), actif=True, erp_client__isnull=True)
-    items = []
-    total = 0
-    for p in produits:
-        qte = panier_ids.get(str(p.id), 0)
-        st = p.prix_vente * qte
-        items.append({'produit': p, 'quantite': qte, 'sous_total': st})
-        total += st
+    if request.method == 'POST':
+        _modifier_panier(request)
+        return redirect('ecommerce_panier')
+    items, total, nb_articles = _panier_details(request)
     return render(request, 'studio/ecommerce_panier.html', {
-        'items': items, 'total': total,
+        'items': items, 'total': total, 'nb_articles': nb_articles,
     })
 
 def ecommerce_ajouter_panier(request, prod_id):
     prod = get_object_or_404(
         Produit, id=prod_id, actif=True, erp_client__isnull=True)
     panier = request.session.get('panier', {})
+    if not isinstance(panier, dict):
+        panier = {}
     key = str(prod.id)
-    panier[key] = panier.get(key, 0) + 1
+    try:
+        quantite = int(panier.get(key, 0))
+    except (TypeError, ValueError):
+        quantite = 0
+    panier[key] = min(quantite + 1, 999)
     request.session['panier'] = panier
     return redirect(request.META.get('HTTP_REFERER', 'ecommerce_index'))
 
 def ecommerce_supprimer_panier(request, prod_id):
     panier = request.session.get('panier', {})
+    if not isinstance(panier, dict):
+        panier = {}
     panier.pop(str(prod_id), None)
     request.session['panier'] = panier
     return redirect('ecommerce_panier')
@@ -1796,6 +1868,12 @@ def _catalogue_espaces():
     return produits, categories
 
 
+def _onglet_espace(request, allowed):
+    """Onglet actif d'un espace, validé contre la liste de ses onglets."""
+    onglet = (request.GET.get('onglet') or '').strip()
+    return onglet if onglet in allowed else allowed[0]
+
+
 def _email_espace(user):
     return (user.email or '').strip()
 
@@ -1833,16 +1911,26 @@ def espace_client(request):
     """Espace client : commandes, abonnements, candidatures et catalogue."""
     profile, _ = UserProfile.objects.get_or_create(user=request.user)
     email = _email_espace(request.user)
+    if _modifier_panier(request):
+        return redirect('%s?onglet=panier' % request.path)
     if request.method == 'POST':
         if request.POST.get('action') == 'edit_profile':
             _maj_profil_utilisateur(request, profile)
             return redirect('espace_client')
     produits, categories = _catalogue_espaces()
+    panier_items, panier_total, panier_count = _panier_details(request)
+    onglet = _onglet_espace(request, (
+        'catalogue', 'panier', 'commandes', 'abonnements', 'candidatures',
+        'profil'))
     return render(request, 'studio/espace_client.html', {
         'espace': 'client',
         'profile': profile,
         'produits': produits,
         'categories': categories,
+        'panier_items': panier_items,
+        'panier_total': panier_total,
+        'panier_count': panier_count,
+        'onglet': onglet,
         'commandes': _commandes_espace(email),
         'souscriptions': _souscriptions_espace(email),
         'candidatures': (Candidature.objects.filter(email__iexact=email)
@@ -1867,6 +1955,9 @@ def espace_entreprise(request):
     membership = _erp_membership(request.user)
     client = membership.client if membership else None
     error = ''
+
+    if _modifier_panier(request):
+        return redirect('%s?onglet=panier' % request.path)
 
     if request.method == 'POST':
         action = request.POST.get('action')
@@ -1985,6 +2076,11 @@ def espace_entreprise(request):
         prefactures = PreFacture.objects.none()
         factures = Facture.objects.none()
 
+    panier_items, panier_total, panier_count = _panier_details(request)
+    onglet = _onglet_espace(request, (
+        'catalogue', 'panier', 'commandes', 'documents', 'abonnements',
+        'entreprise', 'profil'))
+
     return render(request, 'studio/espace_entreprise.html', {
         'espace': 'entreprise',
         'profile': profile,
@@ -1997,6 +2093,10 @@ def espace_entreprise(request):
                            if client else '—'),
         'produits': produits,
         'categories': categories,
+        'panier_items': panier_items,
+        'panier_total': panier_total,
+        'panier_count': panier_count,
+        'onglet': onglet,
         'commandes': _commandes_espace(email),
         'souscriptions': _souscriptions_espace(email),
         'devis': devis,

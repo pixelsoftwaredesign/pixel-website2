@@ -9,16 +9,23 @@
 <style>
 .panier-page{padding:9rem 3rem 3rem;max-width:700px;margin:0 auto}
 .panier-page h1{font-size:1.5rem}
-.panier-item{display:flex;justify-content:space-between;align-items:center;padding:.6rem 0;border-bottom:1px solid var(--border)}
+.panier-item{display:flex;justify-content:space-between;align-items:center;gap:.7rem;flex-wrap:wrap;padding:.6rem 0;border-bottom:1px solid var(--border)}
+.panier-item .pinfo{flex:1 1 180px}
 .panier-item .pnom{font-size:.8rem;font-weight:600}
 .panier-item .pqte{font-size:.7rem;color:var(--muted);font-family:'Space Mono',monospace}
+.panier-item .pactions{display:flex;align-items:center;justify-content:flex-end;gap:.6rem;flex-wrap:wrap}
 .panier-item .pprix{font-size:.8rem;color:var(--accent);font-weight:700;font-family:'Space Mono',monospace}
-.panier-item .pretirer{color:#ef4444;text-decoration:none;font-size:.65rem;font-family:'Space Mono',monospace}
+.panier-item .qte-form{display:flex;align-items:center;gap:.3rem}
+.panier-item .qte-form input{width:3.4rem;padding:.32rem .4rem;border:1px solid var(--border);border-radius:6px;background:#0a1a15;color:var(--text);font-family:'Space Mono',monospace;font-size:.68rem}
+.panier-item .qte-form input:focus{border-color:var(--accent);outline:none}
+.panier-item .qte-form button{padding:.32rem .5rem;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--text);cursor:pointer;font-family:'Space Mono',monospace;font-size:.6rem}
+.panier-item .qte-form button:hover{border-color:var(--accent);color:var(--accent)}
+.panier-item .pretirer{border:none;background:transparent;cursor:pointer;color:#ef4444;text-decoration:none;font-size:.65rem;font-family:'Space Mono',monospace}
 .panier-item .pretirer:hover{text-decoration:underline}
 .panier-total{display:flex;justify-content:space-between;align-items:center;padding:1rem 0;font-size:1.1rem;font-weight:700}
 .panier-total span:last-child{color:var(--accent);font-family:'Space Mono',monospace}
-.panier-actions{display:flex;gap:.6rem;margin-top:.5rem}
-@media(max-width:768px){.panier-page{padding:9rem 1rem 2rem}}
+.panier-actions{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.5rem}
+@media(max-width:768px){.panier-page{padding:9rem 1rem 2rem}.panier-item .pactions{width:100%;justify-content:space-between}}
 </style>
 </head>
 <body>
@@ -29,12 +36,25 @@
   </ul>
 <button class="burger" onclick="document.getElementById('navMenu').classList.toggle('open')" aria-label="Menu"><span></span><span></span><span></span></button></nav>
 <div class="panier-page">
-<h1>🛒 Votre panier</h1>
+<h1>🛒 Votre panier{% if nb_articles %} ({{ nb_articles }}){% endif %}</h1>
 {% if items %}
 {% for item in items %}
 <div class="panier-item">
-<div><div class="pnom">{{ item.produit.nom }}</div><div class="pqte">Qté: {{ item.quantite }}</div></div>
-<div><span class="pprix">{{ item.sous_total }} TND</span> <a href="/ecommerce/retirer/{{ item.produit.id }}/" class="pretirer">✕ Retirer</a></div>
+<div class="pinfo"><div class="pnom">{{ item.produit.nom }}</div><div class="pqte">{{ item.produit.prix_vente }} TND / unité</div></div>
+<div class="pactions">
+<form method="POST" class="qte-form">{% csrf_token %}
+<input type="hidden" name="action" value="panier_qte">
+<input type="hidden" name="produit_id" value="{{ item.produit.id }}">
+<input type="number" name="quantite" value="{{ item.quantite }}" min="1" max="999" inputmode="numeric" aria-label="Quantité pour {{ item.produit.nom }}">
+<button type="submit">OK</button>
+</form>
+<span class="pprix">{{ item.sous_total }} TND</span>
+<form method="POST">{% csrf_token %}
+<input type="hidden" name="action" value="panier_retirer">
+<input type="hidden" name="produit_id" value="{{ item.produit.id }}">
+<button type="submit" class="pretirer">✕ Retirer</button>
+</form>
+</div>
 </div>
 {% endfor %}
 <div class="panier-total"><span>Total</span><span>{{ total }} TND</span></div>

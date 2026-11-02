@@ -43,6 +43,7 @@
     </div>
     <div class="espace-user">
       <span>{{ request.user.username }}</span>
+      <a class="espace-switch" href="?onglet=panier">🛒 Panier{% if panier_count %} ({{ panier_count }}){% endif %}</a>
       {% block header_action %}{% endblock %}
     </div>
   </div>

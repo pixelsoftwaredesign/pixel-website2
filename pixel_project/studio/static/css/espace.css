@@ -376,6 +376,104 @@
   color: #05100D;
 }
 
+/* Panier des espaces */
+.esp-panier .p-top { margin-bottom: .4rem; }
+.esp-panier h3 { margin-bottom: .15rem; }
+.esp-panier-sub { margin: 0; color: var(--muted); font-size: .68rem; }
+
+.esp-panier-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .8rem;
+  flex-wrap: wrap;
+  padding: .8rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.esp-panier-info { flex: 1 1 220px; min-width: 0; }
+.esp-panier-info strong { display: block; font-size: .8rem; }
+.esp-panier-info span { color: var(--muted); font-size: .64rem; }
+
+.esp-panier-qty {
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+}
+
+.esp-panier-qty form { display: inline-flex; }
+
+.esp-panier-qty button {
+  width: 1.7rem;
+  height: 1.7rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+  font-size: .9rem;
+  line-height: 1;
+  transition: .2s;
+}
+
+.esp-panier-qty button:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.esp-panier-qty button:disabled { opacity: .35; cursor: not-allowed; }
+
+.esp-panier-qty > span {
+  min-width: 1.6rem;
+  text-align: center;
+  color: var(--text);
+  font-family: 'Space Mono', monospace;
+  font-size: .72rem;
+}
+
+.esp-panier-subtotal {
+  min-width: 5.5rem;
+  color: var(--accent);
+  font-family: 'Space Mono', monospace;
+  font-size: .72rem;
+  font-weight: 700;
+  text-align: right;
+}
+
+.esp-panier-remove-form { margin: 0; }
+
+.esp-panier-remove {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: #ef4444;
+  cursor: pointer;
+  font-family: 'Space Mono', monospace;
+  font-size: .58rem;
+}
+
+.esp-panier-remove:hover { text-decoration: underline; }
+
+.esp-panier-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: .9rem 0 .2rem;
+  font-size: .9rem;
+  font-weight: 700;
+}
+
+.esp-panier-total strong {
+  color: var(--accent);
+  font-family: 'Space Mono', monospace;
+}
+
+@media (max-width: 768px) {
+  .esp-panier-item { align-items: flex-start; }
+  .esp-panier-subtotal { min-width: 0; text-align: left; }
+  .esp-panier-remove-form { margin-left: auto; }
+}
+
 /* Entreprise */
 .ent-card {
   padding: 1.2rem;
