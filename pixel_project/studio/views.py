@@ -2645,8 +2645,36 @@ from django.conf import settings
 
 PIXMAIL_DOMAIN = getattr(settings, 'PIXMAIL_DOMAIN', 'pixelsoftwaredesign.xyz')
 
+@login_required
 def academy(request):
-    return render(request, 'studio/academy.html')
+    from .models import AcademyProgress
+    progress = {p.module: p for p in AcademyProgress.objects.filter(user=request.user)}
+    return render(request, 'studio/academy.html', {
+        'academy_progress': progress,
+        'academy_user': request.user,
+    })
+
+@login_required
+def api_academy_progress(request):
+    from .models import AcademyProgress
+    if request.method == 'POST':
+        import json as _json
+        try:
+            data = _json.loads(request.body or '{}')
+        except Exception:
+            data = request.POST
+        module = int(data.get('module', 0))
+        score = int(data.get('score', 0))
+        completed = bool(data.get('completed', False))
+        if module < 1 or module > 5:
+            return JsonResponse({'status': 'error', 'message': 'module invalide'}, status=400)
+        obj, _ = AcademyProgress.objects.update_or_create(
+            user=request.user, module=module,
+            defaults={'score': score, 'completed': completed},
+        )
+        return JsonResponse({'status': 'success', 'module': obj.module, 'score': obj.score, 'completed': obj.completed})
+    progress = {p.module: {'score': p.score, 'completed': p.completed} for p in AcademyProgress.objects.filter(user=request.user)}
+    return JsonResponse({'status': 'success', 'progress': progress})
 
 def pixmail_landing(request):
     return render(request, 'studio/pixmail_landing.html')

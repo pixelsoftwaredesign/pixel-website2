@@ -1900,3 +1900,21 @@ class NewsletterCampaign(models.Model):
 
     def __str__(self):
         return self.sujet
+
+
+# ─── PixelSoftware Academy — progression étudiant ─────────────
+class AcademyProgress(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='academy_progress')
+    module = models.PositiveSmallIntegerField(verbose_name="Module (1-5)")
+    score = models.PositiveSmallIntegerField(default=0, verbose_name="Score quiz")
+    completed = models.BooleanField(default=False, verbose_name="Module complété")
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Progression Academy"
+        verbose_name_plural = "Progressions Academy"
+        unique_together = ('user', 'module')
+        ordering = ['user', 'module']
+
+    def __str__(self):
+        return f"{self.user.username} — module {self.module} ({self.score})"
