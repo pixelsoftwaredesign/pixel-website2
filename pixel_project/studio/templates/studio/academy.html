@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PixelSoftware Academy — Advanced Systems & AI Architecture</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome 6 Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- KaTeX for crisp LaTeX Math Rendering -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        pixel: {
+                            bg: '#070a11',
+                            panel: '#0d1322',
+                            border: '#1b2438',
+                            input: '#12192c',
+                            cyan: '#38bdf8',
+                            indigo: '#818cf8',
+                            purple: '#c084fc',
+                            emerald: '#34d399',
+                            amber: '#fbbf24',
+                            rose: '#fb7185'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #070a11;
+            background-image: 
+                radial-gradient(rgba(56, 189, 248, 0.05) 1px, transparent 1px),
+                radial-gradient(rgba(129, 140, 248, 0.03) 1px, transparent 1px);
+            background-size: 32px 32px, 16px 16px;
+            background-position: 0 0, 8px 8px;
+        }
+
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #070a11; }
+        ::-webkit-scrollbar-thumb { background: #1b2438; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #38bdf8; }
+
+        .glow-cyan { box-shadow: 0 0 25px -5px rgba(56, 189, 248, 0.35); }
+        .code-editor {
+            font-family: 'JetBrains Mono', monospace;
+            tab-size: 4;
+        }
+    </style>
+</head>
+<body class="text-slate-200 font-sans min-h-screen flex flex-col antialiased selection:bg-pixel-cyan selection:text-slate-900">
+
+    <!-- TOP APPLICATION NAVBAR -->
+    <header class="sticky top-0 z-50 bg-pixel-panel/90 backdrop-blur-md border-b border-pixel-border px-4 lg:px-6 py-2.5">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <div class="flex items-center gap-3 cursor-pointer" onclick="switchNav('cursus')">
+                <div class="w-9 h-9 rounded-lg bg-gradient-to-br from-pixel-cyan via-pixel-indigo to-pixel-purple p-[1px] glow-cyan">
+                    <div class="w-full h-full bg-pixel-bg rounded-[7px] flex items-center justify-center text-pixel-cyan font-mono font-black text-lg">
+                        P█
+                    </div>
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-mono font-bold text-base tracking-tight text-white">PIXELSOFTWARE</span>
+                        <span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-pixel-cyan/10 border border-pixel-cyan/30 text-pixel-cyan">ACADEMY</span>
+                    </div>
+                    <span class="block text-[10px] font-mono text-slate-400">High-Performance Systems & AI Architecture</span>
+                </div>
+            </div>
+
+            <nav class="hidden md:flex items-center gap-1 bg-pixel-bg p-1 rounded-xl border border-pixel-border font-mono text-xs">
+                <button onclick="switchNav('cursus')" id="nav-cursus" class="px-3.5 py-1.5 rounded-lg transition text-pixel-cyan bg-pixel-panel border border-pixel-border font-medium flex items-center gap-2">
+                    <i class="fa-solid fa-graduation-cap"></i> Cursus
+                </button>
+                <button onclick="switchNav('sandbox')" id="nav-sandbox" class="px-3.5 py-1.5 rounded-lg transition text-slate-400 hover:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-terminal text-pixel-cyan"></i> Sandbox
+                </button>
+                <button onclick="switchNav('graph')" id="nav-graph" class="px-3.5 py-1.5 rounded-lg transition text-slate-400 hover:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-diagram-project text-pixel-purple"></i> Meaning Graph
+                </button>
+                <button onclick="switchNav('projet')" id="nav-projet" class="px-3.5 py-1.5 rounded-lg transition text-slate-400 hover:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-hospital text-pixel-rose"></i> Projet Santé
+                </button>
+                <button onclick="switchNav('assessment')" id="nav-assessment" class="px-3.5 py-1.5 rounded-lg transition text-slate-400 hover:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-award text-pixel-amber"></i> Certification
+                </button>
+            </nav>
+
+            <div class="flex items-center gap-3 font-mono text-xs">
+                <div class="hidden sm:flex items-center gap-2 px-3 py-1 rounded-lg bg-pixel-input border border-pixel-border text-slate-300">
+                    <span class="w-2 h-2 rounded-full bg-pixel-emerald animate-pulse"></span>
+                    <span class="text-[11px]">Runtime: Python 3.12 (NumPy Engine)</span>
+                </div>
+                <a href="/" class="text-slate-400 hover:text-pixel-cyan"><i class="fa-solid fa-arrow-left mr-1"></i> Site</a>
+            </div>
+        </div>
+        
+        <div class="flex md:hidden mt-2 pt-2 border-t border-pixel-border justify-around font-mono text-xs">
+            <button onclick="switchNav('cursus')" id="mob-cursus" class="px-2.5 py-1 rounded text-pixel-cyan font-bold">Cursus</button>
+            <button onclick="switchNav('sandbox')" id="mob-sandbox" class="px-2.5 py-1 rounded text-slate-400">Sandbox</button>
+            <button onclick="switchNav('graph')" id="mob-graph" class="px-2.5 py-1 rounded text-slate-400">Graphe</button>
+            <button onclick="switchNav('projet')" id="mob-projet" class="px-2.5 py-1 rounded text-slate-400">Projet</button>
+            <button onclick="switchNav('assessment')" id="mob-assessment" class="px-2.5 py-1 rounded text-slate-400">Quiz</button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT VIEW CONTAINER -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+
+        <!-- ================= SECTION 1: CURSUS & MODULES ================= -->
+        <section id="sec-cursus" class="space-y-6">
+            <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-pixel-panel via-pixel-bg to-pixel-panel border border-pixel-border p-6 sm:p-8">
+                <div class="max-w-3xl space-y-3 relative z-10">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-pixel-cyan/10 border border-pixel-cyan/30 text-pixel-cyan font-mono text-xs">
+                        <i class="fa-solid fa-microchip"></i> Formations Fondamentales & Practical Extensions 2026
+                    </div>
+                    <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight text-white">
+                        Maîtrisez les Architectures <span class="bg-gradient-to-r from-pixel-cyan via-pixel-indigo to-pixel-purple bg-clip-text text-transparent">Distribuées & IA Avancées</span>
+                    </h1>
+                    <p class="text-slate-400 text-sm leading-relaxed">
+                        Concevez des moteurs de calcul haute performance, maîtrisez le Federated Learning avec régularisation FedProx, bâtissez des Meaning Graphs, appliquez le LoRA Fine-Tuning Edge et sécurisez vos applications hospitalières.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Curricula Cards Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Module 1 -->
+                <div class="bg-pixel-panel border border-pixel-border hover:border-pixel-cyan/50 rounded-2xl p-6 transition flex flex-col justify-between group">
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div class="w-12 h-12 rounded-xl bg-pixel-input border border-pixel-border flex items-center justify-center text-pixel-cyan text-xl">
+                                <i class="fa-solid fa-network-wired"></i>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-mono border border-pixel-cyan/40 bg-pixel-cyan/10 text-pixel-cyan">Module 01</span>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-white group-hover:text-pixel-cyan transition">Big Data & Federated Learning</h3>
+                            <p class="text-xs font-mono text-slate-400 mt-1">FedProx & DP-SGD</p>
+                        </div>
+                        <p class="text-slate-400 text-xs leading-relaxed">
+                            Algorithme FedProx sur données Non-I.I.D., injection de bruit par Differential Privacy et agrégation robuste Trimmed Mean.
+                        </p>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-pixel-border flex gap-2">
+                        <button onclick="openCourseModal(1)" class="w-full py-2.5 rounded-xl bg-pixel-input text-pixel-cyan border border-pixel-cyan/30 font-mono text-xs transition">Théorie</button>
+                        <button onclick="loadSandboxPreset('fedprox')" class="py-2.5 px-3 rounded-xl bg-pixel-bg text-slate-300 font-mono text-xs border border-pixel-border transition"><i class="fa-solid fa-play text-pixel-emerald"></i></button>
+                    </div>
+                </div>
+
+                <!-- Module 2 -->
+                <div class="bg-pixel-panel border border-pixel-border hover:border-pixel-purple/50 rounded-2xl p-6 transition flex flex-col justify-between group">
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div class="w-12 h-12 rounded-xl bg-pixel-input border border-pixel-border flex items-center justify-center text-pixel-purple text-xl">
+                                <i class="fa-solid fa-diagram-project"></i>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-mono border border-pixel-purple/40 bg-pixel-purple/10 text-pixel-purple">Module 02</span>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-white group-hover:text-pixel-purple transition">Meaning Graphs & GraphRAG</h3>
+                            <p class="text-xs font-mono text-slate-400 mt-1">Recherche Vectorielle + Ontologie</p>
+                        </div>
+                        <p class="text-slate-400 text-xs leading-relaxed">
+                            Résolution des limites vectorielles denses. Alignement ontologique, triplets RDF et hybridation Dense + Sparse + Graph Traversal.
+                        </p>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-pixel-border flex gap-2">
+                        <button onclick="openCourseModal(2)" class="w-full py-2.5 rounded-xl bg-pixel-input text-pixel-purple border border-pixel-purple/30 font-mono text-xs transition">Théorie</button>
+                        <button onclick="switchNav('graph')" class="py-2.5 px-3 rounded-xl bg-pixel-bg text-slate-300 font-mono text-xs border border-pixel-border transition"><i class="fa-solid fa-eye text-pixel-purple"></i></button>
+                    </div>
+                </div>
+
+                <!-- Module 3 -->
+                <div class="bg-pixel-panel border border-pixel-border hover:border-pixel-indigo/50 rounded-2xl p-6 transition flex flex-col justify-between group">
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div class="w-12 h-12 rounded-xl bg-pixel-input border border-pixel-border flex items-center justify-center text-pixel-indigo text-xl">
+                                <i class="fa-solid fa-sitemap"></i>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-mono border border-pixel-indigo/40 bg-pixel-indigo/10 text-pixel-indigo">Module 03</span>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-white group-hover:text-pixel-indigo transition">Enterprise AI Architecture</h3>
+                            <p class="text-xs font-mono text-slate-400 mt-1">Router, Cache & Agents</p>
+                        </div>
+                        <p class="text-slate-400 text-xs leading-relaxed">
+                            Pattern Router-Dispatcher pour SLM/LLM, cache sémantique haute vitesse, Circuit Breakers et orchestration d'Agents ReAct.
+                        </p>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-pixel-border flex gap-2">
+                        <button onclick="openCourseModal(3)" class="w-full py-2.5 rounded-xl bg-pixel-input text-pixel-indigo border border-pixel-indigo/30 font-mono text-xs transition">Théorie</button>
+                        <button onclick="loadSandboxPreset('router')" class="py-2.5 px-3 rounded-xl bg-pixel-bg text-slate-300 font-mono text-xs border border-pixel-border transition"><i class="fa-solid fa-play text-pixel-emerald"></i></button>
+                    </div>
+                </div>
+
+                <!-- Module 4 -->
+                <div class="bg-pixel-panel border border-pixel-border hover:border-pixel-emerald/50 rounded-2xl p-6 transition flex flex-col justify-between group">
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div class="w-12 h-12 rounded-xl bg-pixel-input border border-pixel-border flex items-center justify-center text-pixel-emerald text-xl">
+                                <i class="fa-solid fa-bolt"></i>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-mono border border-pixel-emerald/40 bg-pixel-emerald/10 text-pixel-emerald">Extension 04</span>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-white group-hover:text-pixel-emerald transition">LoRA & Edge Fine-Tuning</h3>
+                            <p class="text-xs font-mono text-slate-400 mt-1">Adaptation à Bas Rang sur Edge</p>
+                        </div>
+                        <p class="text-slate-400 text-xs leading-relaxed">
+                            Décomposition $\Delta W = \frac{\alpha}{r} B \cdot A$ pour un fine-tuning sobre en mémoire et des échanges réseaux ultra-compacts.
+                        </p>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-pixel-border flex gap-2">
+                        <button onclick="openCourseModal(4)" class="w-full py-2.5 rounded-xl bg-pixel-input text-pixel-emerald border border-pixel-emerald/30 font-mono text-xs transition">Théorie</button>
+                        <button onclick="loadSandboxPreset('lora')" class="py-2.5 px-3 rounded-xl bg-pixel-bg text-slate-300 font-mono text-xs border border-pixel-border transition"><i class="fa-solid fa-play text-pixel-emerald"></i></button>
+                    </div>
+                </div>
+
+                <!-- Module 5 -->
+                <div class="bg-pixel-panel border border-pixel-border hover:border-pixel-rose/50 rounded-2xl p-6 transition flex flex-col justify-between group">
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <div class="w-12 h-12 rounded-xl bg-pixel-input border border-pixel-border flex items-center justify-center text-pixel-rose text-xl">
+                                <i class="fa-solid fa-shield-halved"></i>
+                            </div>
+                            <span class="px-2.5 py-1 rounded-full text-[10px] font-mono border border-pixel-rose/40 bg-pixel-rose/10 text-pixel-rose">Extension 05</span>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-white group-hover:text-pixel-rose transition">Guardrails & Gouvernance PII</h3>
+                            <p class="text-xs font-mono text-slate-400 mt-1">Anonymisation & Anti-Prompt Injection</p>
+                        </div>
+                        <p class="text-slate-400 text-xs leading-relaxed">
+                            Masquage automatique des données de santé identifiables (SSN, emails) et filtrage préventif des injections directes/indirectes.
+                        </p>
+                    </div>
+                    <div class="mt-6 pt-4 border-t border-pixel-border flex gap-2">
+                        <button onclick="openCourseModal(5)" class="w-full py-2.5 rounded-xl bg-pixel-input text-pixel-rose border border-pixel-rose/30 font-mono text-xs transition">Théorie</button>
+                        <button onclick="loadSandboxPreset('guardrails')" class="py-2.5 px-3 rounded-xl bg-pixel-bg text-slate-300 font-mono text-xs border border-pixel-border transition"><i class="fa-solid fa-play text-pixel-emerald"></i></button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 2: LIVE CODE SANDBOX ================= -->
+        <section id="sec-sandbox" class="hidden space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-pixel-panel p-4 rounded-xl border border-pixel-border">
+                <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-pixel-cyan/10 border border-pixel-cyan/30 flex items-center justify-center text-pixel-cyan font-mono font-bold text-sm">
+                        &gt;_
+                    </div>
+                    <div>
+                        <h2 class="text-base font-bold text-white">Live Algorithm Sandbox & Execution Engine</h2>
+                        <p class="text-xs font-mono text-slate-400">Exécution client-side d'algorithmes système & IA From Scratch</p>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2 font-mono text-xs">
+                    <span class="text-slate-400 hidden sm:inline">Presets :</span>
+                    <button onclick="loadSandboxPreset('fedprox')" class="px-2.5 py-1 rounded-lg bg-pixel-input text-pixel-cyan border border-pixel-border">FedProx + DP</button>
+                    <button onclick="loadSandboxPreset('lora')" class="px-2.5 py-1 rounded-lg bg-pixel-input text-pixel-emerald border border-pixel-border">LoRA Edge</button>
+                    <button onclick="loadSandboxPreset('guardrails')" class="px-2.5 py-1 rounded-lg bg-pixel-input text-pixel-rose border border-pixel-border">PII Guardrails</button>
+                    <button onclick="loadSandboxPreset('router')" class="px-2.5 py-1 rounded-lg bg-pixel-input text-pixel-indigo border border-pixel-border">Router</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                <div class="lg:col-span-7 bg-pixel-panel border border-pixel-border rounded-xl flex flex-col overflow-hidden">
+                    <div class="bg-pixel-bg px-4 py-2 border-b border-pixel-border flex items-center justify-between font-mono text-xs">
+                        <span id="editor-filename" class="text-slate-300 font-medium">algorithm_fedprox_dp.py</span>
+                        <span class="text-slate-500">Python 3.12 (Simulated)</span>
+                    </div>
+                    <textarea id="code-editor" class="w-full h-[440px] bg-pixel-bg text-slate-200 p-4 code-editor text-xs leading-relaxed focus:outline-none resize-none border-none font-mono" spellcheck="false"></textarea>
+                    <div class="bg-pixel-panel p-3 border-t border-pixel-border flex items-center justify-between">
+                        <span class="text-[11px] font-mono text-slate-400"><i class="fa-solid fa-keyboard mr-1"></i> Modifiez le code en temps réel</span>
+                        <button onclick="runSandboxCode()" class="px-5 py-2 rounded-lg bg-gradient-to-r from-pixel-cyan to-pixel-indigo text-slate-900 font-mono font-bold text-xs">
+                            <i class="fa-solid fa-play"></i> Lancer la Simulation
+                        </button>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-5 bg-pixel-panel border border-pixel-border rounded-xl flex flex-col overflow-hidden">
+                    <div class="bg-pixel-bg px-4 py-2 border-b border-pixel-border flex items-center justify-between font-mono text-xs">
+                        <span class="text-slate-300"><i class="fa-solid fa-terminal text-pixel-cyan mr-1.5"></i> Output Terminal</span>
+                        <button onclick="clearTerminal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                    <div id="terminal-output" class="w-full h-[485px] bg-pixel-bg text-slate-300 p-4 font-mono text-xs leading-relaxed overflow-y-auto space-y-1">
+                        <div class="text-slate-500">// Terminal prêt. Cliquez sur "Lancer la Simulation" pour exécuter l'algorithme.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 3: MEANING GRAPH VISUALIZER ================= -->
+        <section id="sec-graph" class="hidden space-y-4">
+            <div class="bg-pixel-panel p-4 rounded-xl border border-pixel-border flex items-center justify-between font-mono text-xs">
+                <div>
+                    <h2 class="text-base font-bold text-white">Meaning Graph & Knowledge Traversal Visualizer</h2>
+                    <p class="text-slate-400">Modélisation des nœuds FedProx, DP-SGD et Triplets Sémantiques GraphRAG</p>
+                </div>
+                <button onclick="toggleGraphAnimation()" id="btn-animate-graph" class="px-3 py-1.5 rounded-lg bg-pixel-input text-pixel-purple border border-pixel-border">
+                    <i class="fa-solid fa-pulse mr-1"></i> Dynamic Pulse: ON
+                </button>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                <div class="lg:col-span-8 bg-pixel-panel border border-pixel-border rounded-xl h-[500px] relative overflow-hidden">
+                    <canvas id="graphCanvas" class="w-full h-full cursor-pointer"></canvas>
+                </div>
+                <div class="lg:col-span-4 bg-pixel-panel border border-pixel-border rounded-xl p-5 space-y-4 font-mono text-xs">
+                    <div class="border-b border-pixel-border pb-3 flex items-center justify-between">
+                        <span class="text-slate-400">Node Inspector</span>
+                        <span id="inspect-node-type" class="px-2 py-0.5 rounded bg-pixel-purple/10 border border-pixel-purple/30 text-pixel-purple text-[10px]">Select Node</span>
+                    </div>
+                    <h3 id="inspect-node-title" class="text-lg font-bold text-white">Cliquez sur un nœud</h3>
+                    <p id="inspect-node-desc" class="text-slate-400 leading-relaxed text-[11px]">
+                        Le Meaning Graph relie dynamiquement les clients décentralisés, le serveur central FedProx, la couche de bruit DP-SGD et les vecteurs de connaissances.
+                    </p>
+                    <div class="space-y-2 border-t border-pixel-border pt-3">
+                        <span class="text-slate-400 block font-bold">Triplets Sémantiques (SPARQL/RDF) :</span>
+                        <div id="inspect-triplets" class="space-y-1">
+                            <div class="p-2 rounded bg-pixel-bg border border-pixel-border text-[11px] text-slate-300">(Sélectionnez un nœud dans le canevas)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 4: PROJET TRANSVERSAL HOSPITALIER ================= -->
+        <section id="sec-projet" class="hidden space-y-6">
+            <div class="bg-pixel-panel border border-pixel-border rounded-2xl p-6 sm:p-8 space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-pixel-border pb-6">
+                    <div>
+                        <span class="px-2.5 py-0.5 rounded text-[10px] font-mono bg-pixel-rose/10 border border-pixel-rose/30 text-pixel-rose">
+                            Master 2 / École d'Ingénieurs — Projet Fil Rouge
+                        </span>
+                        <h2 class="text-2xl font-bold text-white mt-1">Cahier des Charges — Système Hospitalier Fédéré</h2>
+                        <p class="text-xs text-slate-400 mt-1">Plateforme distribuée multi-établissements combinant FedProx, GraphRAG et Guardrails PII.</p>
+                    </div>
+                    <button onclick="switchNav('sandbox')" class="px-4 py-2 rounded-xl bg-pixel-rose/20 text-pixel-rose border border-pixel-rose/40 font-mono text-xs font-bold hover:bg-pixel-rose hover:text-slate-900 transition flex items-center gap-2">
+                        <i class="fa-solid fa-code"></i> Tester les composants
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 font-mono text-xs">
+                    <div class="p-4 rounded-xl bg-pixel-bg border border-pixel-border space-y-2">
+                        <div class="text-pixel-cyan font-bold flex items-center gap-2">
+                            <i class="fa-solid fa-server"></i> Task 1 : FedProx + DP-SGD
+                        </div>
+                        <p class="text-slate-400 text-[11px] leading-relaxed">
+                            Déployer un serveur central et 3 nœuds hôpitaux avec distributions Non-I.I.D. Appliquer la régularisation proximale $\mu = 0.05$ et le filtrage Trimmed Mean.
+                        </p>
+                    </div>
+
+                    <div class="p-4 rounded-xl bg-pixel-bg border border-pixel-border space-y-2">
+                        <div class="text-pixel-purple font-bold flex items-center gap-2">
+                            <i class="fa-solid fa-diagram-project"></i> Task 2 : Meaning Graph Médical
+                        </div>
+                        <p class="text-slate-400 text-[11px] leading-relaxed">
+                            Modéliser l'ontologie sous forme de triplets RDF $(Maladie, TRAITÉ\_PAR, Médicament)$ et implémenter le retriever hybride.
+                        </p>
+                    </div>
+
+                    <div class="p-4 rounded-xl bg-pixel-bg border border-pixel-border space-y-2">
+                        <div class="text-pixel-rose font-bold flex items-center gap-2">
+                            <i class="fa-solid fa-shield-halved"></i> Task 3 : Guardrails & PII
+                        </div>
+                        <p class="text-slate-400 text-[11px] leading-relaxed">
+                            Assainir les prompts médicaux en anonymisant les SSN et emails patients, tout en interceptant les injections de requêtes.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="space-y-3 border-t border-pixel-border pt-4">
+                    <h3 class="font-mono text-sm font-bold text-white uppercase tracking-wider">Grille d'Évaluation Officielle</h3>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left font-mono text-xs border border-pixel-border rounded-lg overflow-hidden">
+                            <thead class="bg-pixel-bg text-slate-300 border-b border-pixel-border">
+                                <tr>
+                                    <th class="p-3">Critère</th>
+                                    <th class="p-3">Éléments Évalués</th>
+                                    <th class="p-3 text-right">Barème</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-pixel-border text-slate-400">
+                                <tr>
+                                    <td class="p-3 font-bold text-pixel-cyan">FedProx & DP-SGD</td>
+                                    <td class="p-3 text-[11px]">Convergence du modèle sur données Non-I.I.D. et respect du clipping $L_2$.</td>
+                                    <td class="p-3 text-right font-bold text-white">6 pts</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-bold text-pixel-purple">GraphRAG & Meaning Graph</td>
+                                    <td class="p-3 text-[11px]">Précision de la recherche hybride et structure de l'ontologie RDF.</td>
+                                    <td class="p-3 text-right font-bold text-white">6 pts</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-bold text-pixel-rose">Sécurité & Guardrails</td>
+                                    <td class="p-3 text-[11px]">Filtrage PII à 100% et résilience aux injections.</td>
+                                    <td class="p-3 text-right font-bold text-white">4 pts</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-bold text-pixel-indigo">Code & Architecture</td>
+                                    <td class="p-3 text-[11px]">Propreté du code Python, modularité et documentation.</td>
+                                    <td class="p-3 text-right font-bold text-white">4 pts</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= SECTION 5: CERTIFICATION QUIZ ================= -->
+        <section id="sec-assessment" class="hidden max-w-4xl mx-auto space-y-6">
+            <div class="bg-pixel-panel border border-pixel-border rounded-2xl p-6 sm:p-8 space-y-6">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-pixel-border pb-6">
+                    <div>
+                        <span class="px-2.5 py-0.5 rounded text-[10px] font-mono bg-pixel-amber/10 border border-pixel-amber/30 text-pixel-amber">
+                            Systems Architect Certification
+                        </span>
+                        <h2 class="text-2xl font-bold text-white mt-1">Examen de Validation Technique</h2>
+                        <p class="text-xs text-slate-400 mt-1">Évaluez vos connaissances sur FedProx, la Confidentialité Différentielle et les Meaning Graphs.</p>
+                    </div>
+
+                    <div class="text-right font-mono text-xs">
+                        <div class="text-slate-400">Score de certification</div>
+                        <div id="quiz-score-display" class="text-2xl font-black text-pixel-amber">-- / 4</div>
+                    </div>
+                </div>
+
+                <div id="quiz-questions-container" class="space-y-6"></div>
+
+                <div class="pt-4 border-t border-pixel-border flex items-center justify-between">
+                    <button onclick="evaluateCertificationQuiz()" class="px-6 py-3 rounded-xl bg-gradient-to-r from-pixel-amber via-pixel-indigo to-pixel-cyan text-slate-900 font-mono font-bold text-xs">
+                        Soumettre & Évaluer l'Examen
+                    </button>
+                    <div id="quiz-status-feedback" class="font-mono text-xs text-slate-400"></div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- DETAILED COURSE MODAL -->
+    <div id="course-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-pixel-panel border border-pixel-border rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 sm:p-8 relative shadow-2xl space-y-6">
+            <button onclick="closeCourseModal()" class="absolute top-6 right-6 text-slate-400 hover:text-white bg-pixel-bg p-2 rounded-lg border border-pixel-border">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+            <div id="course-modal-body"></div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="border-t border-pixel-border bg-pixel-panel py-6 px-4 text-center font-mono text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-2">
+                <span class="text-white font-bold">PixelSoftware Academy</span>
+                <span>— Platform Version 3.4.0</span>
+            </div>
+            <div class="flex items-center gap-4 text-slate-400">
+                <span onclick="switchNav('cursus')" class="hover:text-pixel-cyan cursor-pointer">Cursus</span>
+                <span>•</span>
+                <span onclick="switchNav('sandbox')" class="hover:text-pixel-cyan cursor-pointer">Sandbox</span>
+                <span>•</span>
+                <span onclick="switchNav('graph')" class="hover:text-pixel-cyan cursor-pointer">Meaning Graph</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        const MODULES_DATA = {
+            1: {
+                title: "Big Data Systems & Federated Learning From Scratch",
+                subtitle: "Apprentissage Fédéré sur données Non-I.I.D. & Confidentialité Différentielle",
+                badge: "Module 01 — Algorithmes Décentralisés",
+                theory: `
+                    <h4 class="text-sm font-bold text-white font-mono uppercase tracking-wider mb-2">1. Le Défi des Données Non-I.I.D. & FedProx</h4>
+                    <p class="text-slate-300 text-xs leading-relaxed mb-3">
+                        FedProx résout la dérive des poids (<i>Client Drift</i>) en introduisant un terme proximal dans la fonction de coût locale :
+                    </p>
+                    <div class="p-3 bg-pixel-bg rounded-lg border border-pixel-border text-center font-mono text-sm text-pixel-cyan mb-4">
+                        $$h_k(w; w_t) = F_k(w) + \\frac{\\mu}{2} \\|w - w_t\\|^2$$
+                    </div>
+                `
+            },
+            2: {
+                title: "Meaning Graphs & Architectures GraphRAG",
+                subtitle: "Hybridation Sémantique : Vector Search + Triplet Traversal",
+                badge: "Module 02 — Abstraction Sémantique",
+                theory: `
+                    <h4 class="text-sm font-bold text-white font-mono uppercase tracking-wider mb-2">1. Formule du Score Hybride Tri-Partite</h4>
+                    <div class="p-3 bg-pixel-bg rounded-lg border border-pixel-border text-center font-mono text-sm text-pixel-purple mb-4">
+                        $$\\text{Score}(doc) = \\alpha \\cdot \\text{Sim}_{\\text{Dense}}(q, d) + \\beta \\cdot \\text{BM25}(q, d) + \\gamma \\cdot \\text{Centrality}_{\\text{Graph}}(d)$$
+                    </div>
+                `
+            },
+            3: {
+                title: "Enterprise AI Architecture & Agentic Systems",
+                subtitle: "Design Patterns : Router-Dispatcher, Semantic Caching & ReAct Loop",
+                badge: "Module 03 — Software Architecture IA",
+                theory: `
+                    <h4 class="text-sm font-bold text-white font-mono uppercase tracking-wider mb-2">1. Router & Boucle ReAct</h4>
+                    <p class="text-slate-300 text-xs leading-relaxed">
+                        Aiguillage dynamique entre SLM et LLM lourd avec tolérance aux pannes par Circuit Breaker.
+                    </p>
+                `
+            },
+            4: {
+                title: "LoRA & Edge Fine-Tuning (Parameter-Efficient PEFT)",
+                subtitle: "Adaptation à Bas Rang sur Dispositifs Mobiles et IoT",
+                badge: "Module 04 — Edge ML Optimization",
+                theory: `
+                    <h4 class="text-sm font-bold text-white font-mono uppercase tracking-wider mb-2">1. Décomposition LoRA</h4>
+                    <div class="p-3 bg-pixel-bg rounded-lg border border-pixel-border text-center font-mono text-sm text-pixel-emerald mb-4">
+                        $$h = W_0 x + \\frac{\\alpha}{r} B \\cdot A \\cdot x$$
+                    </div>
+                `
+            },
+            5: {
+                title: "Guardrails & Gouvernance des Données Santé",
+                subtitle: "Masquage PII et Résilience aux Attaques",
+                badge: "Module 05 — AI Governance & Security",
+                theory: `
+                    <h4 class="text-sm font-bold text-white font-mono uppercase tracking-wider mb-2">1. Masquage PII</h4>
+                    <p class="text-slate-300 text-xs leading-relaxed">
+                        Anonymisation des SSN et emails patients avant l'envoi au modèle.
+                    </p>
+                `
+            }
+        };
+
+        const SANDBOX_PRESETS = {
+            fedprox: {
+                filename: "fedprox_dp_simulation.py",
+                code: "import numpy as np\n\ndef simulate_fedprox_round():\n    print('=== RUNTIME FEDPROX + DP-SGD ===')\n    w = np.array([2.5, -1.2, 0.8])\n    print(f'Poids globaux initialises : {w}')\n    print('Round FedProx 01 termine avec succes.')\n\nsimulate_fedprox_round()"
+            },
+            lora: {
+                filename: "lora_edge_implementation.py",
+                code: "import numpy as np\n\nprint('=== ATELIER LORA FINE-TUNING EDGE ===')\nprint('W0 (Frozen): 4,194,304 params')\nprint('A+B (Trainable): 40,960 params')\nprint('Ratio réseau : 0.97% des poids transmis')"
+            },
+            guardrails: {
+                filename: "pii_guardrails_pipeline.py",
+                code: "import re\n\nprint('=== PIPELINE GUARDRAILS & PII ===')\nprint('Input Raw: SSN 1 85 04 12345 678')\nprint('Redacted : <REDACTED_SSN>')"
+            },
+            router: {
+                filename: "semantic_router_gateway.py",
+                code: "print('=== SEMANTIC ROUTER GATEWAY ===')\nprint('[Query]: Status du serveur ? -> SLM (0.2ms)')"
+            }
+        };
+
+        const QUIZ_QUESTIONS = [
+            { id: 1, question: "Quelle est la fonction du terme proximal dans FedProx ?", options: ["Augmenter la vitesse GPU", "Limiter la dérive locale des poids (Client Drift)", "Masquer le nom des patients"], correct: 1, explanation: "Le terme (mu/2)||w - w_t||^2 restreint l'écart entre le modèle local et le modèle global." },
+            { id: 2, question: "Quelle étape DP-SGD protège la confidentialité des clients ?", options: ["Le clipping L2 et l'ajout de bruit gaussien", "La régression Ridge", "La compression LoRA"], correct: 0, explanation: "Le clipping borne la sensibilité et le bruit garantit la confidentialité différentielle." },
+            { id: 3, question: "Pourquoi utiliser un Meaning Graph en GraphRAG ?", options: ["Pour accélérer le téléchargement HTML", "Pour capturer les relations complexes multi-sauts", "Pour supprimer le GPU"], correct: 1, explanation: "Les triplets RDF préservent le contexte global et les chaînes de causalité." },
+            { id: 4, question: "Quel est l'avantage principal de LoRA sur Edge ?", options: ["Entraîner à 0% de batterie", "Ne transmettre que de très petites matrices d'adaptation A et B", "Supprimer les fichiers Python"], correct: 1, explanation: "LoRA réduit le volume de paramètres transférés sur le réseau de plus de 95%." }
+        ];
+
+        function switchNav(sectionId) {
+            ['cursus', 'sandbox', 'graph', 'projet', 'assessment'].forEach(sec => {
+                const el = document.getElementById('sec-' + sec);
+                const btnNav = document.getElementById('nav-' + sec);
+                if (sec === sectionId) {
+                    if (el) el.classList.remove('hidden');
+                    if (btnNav) btnNav.className = "px-3.5 py-1.5 rounded-lg transition text-pixel-cyan bg-pixel-panel border border-pixel-border font-medium flex items-center gap-2";
+                } else {
+                    if (el) el.classList.add('hidden');
+                    if (btnNav) btnNav.className = "px-3.5 py-1.5 rounded-lg transition text-slate-400 hover:text-white flex items-center gap-2";
+                }
+            });
+
+            if (sectionId === 'graph') initGraphCanvas();
+        }
+
+        function loadSandboxPreset(key) {
+            const preset = SANDBOX_PRESETS[key];
+            if (!preset) return;
+            document.getElementById('editor-filename').innerText = preset.filename;
+            document.getElementById('code-editor').value = preset.code;
+            switchNav('sandbox');
+        }
+
+        function clearTerminal() {
+            document.getElementById('terminal-output').innerHTML = '<div class="text-slate-500">// Terminal prêt.</div>';
+        }
+
+        function runSandboxCode() {
+            const terminal = document.getElementById('terminal-output');
+            terminal.innerHTML = '<div class="text-pixel-cyan">[Exec Engine] Exécution Python 3.12...</div>';
+            setTimeout(() => {
+                terminal.innerHTML += '<div class="text-pixel-emerald font-bold">=== SIMULATION COMPLÉTÉE AVEC SUCCÈS ===</div>';
+            }, 400);
+        }
+
+        function openCourseModal(id) {
+            const d = MODULES_DATA[id];
+            if (!d) return;
+            document.getElementById('course-modal-body').innerHTML = `
+                <div class="space-y-4">
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-mono bg-pixel-cyan/10 border border-pixel-cyan/30 text-pixel-cyan">${d.badge}</span>
+                    <h3 class="text-2xl font-bold text-white">${d.title}</h3>
+                    <div class="space-y-4 text-xs text-slate-300">${d.theory}</div>
+                </div>
+            `;
+            document.getElementById('course-modal').classList.remove('hidden');
+            if (window.renderMathInElement) renderMathInElement(document.getElementById('course-modal-body'));
+        }
+
+        function closeCourseModal() {
+            document.getElementById('course-modal').classList.add('hidden');
+        }
+
+        function initGraphCanvas() {
+            const canvas = document.getElementById('graphCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+            
+            ctx.fillStyle = "#070a11";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.beginPath();
+            ctx.arc(canvas.width / 2, canvas.height / 2, 30, 0, Math.PI * 2);
+            ctx.fillStyle = "#38bdf8";
+            ctx.fill();
+
+            ctx.fillStyle = "#ffffff";
+            ctx.font = "12px JetBrains Mono";
+            ctx.textAlign = "center";
+            ctx.fillText("Serveur FedProx", canvas.width / 2, canvas.height / 2 + 50);
+        }
+
+        function toggleGraphAnimation() {}
+
+        function renderQuiz() {
+            const container = document.getElementById('quiz-questions-container');
+            if (!container) return;
+            container.innerHTML = QUIZ_QUESTIONS.map((q, idx) => `
+                <div class="p-5 rounded-xl bg-pixel-bg border border-pixel-border space-y-3 font-mono text-xs">
+                    <div class="text-white font-bold">0${idx+1}. ${q.question}</div>
+                    <div class="space-y-2 pl-4">
+                        ${q.options.map((opt, oIdx) => `
+                            <label class="flex items-center gap-2 cursor-pointer text-slate-300">
+                                <input type="radio" name="q_${q.id}" value="${oIdx}">
+                                <span>${opt}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function evaluateCertificationQuiz() {
+            let score = 0;
+            QUIZ_QUESTIONS.forEach(q => {
+                const sel = document.querySelector(`input[name="q_${q.id}"]:checked`);
+                if (sel && parseInt(sel.value) === q.correct) score++;
+            });
+            document.getElementById('quiz-score-display').innerText = `${score} / ${QUIZ_QUESTIONS.length}`;
+        }
+
+        window.onload = function() {
+            loadSandboxPreset('fedprox');
+            renderQuiz();
+            if (window.renderMathInElement) renderMathInElement(document.body);
+        };
+    </script>
+</body>
+</html>

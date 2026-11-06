@@ -101,6 +101,8 @@ urlpatterns = [
     path('faq/', views.faq, name='faq'),
     path('temoignages/', views.temoignages, name='temoignages'),
     path('portfolio/', views.portfolio, name='portfolio'),
+    # ─── PixelSoftware Academy ─────────────────────────
+    path('academy/', views.academy, name='academy'),
     # ─── PixMail ──────────────────────────────────────
     path('pixelemailediteur/', views.pixel_email_editeur, name='pixel_email_editeur'),
     path('api/diag-env/', views.api_diag_env, name='api_diag_env'),
