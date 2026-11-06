@@ -1,7 +1,7 @@
 <!DOCTYPE html>{% load static %}<html lang="fr">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Connexion PixMail — @pxelsoftware-64fcd.web.app</title>
+<title>Connexion PixMail — @pixelsoftwaredesign.xyz</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{% static 'css/style.css' %}">
@@ -30,11 +30,11 @@
 <div class="auth-box">
 <div class="pm-logo"><svg><use href="#pxl"/></svg><div class="pm-badge">PixMail</div></div>
 <h1>Connexion PixMail</h1>
-<p class="sub">Accédez à votre boîte @pxelsoftware-64fcd.web.app</p>
+<p class="sub">Accédez à votre boîte @pixelsoftwaredesign.xyz</p>
 {% if error %}<div class="auth-msg error">{{ error }}</div>{% endif %}
 <form method="POST" action="/pixmail/connexion/">
 {% csrf_token %}
-<div class="cg"><label>Nom d'utilisateur ou email</label><input type="text" name="username" value="{{ username|default:'' }}" placeholder="ex: hajer ou hajer@pxelsoftware-64fcd.web.app" required></div>
+<div class="cg"><label>Nom d'utilisateur ou email</label><input type="text" name="username" value="{{ username|default:'' }}" placeholder="ex: hajer ou hajer@pixelsoftwaredesign.xyz" required></div>
 <div class="cg"><label>Mot de passe</label><input type="password" name="password" placeholder="Votre mot de passe" required></div>
 <button type="submit" class="btn-p">Se connecter →</button>
 </form>

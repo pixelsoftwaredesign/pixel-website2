@@ -1,7 +1,7 @@
 <!DOCTYPE html>{% load static %}<html lang="fr">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Inscription PixMail — @pxelsoftware-64fcd.web.app</title>
+<title>Inscription PixMail — @pixelsoftwaredesign.xyz</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:ital@0;1&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{% static 'css/style.css' %}">
@@ -31,7 +31,7 @@
 <div class="auth-page">
 <div class="auth-box">
 <div class="pm-logo"><svg><use href="#pxl"/></svg><div class="pm-badge">PixMail</div></div>
-<h1>Créer votre email @pxelsoftware-64fcd.web.app</h1>
+<h1>Créer votre email @pixelsoftwaredesign.xyz</h1>
 <p class="sub">Inscrivez-vous et recevez votre adresse email professionnelle</p>
 {% if error %}<div class="auth-msg error">{{ error }}</div>{% endif %}
 <form method="POST" action="/pixmail/inscription/">
@@ -39,7 +39,7 @@
 <div class="cg">
 <label>Nom d'utilisateur</label>
 <input type="text" name="username" value="{{ username|default:'' }}" placeholder="ex: hajer" required pattern="[a-zA-Z0-9_-]+" minlength="3">
-<div class="email-preview">→ <span id="emailPreview">{{ username|default:'votre' }}@pxelsoftware-64fcd.web.app</span></div>
+<div class="email-preview">→ <span id="emailPreview">{{ username|default:'votre' }}@pixelsoftwaredesign.xyz</span></div>
 </div>
 <div class="cg"><label>Nom d'affichage</label><input type="text" name="display_name" value="{{ display_name|default:'' }}" placeholder="ex: Héjer Ghiloufi"></div>
 <div class="cg"><label>Mot de passe</label><input type="password" name="password" placeholder="Min. 6 caractères" required minlength="6"></div>
@@ -51,7 +51,7 @@
 </div>
 <script>
 document.querySelector('input[name="username"]').addEventListener('input',function(){
-document.getElementById('emailPreview').textContent=(this.value||'votre')+'@pxelsoftware-64fcd.web.app'});
+document.getElementById('emailPreview').textContent=(this.value||'votre')+'@pixelsoftwaredesign.xyz'});
 </script>
 </body>
 </html>

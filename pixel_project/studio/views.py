@@ -2643,7 +2643,7 @@ import hashlib
 from django.core.mail import send_mail, EmailMessage
 from django.conf import settings
 
-PIXMAIL_DOMAIN = getattr(settings, 'PIXMAIL_DOMAIN', 'pixelsoftwaredesign.com')
+PIXMAIL_DOMAIN = getattr(settings, 'PIXMAIL_DOMAIN', 'pixelsoftwaredesign.xyz')
 
 def pixmail_landing(request):
     return render(request, 'studio/pixmail_landing.html')

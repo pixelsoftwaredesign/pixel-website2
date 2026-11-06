@@ -39,7 +39,7 @@ RAILWAY_PUBLIC_DOMAIN = os.getenv('RAILWAY_PUBLIC_DOMAIN', '')
 CSRF_TRUSTED_ORIGINS = [
     'https://pixelsoftwaredesign.xyz',
     'https://www.pixelsoftwaredesign.xyz',
-    'https://pxelsoftware-64fcd.web.app',
+    'https://pixelsoftwaredesign.xyz',
     'https://pixelsoftwaredesign.web.app',
     'https://pixel-website2-production.up.railway.app',
     'http://pixel-website2-production.up.railway.app',
@@ -188,11 +188,11 @@ EMAIL_USE_SSL = os.getenv('EMAIL_USE_SSL', 'false').lower() in ('1', 'true', 'ye
 EMAIL_TIMEOUT = int(os.getenv('EMAIL_TIMEOUT', '60'))
 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
-DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'Pixel Software Design <info@pixelsoftwaredesign.xyz>')
-PIXMAIL_DOMAIN = os.getenv('PIXMAIL_DOMAIN', 'pxelsoftware-64fcd.web.app')
-PIXMAIL_FROM_EMAIL = os.getenv('PIXMAIL_FROM_EMAIL', 'Pixel Software Design <info@pixelsoftwaredesign.xyz>')
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'Pixel Software Design <commercial@pixelsoftwaredesign.xyz>')
+PIXMAIL_DOMAIN = os.getenv('PIXMAIL_DOMAIN', 'pixelsoftwaredesign.xyz')
+PIXMAIL_FROM_EMAIL = os.getenv('PIXMAIL_FROM_EMAIL', 'Pixel Software Design <commercial@pixelsoftwaredesign.xyz>')
 RESEND_API_KEY = os.getenv('RESEND_API_KEY', '')
-RESEND_FROM_EMAIL = os.getenv('RESEND_FROM_EMAIL', '')
+RESEND_FROM_EMAIL = os.getenv('RESEND_FROM_EMAIL', 'Pixel Software Design <commercial@pixelsoftwaredesign.xyz>')
 SITE_URL = os.getenv('SITE_URL', 'http://localhost:8000')
 
 # ─── Cloudflare Turnstile (vérification humaine des demandes de devis) ───
