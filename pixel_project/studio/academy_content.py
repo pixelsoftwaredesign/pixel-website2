@@ -221,88 +221,107 @@ Document généré automatiquement le 29/09/2026 — mise en page Pixel Software
 
 PROGRAMME_OFFICIEL_TEXT = r"""Programme d'Études Officiel — PixelSoftware Academy (Édition 2026)
 
-Niveau Cible : Master 2 / Cycle Ingénieur en Systèmes Distribués, IA Avancée & Sécurité
+Niveau cible : Master 2 / Cycle Ingénieur en Systèmes Distribués, IA Avancée & Sécurité
 Établissement : PixelSoftware Design Academy
-Responsable Pédagogique : Ghiloufi Jamel, Architecte Logiciel Principal
+Responsable pédagogique : Ghiloufi Jamel, Architecte Logiciel Principal
+Version corrigée : les points relevés lors de la revue de cohérence sont intégrés et signalés par la mention « révisé ».
 
-VISION ET OBJECTIF DU CURSUS
-Le programme de la PixelSoftware Academy répond aux défis technologiques majeurs de l'industrie : concevoir des systèmes d'intelligence artificielle souverains, respectueux de la vie privée (apprentissage fédéré), structurés par la connaissance (GraphRAG et Meaning Graphs) et optimisés pour les environnements contraints (Edge LoRA et architectures distribuées).
+Vision et objectif du cursus
+Le programme répond aux défis technologiques majeurs de l'industrie : concevoir des systèmes d'intelligence artificielle souverains, respectueux de la vie privée (apprentissage fédéré), structurés par la connaissance (GraphRAG et Meaning Graphs) et optimisés pour les environnements contraints (Edge LoRA et architectures distribuées).
 
-ARCHITECTURE GLOBALE DU CURSUS (Semestres S1 & S2)
+Architecture globale du cursus
+Semestre | Thème | Contenu
+S1 | Fondations & Systèmes Distribués | Module 1 : Systèmes distribués & FedProx ; Module 2 : GraphRAG ; Module 3 : Enterprise AI Architecture
+S2 | Advanced AI & Edge | Module 4 : LoRA & Edge ML ; Module 5 : Guardrails ; Projet fil rouge
 
-SEMESTRE 1 (S1) — Fondations & Systèmes Distribués
-• Module 1 : Big Data Distribué & Federated Learning (FedProx)
-• Module 2 : Meaning Graphs & Architectures GraphRAG
-• Module 3 : Enterprise AI Architecture & System Patterns
+Volumes horaires
+Bloc | Cours | TP / projet | Total
+Module 1 | 10 h | 20 h | 30 h
+Module 2 | 8 h | 17 h | 25 h
+Module 3 | 10 h | 15 h | 25 h
+Total S1 | 28 h | 52 h | 80 h
+Module 4 | 6 h | 14 h | 20 h
+Module 5 | 6 h | 14 h | 20 h
+Projet fil rouge | n/a | 40 h | 40 h
+Total S2 | 12 h | 68 h | 80 h
+Total cursus | 40 h (25 %) | 120 h (75 %) | 160 h
 
-SEMESTRE 2 (S2) — Advanced AI & Edge
-• Module 4 : Parameter-Efficient Fine-Tuning (LoRA & Edge ML)
-• Module 5 : Gouvernance, Sécurité & LLM Guardrails
-• Projet Fil Rouge : Système Hospitalier Fédéré
+Semestre 1 : Fondations des systèmes distribués & IA sémantique
 
-SEMESTRE 1 : Fondations des Systèmes Distribués & IA Sémantique
-
-Module 1 : Big Data Distribué & Federated Learning (FedProx)
-Volume horaire : 30h (10h Cours, 20h TP From Scratch)
-Objectifs : Comprendre les limites des architectures centralisées (RGPD, latence, SPOF) et maîtriser l'apprentissage fédéré sur données hétérogènes.
-Contenu :
-• Topologie des données distribuées : i.i.d. vs Non-i.i.d. (Feature Shift, Concept Drift).
-• Formulation mathématique de l'optimisation globale et dérive des modèles (Client Drift).
-• L'algorithme FedProx et son terme de régularisation proximal : h_k(w; w_t) = F_k(w) + (μ/2)||w - w_t||²_2
-• Confidentialité Différentielle (DP-SGD) : Clipping L2 et injection de bruit gaussien.
+Module 1 : Systèmes distribués & Federated Learning (FedProx) — révisé
+Volume horaire : 30 h (10 h cours, 20 h TP from scratch)
+Révision : le titre initial mentionnait le « Big Data Distribué » sans que le contenu le couvre. Le titre est aligné sur le contenu ; un volet big data pourra être ajouté si l'équipe pédagogique le souhaite.
+Objectifs pédagogiques : comprendre les limites des architectures centralisées (RGPD, latence, point de défaillance unique) et maîtriser l'apprentissage fédéré sur données hétérogènes.
+Contenu détaillé :
+• Topologie des données distribuées : i.i.d. vs non-i.i.d. (Feature Shift, Concept Drift).
+• Formulation mathématique de l'optimisation globale et de la dérive des modèles (Client Drift).
+• Algorithme FedProx et son terme de régularisation proximal : h_k(w; w_t) = F_k(w) + (μ/2) ‖w − w_t‖²₂
+• Confidentialité différentielle (DP-SGD) : clipping L2 et injection de bruit gaussien.
 • Robustesse aux attaques par empoisonnement via l'agrégation Trimmed Mean.
-Évaluation : Implémentation en Python pur d'un cluster fédéré simulé.
+Évaluation : implémentation en Python pur d'un cluster fédéré simulé.
 
-Module 2 : Meaning Graphs & Architectures GraphRAG
-Volume horaire : 25h (8h Cours, 17h TP)
-Objectifs : Dépasser les limites de la recherche vectorielle pure (Dense Retrieval) en combinant ontologies sémantiques et recherche hybride.
-Contenu :
+Module 2 : Meaning Graphs & architectures GraphRAG
+Volume horaire : 25 h (8 h cours, 17 h TP)
+Objectifs pédagogiques : dépasser les limites de la recherche vectorielle pure (Dense Retrieval) en combinant ontologies sémantiques et recherche hybride.
+Contenu détaillé :
 • Limites contextuelles globales des bases vectorielles (HNSW).
 • Extraction de triplets RDF (Sujet, Prédicat, Objet) et construction de graphes de connaissances.
-• Formule d'hybridation tri-partite : Score(doc) = α·Sim_Dense(q,d) + β·BM25(q,d) + γ·Centrality_Graph(doc)
-Évaluation : Conception d'un pipeline GraphRAG interconnecté à un graphe de connaissances.
+• Formule d'hybridation tri-partite : Score(doc) = α · Sim_Dense(q, d) + β · BM25(q, d) + γ · Centrality_Graph(doc)
+Évaluation : conception d'un pipeline GraphRAG interconnecté à un graphe de connaissances.
 
 Module 3 : Enterprise AI Architecture & System Patterns
-Volume horaire : 25h (10h Cours, 15h TP)
-Objectifs : Architecturer des plateformes d'IA prêtes pour la production à grande échelle.
-Contenu :
-• Pattern Router-Dispatcher pour l'aiguillage sémantique entre SLMs et LLMs.
+Volume horaire : 25 h (10 h cours, 15 h TP)
+Objectifs pédagogiques : architecturer des plateformes d'IA prêtes pour la production à grande échelle.
+Contenu détaillé :
+• Pattern Router-Dispatcher pour l'aiguillage sémantique entre petits modèles (SLMs) et grands modèles (LLMs).
 • Mise en cache sémantique (Semantic Caching) pour réduire la latence TTFT.
 • Boucles d'agents autonomes ReAct (Reasoning + Acting) et gestion des Circuit Breakers.
-Évaluation : Développement d'une passerelle d'inférence haute performance.
+Évaluation : développement d'une passerelle d'inférence haute performance.
 
-SEMESTRE 2 : Optimisation Edge, Gouvernance & Projet Transversal
+Semestre 2 : Optimisation Edge, gouvernance & projet transversal
 
 Module 4 : Parameter-Efficient Fine-Tuning (LoRA & Edge ML)
-Volume horaire : 20h (6h Cours, 14h TP)
-Objectifs : Entraîner et adapter des modèles sur des dispositifs à ressources limitées (IoT / Mobile).
-Contenu :
-• Théorie de la décomposition à bas rang : h = W_0 x + (α/r) B·A·x
+Volume horaire : 20 h (6 h cours, 14 h TP)
+Objectifs pédagogiques : entraîner et adapter des modèles sur des dispositifs à ressources limitées (IoT / mobile).
+Contenu détaillé :
+• Théorie de la décomposition à bas rang : h = W₀x + (α/r) · B · A · x
 • Stratégies d'optimisation de la mémoire GPU et réduction du volume de communication en Federated Learning.
-Évaluation : Implémentation d'une couche LoRA from scratch en Python.
+Évaluation : implémentation d'une couche LoRA from scratch en Python.
+Point d'attention : 6 h de cours pour trois thèmes (LoRA, mémoire GPU, communication FL) est un volume serré ; un rééquilibrage cours/TP peut être envisagé.
 
-Module 5 : Gouvernance, Sécurité & LLM Guardrails
-Volume horaire : 20h (6h Cours, 14h TP)
-Objectifs : Sécuriser les flux d'entrées/sorties et assurer la conformité réglementaire des applications d'IA.
-Contenu :
+Module 5 : Gouvernance, sécurité & LLM Guardrails
+Volume horaire : 20 h (6 h cours, 14 h TP)
+Objectifs pédagogiques : sécuriser les flux d'entrées/sorties et assurer la conformité réglementaire des applications d'IA.
+Contenu détaillé :
 • Détection et masquage automatisé des informations personnelles identifiables (PII : SSN, e-mails, téléphones).
 • Résilience face aux attaques par injection de prompt directes et indirectes.
-Évaluation : Construction d'un pipeline de filtrage et de sécurité des requêtes.
+Évaluation : construction d'un pipeline de filtrage et de sécurité des requêtes.
 
-Projet Fil Rouge : Système Hospitalier Fédéré
-Volume horaire : 40h de projet guidé
-Énoncé : Déploiement d'une architecture multi-établissements intégrant FedProx pour la confidentialité des données de santé, un Meaning Graph médical pour le requêtage ontologique et des Guardrails de sécurité.
-Soutenance : Évaluation sur grille officielle (20 points) devant un jury d'architectes.
+Projet fil rouge : Système hospitalier fédéré (travail en équipe) — révisé
+Volume horaire : 40 h de projet guidé
+Énoncé : déploiement d'une architecture multi-établissements intégrant :
+• FedProx (avec DP-SGD) pour la confidentialité des données de santé (Module 1) ;
+• un Meaning Graph médical et une recherche GraphRAG pour le requêtage ontologique (Module 2) ;
+• une passerelle d'inférence avec Router-Dispatcher, cache sémantique et Circuit Breakers (Module 3) ;
+• une adaptation LoRA des modèles pour les établissements à ressources limitées (Module 4) ;
+• des Guardrails de sécurité : masquage PII et défense contre l'injection de prompt (Module 5).
+Révision : la version initiale n'intégrait ni LoRA ni les patterns du Module 3. L'énoncé couvre désormais l'ensemble des cinq modules.
+Soutenance : évaluation sur grille officielle (20 points) devant un jury d'architectes.
 
-Grille Récapitulative des Compétences Validées
-Domaine | Compétence Clé | Niveau Visé
-Systèmes Distribués | Conception et pilotage d'un cluster d'apprentissage fédéré (FedProx + DP) | Maîtrise Experte
-Ingénierie des Données | Création de Meaning Graphs et hybridation GraphRAG | Maîtrise Avancée
-Architecture Logicielle | Implémentation de patrons de résilience (Router, Caching, Circuit Breaker) | Maîtrise Experte
-Edge & Sécurité | Fine-Tuning LoRA et filtrage Guardrails PII | Maîtrise Opérationnelle
+Évaluation : points à définir
+Seul le projet dispose aujourd'hui d'une grille officielle sur 20 points. Les éléments suivants restent à fixer par l'équipe pédagogique :
+• la pondération des évaluations de modules par rapport à la soutenance ;
+• les grilles de notation de chaque évaluation de module ;
+• les modalités de rattrapage.
 
-© 2026 Pixel Software Design. Tous droits réservés.
-"""
+Compétences validées
+Domaine | Compétence clé | Niveau visé
+Systèmes distribués | Conception et pilotage d'un cluster d'apprentissage fédéré (FedProx + DP) | Maîtrise experte
+Ingénierie des données | Création de Meaning Graphs et hybridation GraphRAG | Maîtrise avancée
+Architecture logicielle | Implémentation de patrons de résilience (Router, Caching, Circuit Breaker) | Maîtrise experte
+Edge & sécurité | Fine-tuning LoRA et filtrage Guardrails PII | Maîtrise opérationnelle
+
+© 2026 Pixel Software Design. Tous droits réservés."""
 
 IA_DONNEES_SYSTEMES_TEXT = r"""Pixel Software Design — Département de Recherche & Développement
 PIXEL SOFTWARE DESIGN
