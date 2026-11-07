@@ -219,6 +219,91 @@ Ce document est la propriété exclusive de Pixel Software Design. Toute reprodu
 Document généré automatiquement le 29/09/2026 — mise en page Pixel Software Design.
 """
 
+PROGRAMME_OFFICIEL_TEXT = r"""Programme d'Études Officiel — PixelSoftware Academy (Édition 2026)
+
+Niveau Cible : Master 2 / Cycle Ingénieur en Systèmes Distribués, IA Avancée & Sécurité
+Établissement : PixelSoftware Design Academy
+Responsable Pédagogique : Ghiloufi Jamel, Architecte Logiciel Principal
+
+VISION ET OBJECTIF DU CURSUS
+Le programme de la PixelSoftware Academy répond aux défis technologiques majeurs de l'industrie : concevoir des systèmes d'intelligence artificielle souverains, respectueux de la vie privée (apprentissage fédéré), structurés par la connaissance (GraphRAG et Meaning Graphs) et optimisés pour les environnements contraints (Edge LoRA et architectures distribuées).
+
+ARCHITECTURE GLOBALE DU CURSUS (Semestres S1 & S2)
+
+SEMESTRE 1 (S1) — Fondations & Systèmes Distribués
+• Module 1 : Big Data Distribué & Federated Learning (FedProx)
+• Module 2 : Meaning Graphs & Architectures GraphRAG
+• Module 3 : Enterprise AI Architecture & System Patterns
+
+SEMESTRE 2 (S2) — Advanced AI & Edge
+• Module 4 : Parameter-Efficient Fine-Tuning (LoRA & Edge ML)
+• Module 5 : Gouvernance, Sécurité & LLM Guardrails
+• Projet Fil Rouge : Système Hospitalier Fédéré
+
+SEMESTRE 1 : Fondations des Systèmes Distribués & IA Sémantique
+
+Module 1 : Big Data Distribué & Federated Learning (FedProx)
+Volume horaire : 30h (10h Cours, 20h TP From Scratch)
+Objectifs : Comprendre les limites des architectures centralisées (RGPD, latence, SPOF) et maîtriser l'apprentissage fédéré sur données hétérogènes.
+Contenu :
+• Topologie des données distribuées : i.i.d. vs Non-i.i.d. (Feature Shift, Concept Drift).
+• Formulation mathématique de l'optimisation globale et dérive des modèles (Client Drift).
+• L'algorithme FedProx et son terme de régularisation proximal : h_k(w; w_t) = F_k(w) + (μ/2)||w - w_t||²_2
+• Confidentialité Différentielle (DP-SGD) : Clipping L2 et injection de bruit gaussien.
+• Robustesse aux attaques par empoisonnement via l'agrégation Trimmed Mean.
+Évaluation : Implémentation en Python pur d'un cluster fédéré simulé.
+
+Module 2 : Meaning Graphs & Architectures GraphRAG
+Volume horaire : 25h (8h Cours, 17h TP)
+Objectifs : Dépasser les limites de la recherche vectorielle pure (Dense Retrieval) en combinant ontologies sémantiques et recherche hybride.
+Contenu :
+• Limites contextuelles globales des bases vectorielles (HNSW).
+• Extraction de triplets RDF (Sujet, Prédicat, Objet) et construction de graphes de connaissances.
+• Formule d'hybridation tri-partite : Score(doc) = α·Sim_Dense(q,d) + β·BM25(q,d) + γ·Centrality_Graph(doc)
+Évaluation : Conception d'un pipeline GraphRAG interconnecté à un graphe de connaissances.
+
+Module 3 : Enterprise AI Architecture & System Patterns
+Volume horaire : 25h (10h Cours, 15h TP)
+Objectifs : Architecturer des plateformes d'IA prêtes pour la production à grande échelle.
+Contenu :
+• Pattern Router-Dispatcher pour l'aiguillage sémantique entre SLMs et LLMs.
+• Mise en cache sémantique (Semantic Caching) pour réduire la latence TTFT.
+• Boucles d'agents autonomes ReAct (Reasoning + Acting) et gestion des Circuit Breakers.
+Évaluation : Développement d'une passerelle d'inférence haute performance.
+
+SEMESTRE 2 : Optimisation Edge, Gouvernance & Projet Transversal
+
+Module 4 : Parameter-Efficient Fine-Tuning (LoRA & Edge ML)
+Volume horaire : 20h (6h Cours, 14h TP)
+Objectifs : Entraîner et adapter des modèles sur des dispositifs à ressources limitées (IoT / Mobile).
+Contenu :
+• Théorie de la décomposition à bas rang : h = W_0 x + (α/r) B·A·x
+• Stratégies d'optimisation de la mémoire GPU et réduction du volume de communication en Federated Learning.
+Évaluation : Implémentation d'une couche LoRA from scratch en Python.
+
+Module 5 : Gouvernance, Sécurité & LLM Guardrails
+Volume horaire : 20h (6h Cours, 14h TP)
+Objectifs : Sécuriser les flux d'entrées/sorties et assurer la conformité réglementaire des applications d'IA.
+Contenu :
+• Détection et masquage automatisé des informations personnelles identifiables (PII : SSN, e-mails, téléphones).
+• Résilience face aux attaques par injection de prompt directes et indirectes.
+Évaluation : Construction d'un pipeline de filtrage et de sécurité des requêtes.
+
+Projet Fil Rouge : Système Hospitalier Fédéré
+Volume horaire : 40h de projet guidé
+Énoncé : Déploiement d'une architecture multi-établissements intégrant FedProx pour la confidentialité des données de santé, un Meaning Graph médical pour le requêtage ontologique et des Guardrails de sécurité.
+Soutenance : Évaluation sur grille officielle (20 points) devant un jury d'architectes.
+
+Grille Récapitulative des Compétences Validées
+Domaine | Compétence Clé | Niveau Visé
+Systèmes Distribués | Conception et pilotage d'un cluster d'apprentissage fédéré (FedProx + DP) | Maîtrise Experte
+Ingénierie des Données | Création de Meaning Graphs et hybridation GraphRAG | Maîtrise Avancée
+Architecture Logicielle | Implémentation de patrons de résilience (Router, Caching, Circuit Breaker) | Maîtrise Experte
+Edge & Sécurité | Fine-Tuning LoRA et filtrage Guardrails PII | Maîtrise Opérationnelle
+
+© 2026 Pixel Software Design. Tous droits réservés.
+"""
+
 IA_DONNEES_SYSTEMES_TEXT = r"""Pixel Software Design — Département de Recherche & Développement
 PIXEL SOFTWARE DESIGN
 Département de Recherche & Développement

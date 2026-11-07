@@ -2671,6 +2671,14 @@ def academy_ia_donnees_systemes(request):
     })
 
 @login_required
+def academy_programme(request):
+    from .academy_content import PROGRAMME_OFFICIEL_TEXT
+    return render(request, 'studio/academy_programme.html', {
+        'text': PROGRAMME_OFFICIEL_TEXT,
+        'academy_user': request.user,
+    })
+
+@login_required
 def academy_espace(request):
     from .models import AcademyProgress, AcademyStudyTime, AcademyExerciseAnswer, AcademyActivity
     from django.utils import timezone

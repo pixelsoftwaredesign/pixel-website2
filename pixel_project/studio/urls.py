@@ -105,6 +105,7 @@ urlpatterns = [
     path('academy/', views.academy, name='academy'),
     path('academy/fondements/', views.academy_fondements, name='academy_fondements'),
     path('academy/ia-donnees-systemes/', views.academy_ia_donnees_systemes, name='academy_ia_donnees_systemes'),
+    path('academy/programme/', views.academy_programme, name='academy_programme'),
     path('academy/espace/', views.academy_espace, name='academy_espace'),
     path('academy/professeur/', views.academy_professeur, name='academy_professeur'),
     path('academy/administration/', views.academy_administration, name='academy_administration'),
