@@ -107,6 +107,9 @@
                 <button onclick="switchNav('assessment')" id="nav-assessment" class="px-3.5 py-1.5 rounded-lg transition text-slate-400 hover:text-white flex items-center gap-2">
                     <i class="fa-solid fa-award text-pixel-amber"></i> Certification
                 </button>
+                <button onclick="switchNav('exercices')" id="nav-exercices" class="px-3.5 py-1.5 rounded-lg transition text-slate-400 hover:text-white flex items-center gap-2">
+                    <i class="fa-solid fa-pencil text-pixel-emerald"></i> Exercices
+                </button>
             </nav>
 
             <div class="flex items-center gap-3 font-mono text-xs">
@@ -124,6 +127,7 @@
             <button onclick="switchNav('graph')" id="mob-graph" class="px-2.5 py-1 rounded text-slate-400">Graphe</button>
             <button onclick="switchNav('projet')" id="mob-projet" class="px-2.5 py-1 rounded text-slate-400">Projet</button>
             <button onclick="switchNav('assessment')" id="mob-assessment" class="px-2.5 py-1 rounded text-slate-400">Quiz</button>
+            <button onclick="switchNav('exercices')" id="mob-exercices" class="px-2.5 py-1 rounded text-slate-400">Exos</button>
         </div>
     </header>
 
@@ -303,6 +307,47 @@
                         <button onclick="openCourseModal(5)" class="w-full py-2.5 rounded-xl bg-pixel-input text-pixel-rose border border-pixel-rose/30 font-mono text-xs transition">Théorie</button>
                         <button onclick="loadSandboxPreset('guardrails')" class="py-2.5 px-3 rounded-xl bg-pixel-bg text-slate-300 font-mono text-xs border border-pixel-border transition"><i class="fa-solid fa-play text-pixel-emerald"></i></button>
                     </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= BIBLIOTHÈQUE DE COURS (PDF) ================= -->
+        <section id="sec-biblio" class="hidden space-y-4">
+            <div class="bg-pixel-panel p-4 rounded-xl border border-pixel-border flex items-center justify-between font-mono text-xs">
+                <div><h2 class="text-base font-bold text-white">Bibliothèque de cours (PDF)</h2><p class="text-slate-400">L'ensemble des supports de cours PixelSoftware Academy, téléchargeables.</p></div>
+            </div>
+            <div id="biblio-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </section>
+
+        <!-- ================= EXERCICES & TP ================= -->
+        <section id="sec-exercices" class="hidden space-y-4">
+            <div class="bg-pixel-panel p-4 rounded-xl border border-pixel-border flex items-center justify-between font-mono text-xs">
+                <div><h2 class="text-base font-bold text-white">Exercices & Travaux pratiques</h2><p class="text-slate-400">Énoncés et corrections issus des cours intégrés. Plus d'exercices dans la bibliothèque PDF.</p></div>
+            </div>
+            <div class="space-y-4">
+                <div class="bg-pixel-panel border border-pixel-border rounded-2xl p-6 space-y-3">
+                    <div class="flex items-center gap-2"><span class="px-2 py-0.5 rounded text-[10px] font-mono bg-pixel-cyan/10 border border-pixel-cyan/30 text-pixel-cyan">Exercice 1.1.1 — Moyen</span><h3 class="text-sm font-bold text-white">Métrique globale et sous-groupes (crédit)</h3></div>
+                    <p class="text-slate-300 text-xs leading-relaxed"><strong>Énoncé :</strong> Un modèle de crédit atteint 92 % de justesse sur l'ensemble de test, mais 71 % sur le plus petit groupe de population. Calculer l'exactitude non pondérée par groupe, puis déduire la part de la population que la métrique globale cache. Que faut-il demander à l'équipe ?</p>
+                    <details class="mt-2"><summary class="cursor-pointer text-pixel-cyan text-xs font-mono">Correction</summary><p class="text-slate-400 text-xs leading-relaxed mt-2">L'exactitude globale est une moyenne pondérée par la taille de chaque groupe. Si le groupe minoritaire pèse 10 % de la population, la contribution de ses 21 points d'écart au score global est 2 points : exactement l'ordre de grandeur de l'écart annoncé. Il faut demander la décomposition complète par groupe et la taille de chaque groupe.</p></details>
+                </div>
+                <div class="bg-pixel-panel border border-pixel-border rounded-2xl p-6 space-y-3">
+                    <div class="flex items-center gap-2"><span class="px-2 py-0.5 rounded text-[10px] font-mono bg-pixel-emerald/10 border border-pixel-emerald/30 text-pixel-emerald">TP 1.1 — Intermédiaire</span><h3 class="text-sm font-bold text-white">Superviser un service distribué de bout en bout</h3></div>
+                    <p class="text-slate-300 text-xs leading-relaxed"><strong>Énoncé :</strong> Mettre en place une chaîne d'observabilité complète sur un service à trois composants, avec une règle d'alerte calibrée et un tableau de bord exploitable. Exposer une métrique de latence par percentile et un compteur d'erreurs ; configurer la collecte en mode tirage ; écrire une règle d'alerte sur le taux d'erreur avec condition de durée ; construire un tableau de bord en trois volets (santé technique, santé de la qualité, répartition de la charge) ; éteindre un composant pendant deux minutes et consigner les délais ; rédiger la règle d'escalade.</p>
+                    <details class="mt-2"><summary class="cursor-pointer text-pixel-cyan text-xs font-mono">Barème</summary><p class="text-slate-400 text-xs leading-relaxed mt-2">L'alerte se déclenche exactement une fois sur la panne simulée (5 pts) ; le tableau de bord nomme le composant responsable en moins de deux minutes (3 pts) ; la procédure d'escalade nomme un responsable et un délai (2 pts).</p></details>
+                </div>
+                <div class="bg-pixel-panel border border-pixel-border rounded-2xl p-6 space-y-3">
+                    <div class="flex items-center gap-2"><span class="px-2 py-0.5 rounded text-[10px] font-mono bg-pixel-purple/10 border border-pixel-purple/30 text-pixel-purple">TP 1.2 — Avancé</span><h3 class="text-sm font-bold text-white">Panier de marché et détection d'anomalies</h3></div>
+                    <p class="text-slate-300 text-xs leading-relaxed"><strong>Énoncé :</strong> Extraire des règles d'association exploitables d'un panier réel, puis construire un score d'anomalie reproductible sur les transactions d'un client. Écrire le générateur d'itemsets fréquents par largeur croissante ; mesurer support, confiance et levier ; afficher la courbe de nombre de règles en fonction du seuil de support ; construire un score d'anomalie fondé sur la rareté locale ; commenter les cinq plus fortes anomalies.</p>
+                    <details class="mt-2"><summary class="cursor-pointer text-pixel-cyan text-xs font-mono">Barème</summary><p class="text-slate-400 text-xs leading-relaxed mt-2">La règle est justifiée par le levier, non par la seule confiance (4 pts) ; le nombre de règles en fonction du seuil est expliqué (2 pts) ; l'analyse distingue ce qui est statistique et ce qui est décisionnel (4 pts).</p></details>
+                </div>
+                <div class="bg-pixel-panel border border-pixel-border rounded-2xl p-6 space-y-3">
+                    <div class="flex items-center gap-2"><span class="px-2 py-0.5 rounded text-[10px] font-mono bg-pixel-rose/10 border border-pixel-rose/30 text-pixel-rose">Projet — 6 semaines</span><h3 class="text-sm font-bold text-white">Concevoir une chaîne complète, de la source à la restitution</h3></div>
+                    <p class="text-slate-300 text-xs leading-relaxed"><strong>Énoncé :</strong> Une entreprise de logistique veut suivre ses véhicules, détecter les anomalies de conduite et produire un tableau de bord temps réel, tout en conservant un historique exact pour la facturation (≈ 2 milliards d'enregistrements/an). Missions : spécifier le schéma des événements ; choisir le découpage du stockage ; définir la fenêtre de temps et le temps d'événement du traitement de flux ; concevoir la consolidation exacte par lots ; écrire le plan de reprise après panne ; établir ce qu'il faut pour répondre à une demande d'effacement d'un conducteur.</p>
+                    <details class="mt-2"><summary class="cursor-pointer text-pixel-cyan text-xs font-mono">Évaluation</summary><p class="text-slate-400 text-xs leading-relaxed mt-2">Le jury vérifie trois points : le critère de découpage est justifié par le type de requête, la réconciliation entre flux et lots est explicite, et l'effacement est traité comme une contrainte de conception et non comme un verrou.</p></details>
+                </div>
+                <div class="bg-pixel-panel border border-pixel-border rounded-2xl p-6 space-y-3">
+                    <div class="flex items-center gap-2"><span class="px-2 py-0.5 rounded text-[10px] font-mono bg-pixel-amber/10 border border-pixel-amber/30 text-pixel-amber">Plus d'exercices</span><h3 class="text-sm font-bold text-white">Bibliothèque PDF</h3></div>
+                    <p class="text-slate-300 text-xs leading-relaxed">Les 14 supports de cours (diaporamas et cours complets) contiennent des exercices, TP et projets supplémentaires. Voir la section « Bibliothèque de cours (PDF) » ci-dessous.</p>
                 </div>
             </div>
         </section>
@@ -625,7 +670,7 @@
         ];
 
         function switchNav(sectionId) {
-            ['cursus', 'sandbox', 'graph', 'projet', 'assessment'].forEach(sec => {
+            ['cursus', 'sandbox', 'graph', 'projet', 'assessment', 'exercices'].forEach(sec => {
                 const el = document.getElementById('sec-' + sec);
                 const btnNav = document.getElementById('nav-' + sec);
                 if (sec === sectionId) {
@@ -638,6 +683,9 @@
             });
 
             if (sectionId === 'graph') initGraphCanvas();
+            const bib = document.getElementById('sec-biblio');
+            if (bib) { if (sectionId === 'cursus') bib.classList.remove('hidden'); else bib.classList.add('hidden'); }
+            if (sectionId === 'cursus') renderBiblio();
         }
 
         function loadSandboxPreset(key) {
@@ -728,9 +776,15 @@
             document.getElementById('quiz-score-display').innerText = `${score} / ${QUIZ_QUESTIONS.length}`;
         }
 
+        const PDFS = ["Cours_Architecture_Numerique_Trois_Niveaux.pdf","Cours_Architectures_IA.pdf","Cours_Fondements_IA.pdf","Cours_Histoire_IA.pdf","Cours_IA_3D.pdf","Cours_IA_A_Z.pdf","Cours_IA_Appliquee_Terrain.pdf","Cours_IA_Audio.pdf","Cours_IA_Avannee_Federated_Learning.pdf","Cours_IA_Donnees_BigData.pdf","Cours_IA_Recherche_Operationnelle.pdf","Cours_Ingenierie_IA.pdf","Cours_Innovation_IA.pdf","Cours_Introduction_IA.pdf"];
+        function renderBiblio(){
+            const g=document.getElementById('biblio-grid'); if(!g) return;
+            g.innerHTML=PDFS.map(f=>`<a href="/static/studio/cours/${encodeURIComponent(f)}" target="_blank" class="bg-pixel-panel border border-pixel-border hover:border-pixel-cyan/50 rounded-xl p-4 flex items-center gap-3 transition group"><i class="fa-solid fa-file-pdf text-pixel-rose text-xl"></i><span class="text-xs font-mono text-slate-300 group-hover:text-pixel-cyan truncate">${f}</span></a>`).join('');
+        }
         window.onload = function() {
             loadSandboxPreset('fedprox');
             renderQuiz();
+            renderBiblio();
             if (window.renderMathInElement) renderMathInElement(document.body);
         };
     </script>
