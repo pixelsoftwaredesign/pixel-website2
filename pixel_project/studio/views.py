@@ -2655,6 +2655,14 @@ def academy(request):
     })
 
 @login_required
+def academy_fondements(request):
+    from .academy_content import FONDEMENTS_TEXT
+    return render(request, 'studio/academy_fondements.html', {
+        'text': FONDEMENTS_TEXT,
+        'academy_user': request.user,
+    })
+
+@login_required
 def api_academy_progress(request):
     from .models import AcademyProgress
     if request.method == 'POST':
