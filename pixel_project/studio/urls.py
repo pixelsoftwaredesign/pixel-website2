@@ -118,6 +118,7 @@ urlpatterns = [
     path('academy/ia-recherche-operationnelle/', views.academy_ia_recherche_operationnelle, name='academy_ia_recherche_operationnelle'),
     path('academy/ingenierie-ia/', views.academy_ingenierie_ia, name='academy_ingenierie_ia'),
     path('academy/architecture-numerique-trois-niveaux/', views.academy_architecture_numerique_trois_niveaux, name='academy_architecture_numerique_trois_niveaux'),
+    path('academy/cours-interactif-ia/', views.academy_cours_interactif_ia, name='academy_cours_interactif_ia'),
     path('academy/programme/', views.academy_programme, name='academy_programme'),
     path('academy/espace/', views.academy_espace, name='academy_espace'),
     path('academy/professeur/', views.academy_professeur, name='academy_professeur'),

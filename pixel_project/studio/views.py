@@ -2736,6 +2736,10 @@ def academy_architecture_numerique_trois_niveaux(request):
     return render(request, 'studio/academy_architecture_numerique_trois_niveaux.html', {'text': ARCHITECTURE_NUMERIQUE_TROIS_NIVEAUX_TEXT, 'academy_user': request.user})
 
 @login_required
+def academy_cours_interactif_ia(request):
+    return render(request, 'studio/cours_interactif_ia.html', {'academy_user': request.user})
+
+@login_required
 def academy_programme(request):
     from .academy_content import PROGRAMME_OFFICIEL_TEXT
     return render(request, 'studio/academy_programme.html', {
