@@ -15,7 +15,11 @@
     .question{border:1px solid #cbdde3;border-radius:12px;padding:1.1rem;margin:1rem 0}.question legend{font-weight:750;padding:0 .3rem}.option{display:block;margin:.45rem 0;padding:.55rem .65rem;border-radius:8px;cursor:pointer}.option:hover{background:#f2f7f8}.option input{accent-color:var(--teal);margin-right:.45rem}.btn{border:0;border-radius:9px;background:var(--blue);color:white;font:inherit;font-weight:700;padding:.65rem .9rem;cursor:pointer}.btn:hover{filter:brightness(1.08)}.btn.alt{background:#e8f1f3;color:var(--ink)}.feedback{display:none;margin-top:.75rem;padding:.75rem;border-radius:8px;font-weight:600}.feedback.ok{display:block;background:#e6f6ef;color:#12634e}.feedback.no{display:block;background:#fdecec;color:#972f2f}.design label{display:block;font-weight:700;margin:.8rem 0 .25rem}.design select,.design textarea{width:100%;font:inherit;border:1px solid #b9d1da;border-radius:8px;padding:.65rem;background:white}.design textarea{min-height:92px;resize:vertical}.result{white-space:pre-line}.footer-actions{display:flex;gap:.6rem;justify-content:space-between;margin-top:1.8rem}.badge{font-size:.78rem;font-weight:700;color:#fff;background:var(--teal);padding:.18rem .48rem;border-radius:99px;margin-left:.4rem}@media(max-width:760px){.grid{grid-template-columns:1fr}.nav{position:static;display:flex;overflow:auto}.nav button{white-space:nowrap}.nav{padding:.45rem}.flow b{display:none}}
   </style>
 </head>
-<body>
+<body><div style="position:sticky;top:0;z-index:9999;background:rgba(5,16,13,.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(30,180,130,.2);padding:.6rem 1.2rem;display:flex;align-items:center;justify-content:space-between;font-family:system-ui,sans-serif;font-size:.85rem;">
+  <a href="/academy/" style="color:#1EB482;text-decoration:none;font-weight:700;">← Academy</a>
+  <a href="/" style="color:#E8F5F0;text-decoration:none;opacity:.8;">Pixel Software Design</a>
+</div>
+
   <header><h1>Fondamentaux de l’IA</h1><p>Un cours bref et interactif pour relier données, modèles, décisions et responsabilité.</p></header>
   <main>
     <section class="progress" aria-label="Progression"><div><strong>Votre progression</strong><br><small id="status">0 exercice validé</small></div><div class="bar" aria-hidden="true"><span id="bar"></span></div><div class="count" id="score">0 / 4</div><button class="btn alt" id="reset">Réinitialiser</button></section>
@@ -44,5 +48,6 @@
     document.querySelector('#design').addEventListener('click',()=>{const domain=document.querySelector('#domain').value,h=document.querySelector('#human').value,r=document.querySelector('#risk').value.trim(),f=document.querySelector('#designFeedback');let msg=h==='none'?'Attention : pour ce type de cas, prévoyez un contrôle humain ou des seuils d’arrêt explicites.':'Bon réflexe : le contrôle humain rend la décision plus vérifiable.';msg+=r.length<12?' Ajoutez maintenant un risque concret : faux négatif, biais, confidentialité ou dérive.':' Vous avez identifié un risque : transformez-le en métrique, seuil d’alerte et procédure de réponse.';msg+=domain==='sante'?' En santé, ne présentez jamais la sortie comme un diagnostic autonome.':' Définissez aussi les données de référence et une solution de repli.';f.className='feedback ok result';f.textContent=msg;if(!state.done.includes('design')){state.done.push('design');save();update();}});
     document.querySelector('#reset').addEventListener('click',()=>{state.done=[];save();update();document.querySelectorAll('.feedback').forEach(x=>x.className='feedback');document.querySelectorAll('input').forEach(x=>x.checked=false);}); update();
   </script>
+<footer style="text-align:center;padding:1.5rem 1rem;font-size:.8rem;opacity:.7;font-family:system-ui,sans-serif;">© 2026 Pixel Software Design — Tous droits réservés.</footer>
 </body>
 </html>

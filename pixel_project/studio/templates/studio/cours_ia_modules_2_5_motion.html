@@ -34,7 +34,11 @@ input[type=range]{width:160px;accent-color:var(--teal)}
 .formula{display:inline-block;margin-top:6px;padding:4px 10px;background:var(--card);border:1px solid var(--line);border-radius:8px;font-family:ui-monospace,Menlo,monospace;font-size:14.5px}
 </style>
 </head>
-<body>
+<body><div style="position:sticky;top:0;z-index:9999;background:rgba(5,16,13,.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(30,180,130,.2);padding:.6rem 1.2rem;display:flex;align-items:center;justify-content:space-between;font-family:system-ui,sans-serif;font-size:.85rem;">
+  <a href="/academy/" style="color:#1EB482;text-decoration:none;font-weight:700;">← Academy</a>
+  <a href="/" style="color:#E8F5F0;text-decoration:none;opacity:.8;">Pixel Software Design</a>
+</div>
+
 <main>
 <h1>Modules 2 à 5, en mouvement</h1>
 <p class="sub">Une scène par module : GraphRAG, routeur et cache, LoRA, guardrails. Jouez avec les curseurs.</p>
@@ -67,5 +71,6 @@ const ROWS=[['Contact : jean.dupont@exemple.tn','Contact : [EMAIL]','var(--teal)
 const S5={name:'M5 · Guardrails',dur:10,html:()=>`<svg viewBox="0 0 600 300" role="img" aria-label="Un guardrail masque les données personnelles et bloque une injection de prompt"><text x="20" y="30" class="big">Entrée</text><text x="320" y="30" class="big">Après le guardrail</text><line id="sc" x1="300" y1="40" x2="300" y2="280" stroke="var(--amber)" stroke-width="3"/>${ROWS.map((r,i)=>`<rect x="14" y="${48+i*58}" width="276" height="44" rx="8" class="box"/><text x="22" y="${75+i*58}" style="font-size:12.5px">${r[0]}</text><rect id="o${i}" x="304" y="${48+i*58}" width="284" height="44" rx="8" fill="none" stroke="${r[2]}" stroke-width="2" opacity="0"/><text id="m${i}" x="312" y="${75+i*58}" style="font-size:12.5px;font-weight:600" opacity="0">${r[1]}</text>`).join('')}</svg>`,cap:`<b>Un filtre en entrée protège le reste du système.</b> Les données personnelles sont masquées avant d’atteindre le modèle, le graphe ou les journaux. Une instruction qui tente de détourner le système est bloquée.`,draw(t){const k=clamp((t-.1)/.8)*4;sset('sc',{opacity:t<.12||t>.9?0:1});ROWS.forEach((r,i)=>{const a=clamp(k-i);$('o'+i).setAttribute('opacity',a);$('m'+i).setAttribute('opacity',a);$('m'+i).setAttribute('fill',r[2]);if(i==Math.floor(k)&&k<4)sset('sc',{y1:48+i*58,y2:92+i*58})});}};
 const SC=[S2,S3,S4,S5];let cur=0,t0=performance.now(),paused=false,frozen=0;const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;function show(i){cur=i;const s=SC[i];$('stage').innerHTML=s.html();$('cap').innerHTML=s.cap;const c=$('ctlx');c.hidden=!s.ctl;c.innerHTML=s.ctl||'';if(s.init)s.init();[...$('tabs').children].forEach((b,j)=>b.setAttribute('aria-selected',j==i));t0=performance.now();frozen=reduce?.999:0;paused=reduce;$('pp').textContent=paused?'Lecture':'Pause';s.draw(reduce?.999:0);}SC.forEach((s,i)=>{const b=document.createElement('button');b.type='button';b.role='tab';b.textContent=s.name;b.onclick=()=>show(i);$('tabs').appendChild(b)});$('pp').onclick=()=>{if(paused){t0=performance.now()-frozen*SC[cur].dur*1000;paused=false;$('pp').textContent='Pause'}else{paused=true;$('pp').textContent='Lecture'}};$('rp').onclick=()=>{t0=performance.now();paused=false;$('pp').textContent='Pause'};function loop(now){if(!paused){const s=SC[cur],e=(now-t0)/1000;const T=s.dur+1.5;const u=(e%T)/s.dur;frozen=Math.min(1,u);s.draw(Math.min(.999,frozen));}else{SC[cur].draw(Math.min(.999,frozen))}requestAnimationFrame(loop);}show(0);requestAnimationFrame(loop);
 </script>
+<footer style="text-align:center;padding:1.5rem 1rem;font-size:.8rem;opacity:.7;font-family:system-ui,sans-serif;">© 2026 Pixel Software Design — Tous droits réservés.</footer>
 </body>
 </html>
