@@ -2744,6 +2744,10 @@ def academy_cours_ia_avances_interactif(request):
     return render(request, 'studio/cours_ia_avances_interactif.html', {'academy_user': request.user})
 
 @login_required
+def academy_cours_fondements_ia_motion(request):
+    return render(request, 'studio/cours_fondements_ia_motion.html', {'academy_user': request.user})
+
+@login_required
 def academy_programme(request):
     from .academy_content import PROGRAMME_OFFICIEL_TEXT
     return render(request, 'studio/academy_programme.html', {
