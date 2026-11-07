@@ -105,6 +105,12 @@ urlpatterns = [
     path('academy/', views.academy, name='academy'),
     path('academy/fondements/', views.academy_fondements, name='academy_fondements'),
     path('academy/ia-donnees-systemes/', views.academy_ia_donnees_systemes, name='academy_ia_donnees_systemes'),
+    path('academy/espace/', views.academy_espace, name='academy_espace'),
+    path('academy/professeur/', views.academy_professeur, name='academy_professeur'),
+    path('api/academy/progress/', views.api_academy_progress, name='api_academy_progress'),
+    path('api/academy/study-time/', views.api_academy_study_time, name='api_academy_study_time'),
+    path('api/academy/exercise/', views.api_academy_exercise, name='api_academy_exercise'),
+    path('api/academy/activity/', views.api_academy_activity, name='api_academy_activity'),
     # ─── PixMail ──────────────────────────────────────
     path('pixelemailediteur/', views.pixel_email_editeur, name='pixel_email_editeur'),
     path('api/diag-env/', views.api_diag_env, name='api_diag_env'),

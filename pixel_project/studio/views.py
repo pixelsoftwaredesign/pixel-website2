@@ -2671,6 +2671,169 @@ def academy_ia_donnees_systemes(request):
     })
 
 @login_required
+def academy_espace(request):
+    from .models import AcademyProgress, AcademyStudyTime, AcademyExerciseAnswer, AcademyActivity
+    from django.utils import timezone
+    progress = list(AcademyProgress.objects.filter(user=request.user).order_by('module'))
+    total_points = sum(p.score for p in progress) + sum(a.points for a in AcademyActivity.objects.filter(user=request.user))
+    completed = sum(1 for p in progress if p.completed)
+    cert = next((p for p in progress if p.module == 0), None)
+    today = timezone.now().date()
+    today_minutes = AcademyStudyTime.objects.filter(user=request.user, date=today).values_list('minutes', flat=True).first() or 0
+    week_minutes = sum(AcademyStudyTime.objects.filter(user=request.user).values_list('minutes', flat=True))
+    exercises = AcademyExerciseAnswer.objects.filter(user=request.user)[:10]
+    activities = AcademyActivity.objects.filter(user=request.user)[:10]
+    return render(request, 'studio/academy_espace.html', {
+        'academy_user': request.user,
+        'progress': progress,
+        'total_points': total_points,
+        'completed': completed,
+        'cert': cert,
+        'today_minutes': today_minutes,
+        'week_minutes': week_minutes,
+        'exercises': exercises,
+        'activities': activities,
+    })
+
+@login_required
+def api_academy_study_time(request):
+    from .models import AcademyStudyTime
+    from django.utils import timezone
+    if request.method == 'POST':
+        import json as _json
+        try:
+            data = _json.loads(request.body or '{}')
+        except Exception:
+            data = request.POST
+        minutes = int(data.get('minutes', 0))
+        date_str = data.get('date')
+        if date_str:
+            from datetime import date as _d
+            d = _d.fromisoformat(date_str)
+        else:
+            d = timezone.now().date()
+        cur = AcademyStudyTime.objects.filter(user=request.user, date=d).first()
+        if cur:
+            cur.minutes = (cur.minutes or 0) + minutes
+            cur.save()
+        else:
+            cur = AcademyStudyTime.objects.create(user=request.user, date=d, minutes=minutes)
+        return JsonResponse({'status': 'success', 'date': str(d), 'minutes': cur.minutes})
+    return JsonResponse({'status': 'error'}, status=400)
+
+@login_required
+def api_academy_exercise(request):
+    from .models import AcademyExerciseAnswer
+    if request.method == 'POST':
+        import json as _json
+        try:
+            data = _json.loads(request.body or '{}')
+        except Exception:
+            data = request.POST
+        obj = AcademyExerciseAnswer.objects.create(
+            user=request.user,
+            exercise_ref=data.get('exercise_ref', ''),
+            answer=data.get('answer', ''),
+            score=int(data.get('score', 0)),
+        )
+        return JsonResponse({'status': 'success', 'id': obj.id})
+    return JsonResponse({'status': 'error'}, status=400)
+
+@login_required
+def api_academy_activity(request):
+    from .models import AcademyActivity
+    if request.method == 'POST':
+        import json as _json
+        try:
+            data = _json.loads(request.body or '{}')
+        except Exception:
+            data = request.POST
+        obj = AcademyActivity.objects.create(
+            user=request.user,
+            activity_type=data.get('activity_type', 'task'),
+            title=data.get('title', ''),
+            detail=data.get('detail', ''),
+            points=int(data.get('points', 0)),
+        )
+        return JsonResponse({'status': 'success', 'id': obj.id})
+    return JsonResponse({'status': 'error'}, status=400)
+
+@login_required
+def academy_administration(request):
+    from .models import AcademyProgress
+    from django.contrib.auth.models import User as _U
+    if not request.user.is_staff:
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden("Accès réservé à l'administration.")
+    # Agrégation par étudiant
+    students = []
+    for u in _U.objects.filter(is_staff=False).order_by('username'):
+        prog = list(AcademyProgress.objects.filter(user=u).order_by('module'))
+        if not prog:
+            continue
+        students.append({
+            'user': u,
+            'progress': prog,
+            'total_points': sum(p.score for p in prog),
+            'completed': sum(1 for p in prog if p.completed),
+            'cert': next((p for p in prog if p.module == 0), None),
+        })
+    # Totaux globaux
+    all_prog = AcademyProgress.objects.all()
+    total_students = len(students)
+    total_points = sum(p.score for p in all_prog)
+    total_completed = sum(1 for p in all_prog if p.completed)
+    return render(request, 'studio/academy_administration.html', {
+        'academy_user': request.user,
+        'students': students,
+        'total_students': total_students,
+        'total_points': total_points,
+        'total_completed': total_completed,
+        'nb_progress': all_prog.count(),
+    })
+
+@login_required
+def academy_professeur(request):
+    from .models import AcademyTeacherStudent, AcademyProgress
+    if not request.user.is_staff:
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden("Accès réservé aux professeurs.")
+    message = ''
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'assign':
+            username = (request.POST.get('student_username') or '').strip()
+            from django.contrib.auth.models import User as _U
+            try:
+                student = _U.objects.get(username=username)
+                AcademyTeacherStudent.objects.get_or_create(teacher=request.user, student=student)
+                message = f"Élève « {username} » affecté."
+            except _U.DoesNotExist:
+                message = f"Utilisateur « {username} » introuvable."
+        elif action == 'unassign':
+            sid = request.POST.get('student_id')
+            AcademyTeacherStudent.objects.filter(teacher=request.user, student_id=sid).delete()
+            message = "Affectation supprimée."
+    assignments = AcademyTeacherStudent.objects.filter(teacher=request.user).select_related('student')
+    students = []
+    for a in assignments:
+        s = a.student
+        prog = list(AcademyProgress.objects.filter(user=s).order_by('module'))
+        students.append({
+            'user': s,
+            'progress': prog,
+            'total_points': sum(p.score for p in prog),
+            'completed': sum(1 for p in prog if p.completed),
+            'cert': next((p for p in prog if p.module == 0), None),
+        })
+    return render(request, 'studio/academy_professeur.html', {
+        'academy_user': request.user,
+        'students': students,
+        'nb_students': len(students),
+        'message': message,
+    })
+
+@login_required
 def api_academy_progress(request):
     from .models import AcademyProgress
     if request.method == 'POST':
@@ -2682,7 +2845,7 @@ def api_academy_progress(request):
         module = int(data.get('module', 0))
         score = int(data.get('score', 0))
         completed = bool(data.get('completed', False))
-        if module < 1 or module > 5:
+        if module < 0 or module > 5:
             return JsonResponse({'status': 'error', 'message': 'module invalide'}, status=400)
         obj, _ = AcademyProgress.objects.update_or_create(
             user=request.user, module=module,

@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="csrf-token" content="{{ csrf_token }}">
     <title>PixelSoftware Academy — Advanced Systems & AI Architecture</title>
     
     <!-- Tailwind CSS CDN -->
@@ -117,6 +118,8 @@
                     <span class="w-2 h-2 rounded-full bg-pixel-emerald animate-pulse"></span>
                     <span class="text-[11px]">Runtime: Python 3.12 (NumPy Engine)</span>
                 </div>
+                <a href="/academy/espace/" class="text-slate-400 hover:text-pixel-cyan"><i class="fa-solid fa-user mr-1"></i> Mon espace</a>
+                {% if user.is_staff %}<a href="/academy/professeur/" class="text-slate-400 hover:text-pixel-cyan"><i class="fa-solid fa-chalkboard-user mr-1"></i> Professeur</a>{% endif %}
                 <a href="/" class="text-slate-400 hover:text-pixel-cyan"><i class="fa-solid fa-arrow-left mr-1"></i> Site</a>
             </div>
         </div>
@@ -773,7 +776,17 @@
                 const sel = document.querySelector(`input[name="q_${q.id}"]:checked`);
                 if (sel && parseInt(sel.value) === q.correct) score++;
             });
+            const pct = Math.round((score / QUIZ_QUESTIONS.length) * 100);
             document.getElementById('quiz-score-display').innerText = `${score} / ${QUIZ_QUESTIONS.length}`;
+            const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+            fetch('/api/academy/progress/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
+                body: JSON.stringify({ module: 0, score: pct, completed: score === QUIZ_QUESTIONS.length })
+            }).then(r => r.json()).then(d => {
+                const fb = document.getElementById('quiz-status-feedback');
+                if (fb) fb.innerText = d.status === 'success' ? 'Score enregistré dans votre espace.' : 'Erreur d\'enregistrement.';
+            }).catch(() => {});
         }
 
         const PDFS = ["Cours_Architecture_Numerique_Trois_Niveaux.pdf","Cours_Architectures_IA.pdf","Cours_Fondements_IA.pdf","Cours_Histoire_IA.pdf","Cours_IA_3D.pdf","Cours_IA_A_Z.pdf","Cours_IA_Appliquee_Terrain.pdf","Cours_IA_Audio.pdf","Cours_IA_Avannee_Federated_Learning.pdf","Cours_IA_Donnees_BigData.pdf","Cours_IA_Recherche_Operationnelle.pdf","Cours_Ingenierie_IA.pdf","Cours_Innovation_IA.pdf","Cours_Introduction_IA.pdf"];

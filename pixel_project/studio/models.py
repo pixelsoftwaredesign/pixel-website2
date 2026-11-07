@@ -1918,3 +1918,73 @@ class AcademyProgress(models.Model):
 
     def __str__(self):
         return f"{self.user.username} — module {self.module} ({self.score})"
+
+
+# ─── PixelSoftware Academy — affectation professeur/élève ─────
+class AcademyTeacherStudent(models.Model):
+    teacher = models.ForeignKey(User, on_delete=models.CASCADE, related_name='academy_students')
+    student = models.ForeignKey(User, on_delete=models.CASCADE, related_name='academy_teachers')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Affectation professeur/élève"
+        verbose_name_plural = "Affectations professeur/élève"
+        unique_together = ('teacher', 'student')
+        ordering = ['teacher', 'student']
+
+    def __str__(self):
+        return f"{self.teacher.username} → {self.student.username}"
+
+
+# ─── PixelSoftware Academy — suivi étudiant détaillé ─────────
+class AcademyStudyTime(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='academy_study_times')
+    date = models.DateField(verbose_name="Date d'étude")
+    minutes = models.PositiveIntegerField(default=0, verbose_name="Minutes d'étude")
+
+    class Meta:
+        verbose_name = "Temps d'étude"
+        verbose_name_plural = "Temps d'étude"
+        unique_together = ('user', 'date')
+        ordering = ['-date']
+
+    def __str__(self):
+        return f"{self.user.username} — {self.date} : {self.minutes} min"
+
+
+class AcademyExerciseAnswer(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='academy_exercise_answers')
+    exercise_ref = models.CharField(max_length=60, verbose_name="Référence exercice")
+    answer = models.TextField(blank=True, verbose_name="Réponse")
+    score = models.PositiveSmallIntegerField(default=0, verbose_name="Score")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Réponse d'exercice"
+        verbose_name_plural = "Réponses d'exercice"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} — {self.exercise_ref} ({self.score})"
+
+
+class AcademyActivity(models.Model):
+    ACTIVITY_TYPES = [
+        ('code_report', 'Rapport de code'),
+        ('r_and_d', 'Participation R&D'),
+        ('task', 'Tâche'),
+    ]
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='academy_activities')
+    activity_type = models.CharField(max_length=20, choices=ACTIVITY_TYPES, verbose_name="Type")
+    title = models.CharField(max_length=120, verbose_name="Titre")
+    detail = models.TextField(blank=True, verbose_name="Détail")
+    points = models.PositiveSmallIntegerField(default=0, verbose_name="Points")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Activité Academy"
+        verbose_name_plural = "Activités Academy"
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.username} — {self.get_activity_type_display()}: {self.title}"
