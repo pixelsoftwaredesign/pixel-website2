@@ -107,6 +107,7 @@ urlpatterns = [
     path('academy/ia-donnees-systemes/', views.academy_ia_donnees_systemes, name='academy_ia_donnees_systemes'),
     path('academy/espace/', views.academy_espace, name='academy_espace'),
     path('academy/professeur/', views.academy_professeur, name='academy_professeur'),
+    path('academy/administration/', views.academy_administration, name='academy_administration'),
     path('api/academy/progress/', views.api_academy_progress, name='api_academy_progress'),
     path('api/academy/study-time/', views.api_academy_study_time, name='api_academy_study_time'),
     path('api/academy/exercise/', views.api_academy_exercise, name='api_academy_exercise'),

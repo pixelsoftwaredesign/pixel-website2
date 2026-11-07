@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark h-full">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Administration scolarité — PixelSoftware Academy</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script>tailwind.config={darkMode:'class',theme:{extend:{fontFamily:{sans:['Inter','sans-serif'],mono:['JetBrains Mono','monospace']},colors:{pixel:{bg:'#070a11',panel:'#0d1322',border:'#1b2438',cyan:'#38bdf8',amber:'#fbbf24',emerald:'#34d399',rose:'#fb7185'}}}}}</script>
+<style>body{background-color:#070a11}</style>
+</head>
+<body class="text-slate-200 font-sans min-h-screen bg-pixel-bg">
+<header class="sticky top-0 z-50 bg-pixel-panel/90 backdrop-blur-md border-b border-pixel-border px-4 lg:px-6 py-2.5">
+  <div class="max-w-6xl mx-auto flex items-center justify-between">
+    <a href="/academy/" class="flex items-center gap-3"><span class="font-mono font-bold text-white">PIXELSOFTWARE</span><span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-pixel-cyan/10 border border-pixel-cyan/30 text-pixel-cyan">ACADEMY</span></a>
+    <div class="flex items-center gap-4 font-mono text-xs">
+      <span class="text-slate-400">Administration</span>
+      <a href="/academy/" class="text-slate-400 hover:text-pixel-cyan">Academy</a>
+      <a href="/logout/" class="text-slate-400 hover:text-pixel-cyan">Déconnexion</a>
+    </div>
+  </div>
+</header>
+<main class="max-w-6xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+  <div class="bg-pixel-panel border border-pixel-border rounded-2xl p-6">
+    <h1 class="text-2xl font-extrabold text-white mb-1">Dashboard de scolarité — Administration</h1>
+    <p class="text-slate-400 text-sm">Vue d'ensemble de tous les étudiants et de leur progression.</p>
+  </div>
+  <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+    <div class="bg-pixel-panel border border-pixel-border rounded-2xl p-5 text-center">
+      <div class="text-3xl font-black text-pixel-cyan">{{ total_students }}</div>
+      <div class="text-xs font-mono text-slate-400 mt-1">Étudiants actifs</div>
+    </div>
+    <div class="bg-pixel-panel border border-pixel-border rounded-2xl p-5 text-center">
+      <div class="text-3xl font-black text-pixel-amber">{{ total_points }}</div>
+      <div class="text-xs font-mono text-slate-400 mt-1">Points totaux</div>
+    </div>
+    <div class="bg-pixel-panel border border-pixel-border rounded-2xl p-5 text-center">
+      <div class="text-3xl font-black text-pixel-emerald">{{ total_completed }}</div>
+      <div class="text-xs font-mono text-slate-400 mt-1">Modules complétés</div>
+    </div>
+    <div class="bg-pixel-panel border border-pixel-border rounded-2xl p-5 text-center">
+      <div class="text-3xl font-black text-pixel-cyan">{{ nb_progress }}</div>
+      <div class="text-xs font-mono text-slate-400 mt-1">Entrées de progression</div>
+    </div>
+  </div>
+  {% if students %}
+  <div class="bg-pixel-panel border border-pixel-border rounded-2xl p-6 overflow-x-auto">
+    <h2 class="text-sm font-bold text-white mb-4 font-mono">Étudiants et progression</h2>
+    <table class="w-full text-left font-mono text-xs">
+      <thead class="text-slate-400 border-b border-pixel-border">
+        <tr>
+          <th class="p-2">Étudiant</th>
+          <th class="p-2">Points</th>
+          <th class="p-2">Modules</th>
+          <th class="p-2">Certification</th>
+          <th class="p-2">Détail</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-pixel-border text-slate-300">
+        {% for s in students %}
+        <tr>
+          <td class="p-2">
+            <div class="font-bold text-white">{{ s.user.username }}</div>
+            <div class="text-slate-500 text-[10px]">{{ s.user.email }}</div>
+          </td>
+          <td class="p-2 text-pixel-amber font-bold">{{ s.total_points }}</td>
+          <td class="p-2">{{ s.completed }} / {{ s.progress|length }}</td>
+          <td class="p-2">{% if s.cert %}{{ s.cert.score }} pts{% else %}—{% endif %}</td>
+          <td class="p-2">
+            <details>
+              <summary class="cursor-pointer text-pixel-cyan">voir</summary>
+              <div class="mt-2 space-y-1">
+                {% for p in s.progress %}
+                <div class="flex items-center justify-between text-[10px]">
+                  <span>Module {{ p.module }}{% if p.module == 0 %} (Certif){% endif %}</span>
+                  <span>{{ p.score }} pts {% if p.completed %}✓{% endif %}</span>
+                </div>
+                {% endfor %}
+              </div>
+            </details>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="bg-pixel-panel border border-pixel-border rounded-2xl p-6 text-center text-slate-400 text-xs">Aucun étudiant avec progression enregistrée.</div>
+  {% endif %}
+  <div class="text-center text-slate-500 text-xs font-mono">© 2026 Pixel Software Design — Tous droits réservés.</div>
+</main>
+</body>
+</html>

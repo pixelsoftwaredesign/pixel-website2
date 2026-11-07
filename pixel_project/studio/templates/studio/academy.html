@@ -120,6 +120,7 @@
                 </div>
                 <a href="/academy/espace/" class="text-slate-400 hover:text-pixel-cyan"><i class="fa-solid fa-user mr-1"></i> Mon espace</a>
                 {% if user.is_staff %}<a href="/academy/professeur/" class="text-slate-400 hover:text-pixel-cyan"><i class="fa-solid fa-chalkboard-user mr-1"></i> Professeur</a>{% endif %}
+                {% if user.is_staff %}<a href="/academy/administration/" class="text-slate-400 hover:text-pixel-cyan"><i class="fa-solid fa-gauge mr-1"></i> Administration</a>{% endif %}
                 <a href="/" class="text-slate-400 hover:text-pixel-cyan"><i class="fa-solid fa-arrow-left mr-1"></i> Site</a>
             </div>
         </div>
