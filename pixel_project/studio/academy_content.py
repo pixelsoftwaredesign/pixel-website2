@@ -219,385 +219,378 @@ Ce document est la propriété exclusive de Pixel Software Design. Toute reprodu
 Document généré automatiquement le 29/09/2026 — mise en page Pixel Software Design.
 """
 
-PROGRAMME_OFFICIEL_TEXT = r"""Programme d'Études Officiel — PixelSoftware Academy (Édition 2026)
+PROGRAMME_OFFICIEL_TEXT = r"""Module 1 — Systèmes distribués & Federated Learning (FedProx)
+Support de cours — PixelSoftware Academy, édition 2026
+Public : Master 2 / cycle ingénieur. Volume : 30 h (10 h de cours, 20 h de TP). Prérequis : Python, algèbre linéaire, descente de gradient, notions de probabilités.
 
-Niveau cible : Master 2 / Cycle Ingénieur en Systèmes Distribués, IA Avancée & Sécurité
-Établissement : PixelSoftware Design Academy
-Responsable pédagogique : Ghiloufi Jamel, Architecte Logiciel Principal
-Version corrigée : les points relevés lors de la revue de cohérence sont intégrés et signalés par la mention « révisé ».
+Objectifs du module
+À la fin du module, vous saurez :
+• expliquer pourquoi et quand l'apprentissage fédéré remplace l'entraînement centralisé ;
+• décrire les formes d'hétérogénéité des données (non-i.i.d.) et leurs effets ;
+• formuler le problème d'optimisation fédérée, implémenter FedAvg et FedProx ;
+• protéger les mises à jour par clipping et bruit gaussien (DP-SGD) ;
+• rendre l'agrégation robuste à des clients malveillants avec la moyenne tronquée (Trimmed Mean).
 
-Vision et objectif du cursus
-Le programme répond aux défis technologiques majeurs de l'industrie : concevoir des systèmes d'intelligence artificielle souverains, respectueux de la vie privée (apprentissage fédéré), structurés par la connaissance (GraphRAG et Meaning Graphs) et optimisés pour les environnements contraints (Edge LoRA et architectures distribuées).
+Plan
+1. Pourquoi l'apprentissage fédéré ?
+2. Données i.i.d. et non-i.i.d.
+3. Formulation du problème et FedAvg
+4. Le Client Drift
+5. FedProx
+6. Confidentialité différentielle et DP-SGD
+7. Robustesse : empoisonnement et Trimmed Mean
+8. Implémentation en Python pur
+9. Exercices et corrigés courts
+10. Résumé et références
 
-Architecture globale du cursus
-Semestre | Thème | Contenu
-S1 | Fondations & Systèmes Distribués | Module 1 : Systèmes distribués & FedProx ; Module 2 : GraphRAG ; Module 3 : Enterprise AI Architecture
-S2 | Advanced AI & Edge | Module 4 : LoRA & Edge ML ; Module 5 : Guardrails ; Projet fil rouge
+1. Pourquoi l'apprentissage fédéré ?
+1.1 Les limites de l'architecture centralisée
+Dans l'approche classique, toutes les données sont copiées sur un serveur qui entraîne le modèle. Trois limites apparaissent dès que les données sont sensibles ou massives.
+• Conformité. Le RGPD, le secret médical ou des contrats peuvent interdire de transférer des données hors de leur lieu d'origine. Copier des dossiers patients vers un serveur commun est souvent impossible.
+• Latence et coût. Déplacer de gros volumes de données coûte en bande passante et en temps ; pour des appareils mobiles, c'est parfois irréaliste.
+• Point de défaillance unique (SPOF). Un serveur central qui contient toutes les données est une cible d'attaque et un point de panne unique.
 
-Volumes horaires
-Bloc | Cours | TP / projet | Total
-Module 1 | 10 h | 20 h | 30 h
-Module 2 | 8 h | 17 h | 25 h
-Module 3 | 10 h | 15 h | 25 h
-Total S1 | 28 h | 52 h | 80 h
-Module 4 | 6 h | 14 h | 20 h
-Module 5 | 6 h | 14 h | 20 h
-Projet fil rouge | n/a | 40 h | 40 h
-Total S2 | 12 h | 68 h | 80 h
-Total cursus | 40 h (25 %) | 120 h (75 %) | 160 h
+1.2 Le principe fédéré
+En apprentissage fédéré, les données restent chez les clients (hôpitaux, téléphones, entreprises). Un serveur coordonne : il envoie le modèle courant, chaque client l'entraîne localement sur ses données, renvoie une mise à jour, et le serveur les agrège pour produire le nouveau modèle. Seuls des paramètres circulent.
+Deux contextes à distinguer. Le cadre cross-silo regroupe peu de clients fiables et puissants (par exemple trois hôpitaux). Le cadre cross-device regroupe un très grand nombre d'appareils, dont une fraction seulement participe à chaque tour. Le projet fil rouge relève du premier.
 
-Semestre 1 : Fondations des systèmes distribués & IA sémantique
+1.3 Une précision importante
+Le fédéré protège la localisation des données, pas automatiquement leur confidentialité. Les mises à jour peuvent révéler de l'information sur les données qui les ont produites. C'est pourquoi on ajoute la confidentialité différentielle (section 6).
 
-Module 1 : Systèmes distribués & Federated Learning (FedProx) — révisé
-Volume horaire : 30 h (10 h cours, 20 h TP from scratch)
-Révision : le titre initial mentionnait le « Big Data Distribué » sans que le contenu le couvre. Le titre est aligné sur le contenu ; un volet big data pourra être ajouté si l'équipe pédagogique le souhaite.
-Objectifs pédagogiques : comprendre les limites des architectures centralisées (RGPD, latence, point de défaillance unique) et maîtriser l'apprentissage fédéré sur données hétérogènes.
-Contenu détaillé :
-• Topologie des données distribuées : i.i.d. vs non-i.i.d. (Feature Shift, Concept Drift).
-• Formulation mathématique de l'optimisation globale et de la dérive des modèles (Client Drift).
-• Algorithme FedProx et son terme de régularisation proximal : h_k(w; w_t) = F_k(w) + (μ/2) ‖w − w_t‖²₂
-• Confidentialité différentielle (DP-SGD) : clipping L2 et injection de bruit gaussien.
-• Robustesse aux attaques par empoisonnement via l'agrégation Trimmed Mean.
-Évaluation : implémentation en Python pur d'un cluster fédéré simulé.
+2. Données i.i.d. et non-i.i.d.
+Des données sont i.i.d. (indépendantes et identiquement distribuées) si tous les clients tirent leurs échantillons de la même distribution. C'est rarement le cas. Les principales formes d'hétérogénéité sont les suivantes.
+Forme | Description | Exemple médical
+Déséquilibre des classes (label skew) | Les proportions de classes diffèrent selon le client | Un hôpital spécialisé voit surtout une pathologie
+Feature Shift | La distribution des entrées diffère | Deux appareils d'imagerie de réglages différents
+Concept Drift | La relation entrée-sortie change selon le client ou le temps | Deux protocoles de diagnostic différents
+Déséquilibre de quantité | Les clients ont des nombres d'exemples très inégaux | Un grand CHU et une petite clinique
+Conséquence. Le gradient calculé par un client n'est plus une estimation fidèle du gradient global : chaque client « tire » le modèle vers son propre optimum.
 
-Module 2 : Meaning Graphs & architectures GraphRAG
-Volume horaire : 25 h (8 h cours, 17 h TP)
-Objectifs pédagogiques : dépasser les limites de la recherche vectorielle pure (Dense Retrieval) en combinant ontologies sémantiques et recherche hybride.
-Contenu détaillé :
-• Limites contextuelles globales des bases vectorielles (HNSW).
-• Extraction de triplets RDF (Sujet, Prédicat, Objet) et construction de graphes de connaissances.
-• Formule d'hybridation tri-partite : Score(doc) = α · Sim_Dense(q, d) + β · BM25(q, d) + γ · Centrality_Graph(doc)
-Évaluation : conception d'un pipeline GraphRAG interconnecté à un graphe de connaissances.
+Partition de Dirichlet (outil de TP). Pour simuler le déséquilibre de classes, on tire pour chaque classe une répartition entre clients selon une loi de Dirichlet de paramètre beta : un petit beta (0,1) donne des clients très spécialisés, un grand beta (100) donne des données presque i.i.d.
 
-Module 3 : Enterprise AI Architecture & System Patterns
-Volume horaire : 25 h (10 h cours, 15 h TP)
-Objectifs pédagogiques : architecturer des plateformes d'IA prêtes pour la production à grande échelle.
-Contenu détaillé :
-• Pattern Router-Dispatcher pour l'aiguillage sémantique entre petits modèles (SLMs) et grands modèles (LLMs).
-• Mise en cache sémantique (Semantic Caching) pour réduire la latence TTFT.
-• Boucles d'agents autonomes ReAct (Reasoning + Acting) et gestion des Circuit Breakers.
-Évaluation : développement d'une passerelle d'inférence haute performance.
+3. Formulation du problème et FedAvg
+3.1 Objectif global
+Soit K clients. Le client k possède n_k exemples ; n est la somme des n_k. Sa perte locale est F_k(w). L'objectif global est
+F(w) = somme sur k de p_k · F_k(w), avec p_k = n_k / n.
+Les poids p_k donnent plus d'importance aux clients qui ont plus de données.
 
-Semestre 2 : Optimisation Edge, gouvernance & projet transversal
+3.2 L'algorithme FedAvg
+À chaque tour t :
+1. Le serveur choisit un sous-ensemble de clients et leur envoie w_t.
+2. Chaque client effectue E époques de descente de gradient locale à partir de w_t et obtient w_k.
+3. Le serveur calcule le nouveau modèle : w_(t+1) = somme sur k de p_k · w_k.
 
-Module 4 : Parameter-Efficient Fine-Tuning (LoRA & Edge ML)
-Volume horaire : 20 h (6 h cours, 14 h TP)
-Objectifs pédagogiques : entraîner et adapter des modèles sur des dispositifs à ressources limitées (IoT / mobile).
-Contenu détaillé :
-• Théorie de la décomposition à bas rang : h = W₀x + (α/r) · B · A · x
-• Stratégies d'optimisation de la mémoire GPU et réduction du volume de communication en Federated Learning.
-Évaluation : implémentation d'une couche LoRA from scratch en Python.
-Point d'attention : 6 h de cours pour trois thèmes (LoRA, mémoire GPU, communication FL) est un volume serré ; un rééquilibrage cours/TP peut être envisagé.
+Exemple numérique. Trois clients ont n = 100, 300 et 600 exemples, donc p = 0,1 ; 0,3 ; 0,6. Pour un paramètre scalaire, ils renvoient 1,0 ; 2,0 et 3,0. Le serveur obtient 0,1 × 1,0 + 0,3 × 2,0 + 0,6 × 3,0 = 0,1 + 0,6 + 1,8 = 2,5. Une moyenne simple aurait donné 2,0 : la pondération compte.
 
-Module 5 : Gouvernance, sécurité & LLM Guardrails
-Volume horaire : 20 h (6 h cours, 14 h TP)
-Objectifs pédagogiques : sécuriser les flux d'entrées/sorties et assurer la conformité réglementaire des applications d'IA.
-Contenu détaillé :
-• Détection et masquage automatisé des informations personnelles identifiables (PII : SSN, e-mails, téléphones).
-• Résilience face aux attaques par injection de prompt directes et indirectes.
-Évaluation : construction d'un pipeline de filtrage et de sécurité des requêtes.
+Compromis communication-calcul. Augmenter E réduit le nombre de tours (donc la communication) mais accroît la dérive décrite ci-dessous.
 
-Projet fil rouge : Système hospitalier fédéré (travail en équipe) — révisé
-Volume horaire : 40 h de projet guidé
-Énoncé : déploiement d'une architecture multi-établissements intégrant :
-• FedProx (avec DP-SGD) pour la confidentialité des données de santé (Module 1) ;
-• un Meaning Graph médical et une recherche GraphRAG pour le requêtage ontologique (Module 2) ;
-• une passerelle d'inférence avec Router-Dispatcher, cache sémantique et Circuit Breakers (Module 3) ;
-• une adaptation LoRA des modèles pour les établissements à ressources limitées (Module 4) ;
-• des Guardrails de sécurité : masquage PII et défense contre l'injection de prompt (Module 5).
-Révision : la version initiale n'intégrait ni LoRA ni les patterns du Module 3. L'énoncé couvre désormais l'ensemble des cinq modules.
-Soutenance : évaluation sur grille officielle (20 points) devant un jury d'architectes.
+4. Le Client Drift
+Si les données sont non-i.i.d., l'optimum de F_k diffère de l'optimum de F. Plus un client fait d'étapes locales, plus il s'éloigne du modèle global vers son propre optimum, et la moyenne de modèles très éloignés est un mauvais compromis.
 
-Évaluation : points à définir
-Seul le projet dispose aujourd'hui d'une grille officielle sur 20 points. Les éléments suivants restent à fixer par l'équipe pédagogique :
-• la pondération des évaluations de modules par rapport à la soutenance ;
-• les grilles de notation de chaque évaluation de module ;
-• les modalités de rattrapage.
+Exemple scalaire. Deux clients de poids égaux (p = 0,5 chacun) :
+• client 1 : F_1(w) = (1 / 2) · w², optimum local 0 ;
+• client 2 : F_2(w) = (0,1 / 2) · (w − 10)², optimum local 10, avec une courbure dix fois plus faible.
+L'optimum global annule le gradient moyen : w + 0,1 · (w − 10) = 0, donc 1,1 · w = 1 et l'optimum vaut w_opt ≈ 0,909.
+Si chaque client résout complètement son problème local à chaque tour (E très grand), le serveur moyenne 0 et 10 et obtient 5, très loin de 0,909. Le client 2, plus « plat », ne devrait presque pas peser dans la solution, mais la moyenne simple lui donne autant de poids qu'au client 1. C'est le Client Drift : l'algorithme converge vers un point qui n'est pas l'optimum global.
 
-Compétences validées
-Domaine | Compétence clé | Niveau visé
-Systèmes distribués | Conception et pilotage d'un cluster d'apprentissage fédéré (FedProx + DP) | Maîtrise experte
-Ingénierie des données | Création de Meaning Graphs et hybridation GraphRAG | Maîtrise avancée
-Architecture logicielle | Implémentation de patrons de résilience (Router, Caching, Circuit Breaker) | Maîtrise experte
-Edge & sécurité | Fine-tuning LoRA et filtrage Guardrails PII | Maîtrise opérationnelle
+5. FedProx
+5.1 Idée
+FedProx limite la dérive en ajoutant à l'objectif local un terme qui pénalise l'éloignement par rapport au modèle global courant w_t :
+h_k(w ; w_t) = F_k(w) + (mu / 2) · ‖w − w_t‖².
+Le paramètre mu ≥ 0 règle la force de rappel. Le gradient local devient
+gradient de F_k en w, plus mu · (w − w_t).
+Le second terme tire le modèle local vers w_t, comme un ressort.
 
-Plan de cours détaillé (proposition)
-Chaque séance de cours dure 2 h. Les séances de TP durent 3 à 5 h. Les totaux de chaque module correspondent aux volumes horaires du programme.
+5.2 Propriétés
+• mu = 0 redonne exactement FedAvg.
+• mu grand : le client bouge peu, la dérive est faible, mais la progression locale aussi (plus de tours nécessaires).
+• Travail local variable. FedProx tolère que des clients lents ou contraints fassent moins de calcul sans bloquer le tour, ce qui est utile en pratique.
+• Réglage. Valeurs à tester : 0,001 ; 0,01 ; 0,1 ; 1. Le meilleur mu dépend du degré d'hétérogénéité ; on le choisit sur un jeu de validation.
 
-Module 1 : Systèmes distribués & Federated Learning (10 h cours, 20 h TP)
-Séance | Type | Durée | Contenu
-C1 | Cours | 2 h | Limites des architectures centralisées (RGPD, latence, SPOF) ; données i.i.d. vs non-i.i.d. (Feature Shift, Concept Drift)
-C2 | Cours | 2 h | Optimisation globale, principe de FedAvg, Client Drift
-C3 | Cours | 2 h | FedProx : terme proximal, rôle et réglage de μ
-C4 | Cours | 2 h | DP-SGD : clipping L2, bruit gaussien, compromis confidentialité/utilité
-C5 | Cours | 2 h | Attaques par empoisonnement et agrégation Trimmed Mean
-T1 | TP | 4 h | Simulateur de clients à données non-i.i.d. en Python pur
-T2 | TP | 4 h | FedAvg from scratch
-T3 | TP | 4 h | FedProx : comparaison avec FedAvg selon μ
-T4 | TP | 4 h | DP-SGD sur les mises à jour clients
-T5 | TP | 4 h | Attaque par empoisonnement, Trimmed Mean et évaluation finale du cluster fédéré
+5.3 Retour sur l'exemple scalaire
+Supposons que chaque client résolve exactement son problème proximal à chaque tour.
+• Client 1 : on minimise w²/2 + (mu/2)(w − w_t)², d'où w = mu · w_t / (1 + mu).
+• Client 2 : on minimise 0,1(w − 10)²/2 + (mu/2)(w − w_t)², d'où w = (1 + mu · w_t) / (0,1 + mu).
+Le modèle global se stabilise au point fixe de la moyenne de ces deux réponses. On obtient :
+mu | Point fixe du serveur | Écart à l'optimum 0,909
+0 (FedAvg) | 5,00 | 4,09
+1 | environ 1,54 | environ 0,63
+10 | environ 0,98 | environ 0,07
+Plus mu est grand, plus le point fixe se rapproche de l'optimum global. Le prix à payer est que chaque tour progresse moins loin : il faut un compromis. Ce résultat est propre à cet exemple (résolution exacte, problème quadratique), mais il illustre le mécanisme.
 
-Module 2 : Meaning Graphs & GraphRAG (8 h cours, 17 h TP)
-Séance | Type | Durée | Contenu
-C1 | Cours | 2 h | Recherche dense et limites contextuelles des bases vectorielles (HNSW)
-C2 | Cours | 2 h | Triplets RDF (Sujet, Prédicat, Objet), ontologies et graphes de connaissances
-C3 | Cours | 2 h | BM25 et centralité de graphe
-C4 | Cours | 2 h | Formule d'hybridation tri-partite, réglage de α, β, γ, métriques d'évaluation (recall, MRR)
-T1 | TP | 4 h | Extraction de triplets à partir d'un corpus
-T2 | TP | 4 h | Index dense et BM25
-T3 | TP | 4 h | Construction du graphe et calcul de la centralité
-T4 | TP | 5 h | Pipeline GraphRAG complet et évaluation
+6. Confidentialité différentielle et DP-SGD
+6.1 Définition
+Un mécanisme aléatoire M est (epsilon, delta)-différentiellement privé si, pour deux jeux de données voisins D et D' (qui diffèrent d'un individu, ou d'un client), et pour tout ensemble de sorties S :
+Probabilité(M(D) dans S) ≤ e^epsilon · Probabilité(M(D') dans S) + delta.
+Intuitivement, la sortie change très peu que l'individu soit présent ou non : un observateur ne peut presque rien déduire de sa présence. Plus epsilon est petit, plus la protection est forte.
 
-Module 3 : Enterprise AI Architecture (10 h cours, 15 h TP)
-Séance | Type | Durée | Contenu
-C1 | Cours | 2 h | Pattern Router-Dispatcher : critères d'aiguillage SLM / LLM
-C2 | Cours | 2 h | Cache sémantique : similarité, seuils, invalidation, impact sur le TTFT
-C3 | Cours | 2 h | Agents ReAct : boucle raisonnement-action-observation
-C4 | Cours | 2 h | Circuit Breakers, timeouts, reprises et dégradation gracieuse
-C5 | Cours | 2 h | Conception d'une passerelle d'inférence : observabilité, coûts, passage à l'échelle
-T1 | TP | 4 h | Router-Dispatcher
-T2 | TP | 4 h | Cache sémantique
-T3 | TP | 4 h | Boucle ReAct protégée par un Circuit Breaker
-T4 | TP | 3 h | Assemblage de la passerelle d'inférence et tests de charge
+6.2 Le mécanisme en deux étapes
+1. Clipping L2. On borne la norme de chaque mise à jour : delta_w_bar = delta_w · min(1, C / ‖delta_w‖₂). Ainsi aucun client ne peut influencer l'agrégat de plus de C ; la sensibilité est bornée.
+2. Bruit gaussien. On ajoute à la somme des mises à jour clippées un bruit N(0, sigma² · C² · I).
+Exemple. Une mise à jour vaut (3 ; 4) ; sa norme est 5. Avec C = 1, le facteur vaut min(1 ; 1/5) = 0,2 et la mise à jour clippée vaut (0,6 ; 0,8), de norme 1. Avec sigma = 1, on ajoute à chaque coordonnée de la somme un bruit d'écart-type sigma · C = 1. Si l'on moyenne K = 10 clients, le bruit sur la moyenne a un écart-type de 0,1 par coordonnée : plus il y a de clients, moins le bruit relatif est gênant.
 
-Module 4 : LoRA & Edge ML (6 h cours, 14 h TP)
-Séance | Type | Durée | Contenu
-C1 | Cours | 2 h | Décomposition à bas rang : h = W₀x + (α/r) · B · A · x
-C2 | Cours | 2 h | Optimisation de la mémoire GPU et contraintes des dispositifs IoT / mobiles
-C3 | Cours | 2 h | LoRA en apprentissage fédéré : réduction du volume de communication
-T1 | TP | 4 h | Couche LoRA from scratch
-T2 | TP | 4 h | Mesure du nombre de paramètres entraînables et de la mémoire selon le rang r
-T3 | TP | 3 h | Intégration de LoRA dans un client fédéré
-T4 | TP | 3 h | Évaluation : précision contre coût de communication
+6.3 Compromis confidentialité-utilité
+• Un sigma plus grand donne un epsilon plus petit (meilleure confidentialité) mais un entraînement plus bruité.
+• Un C trop petit écrête l'information utile ; un C trop grand exige plus de bruit pour la même garantie.
+• Le budget se consomme à chaque tour : un comptable de confidentialité (comptable des moments, confidentialité de Rényi) suit le total. L'échantillonnage aléatoire des clients amplifie la protection.
+Précision. Dans l'article original de DP-SGD, le clipping porte sur les gradients de chaque exemple. En fédéré, on clippe souvent la mise à jour de chaque client, ce qui protège un client entier. C'est la variante utilisée en TP.
 
-Module 5 : Gouvernance, sécurité & LLM Guardrails (6 h cours, 14 h TP)
-Séance | Type | Durée | Contenu
-C1 | Cours | 2 h | Données personnelles (PII), RGPD et obligations de conformité
-C2 | Cours | 2 h | Injection de prompt directe et indirecte : scénarios d'attaque et défenses
-C3 | Cours | 2 h | Architecture de guardrails en entrée et en sortie
-T1 | TP | 4 h | Détection de PII (SSN, e-mails, téléphones)
-T2 | TP | 4 h | Masquage et anonymisation automatisés
-T3 | TP | 3 h | Détecteur d'injection de prompt
-T4 | TP | 3 h | Pipeline complet de filtrage et jeu de tests adverses
+7. Robustesse : empoisonnement et Trimmed Mean
+7.1 Menaces
+Un client malveillant peut empoisonner ses données (inversion d'étiquettes) ou envoyer directement une mise à jour nuisible. Contre une simple moyenne, un seul client suffit pour déplacer le résultat arbitrairement loin.
 
-Projet fil rouge : Système hospitalier fédéré (40 h)
-Phase | Durée | Livrable
-Cadrage et architecture | 4 h | Schéma d'architecture, répartition des rôles dans l'équipe
-Cluster fédéré (FedProx + DP-SGD) | 10 h | Entraînement multi-établissements sur données simulées
-Meaning Graph médical et GraphRAG | 8 h | Graphe ontologique et requêtage hybride
-Passerelle d'inférence | 6 h | Router, cache sémantique et Circuit Breakers
-Adaptation LoRA | 4 h | Mise à jour allégée pour les établissements à faibles ressources
-Guardrails | 4 h | Masquage PII et défense contre l'injection de prompt
-Soutenance | 4 h | Présentation devant le jury, grille sur 20 points
+7.2 Moyenne tronquée (Trimmed Mean)
+Pour chaque paramètre (coordonnée par coordonnée) :
+1. on trie les K valeurs reçues ;
+2. on retire les b plus petites et les b plus grandes ;
+3. on moyenne les K − 2b valeurs restantes.
+Exemple. Sept clients envoient, pour un même paramètre : 0,9 ; 1,0 ; 1,1 ; 1,0 ; 0,95 ; 1,05 et 50 (valeur d'un client malveillant).
+• Moyenne simple : (0,9 + 1,0 + 1,1 + 1,0 + 0,95 + 1,05 + 50) / 7 = 56 / 7 = 8,0.
+• Valeurs triées : 0,9 ; 0,95 ; 1,0 ; 1,0 ; 1,05 ; 1,1 ; 50. Avec b = 1, on retire 0,9 et 50, et on moyenne les cinq valeurs restantes : 5,1 / 5 = 1,02.
+Le résultat est proche de la vérité (environ 1), alors que la moyenne simple est faussée par un seul client.
 
-Les durées par séance sont une proposition ; elles peuvent être ajustées tant que les totaux par module restent inchangés.
+7.3 Limites
+• La méthode résiste si le nombre de clients malveillants ne dépasse pas b.
+• En non-i.i.d., des clients honnêtes mais atypiques peuvent être écartés : la robustesse coûte de l'efficacité. Le choix de b est un compromis.
+• Elle ne protège pas la confidentialité : elle se combine avec DP-SGD, elle ne le remplace pas.
 
-Cours détaillé
-Cette partie développe le contenu de chaque séance du plan ci-dessus : notions, formules, exemples et consignes de TP. Les notations sont en texte brut pour rester lisibles partout.
+8. Implémentation en Python pur
+Le programme ci-dessous reproduit l'exemple scalaire de la section 4 et permet de comparer FedAvg (mu = 0) et FedProx. Les clients ont chacun une perte quadratique F_k(w) = (a / 2) · (w − c)².
 
-Module 1 : Systèmes distribués & Federated Learning
-C1 : Pourquoi l'apprentissage fédéré ? (2 h)
-Objectifs : identifier les limites d'une architecture centralisée et caractériser l'hétérogénéité des données.
-Notions :
-• Architecture centralisée : toutes les données sont copiées sur un serveur d'entraînement. Trois limites : conformité (RGPD, secret médical, interdiction de transférer certaines données), latence et coût de transfert, point de défaillance unique (SPOF).
-• Apprentissage fédéré : les données restent chez les clients ; seuls les paramètres du modèle (ou leurs mises à jour) circulent. Le serveur coordonne, agrège et redistribue.
-• Données i.i.d. : tous les clients tirent leurs échantillons de la même distribution. Cas rare en pratique.
-• Données non-i.i.d. : déséquilibre des classes par client (label skew), distributions d'entrées différentes (Feature Shift), relation entrée-sortie qui change selon le client ou le temps (Concept Drift), quantités de données très inégales.
-Exemple fil rouge : trois hôpitaux. L'un traite surtout des patients âgés, un autre dispose d'un autre type d'imagerie, un troisième a des protocoles de diagnostic différents : les trois formes de non-i.i.d. apparaissent.
-À retenir : le fédéré protège la localisation des données, pas automatiquement leur confidentialité. Les mises à jour peuvent fuiter de l'information, d'où DP-SGD en C4.
+def local_update(w_t, a, c, mu, lr, steps):
+    w = w_t
+    for _ in range(steps):
+        grad = a * (w - c) + mu * (w - w_t)
+        w -= lr * grad
+    return w
 
-C2 : Optimisation globale et Client Drift (2 h)
-Objectifs : formuler le problème fédéré et comprendre pourquoi la moyenne simple dérive.
-Formulation : avec K clients, n_k échantillons pour le client k et n = somme des n_k, on minimise
-F(w) = somme sur k de p_k · F_k(w), avec p_k = n_k / n
-où F_k est la perte locale du client k.
-FedAvg (référence) : à chaque tour t, le serveur envoie w_t à un sous-ensemble de clients ; chacun effectue E époques de SGD local et renvoie w_k ; le serveur calcule w_(t+1) = somme sur k de p_k · w_k.
-Client Drift : quand les données sont non-i.i.d., l'optimum local de chaque F_k diffère de l'optimum global. Plus E est grand ou le taux d'apprentissage élevé, plus chaque client s'éloigne de w_t vers son propre optimum, et la moyenne devient un mauvais compromis : convergence lente, oscillante, parfois divergente.
-À retenir : réduire E limite la dérive mais augmente la communication ; il faut un mécanisme qui borne la dérive sans renoncer au calcul local.
 
-C3 : FedProx (2 h)
-Objectifs : dériver le terme proximal et savoir régler mu.
-Objectif local modifié :
-h_k(w; w_t) = F_k(w) + (mu / 2) · ||w − w_t||²
-Gradient local : grad F_k(w) + mu · (w − w_t). Le second terme ramène le modèle local vers le modèle global courant : c'est une force de rappel.
-Propriétés :
-• mu = 0 redonne FedAvg.
-• mu grand : le client bouge peu, la dérive est faible mais la progression locale aussi.
-• FedProx tolère un travail local variable : un client lent ou à ressources limitées peut faire moins d'itérations sans bloquer le tour.
-Réglage : valeurs usuelles à tester : 0.001, 0.01, 0.1, 1. Le meilleur mu dépend du degré d'hétérogénéité ; on le choisit sur un jeu de validation.
+def run(mu, rounds=200, steps=500, lr=0.1):
+    clients = [(1.0, 0.0), (0.1, 10.0)]   # (a, c) ; poids egaux
+    w = 5.0
+    for _ in range(rounds):
+        locals_ = [local_update(w, a, c, mu, lr, steps) for a, c in clients]
+        w = sum(locals_) / len(locals_)
+    return w
 
-C4 : Confidentialité différentielle et DP-SGD (2 h)
-Objectifs : protéger les mises à jour par clipping et bruit, et mesurer le coût en utilité.
-Définition : un mécanisme est (epsilon, delta)-différentiellement privé si sa sortie change très peu (au plus un facteur e^epsilon, plus une probabilité delta) quand on ajoute ou retire un individu (ou un client) des données.
-Mécanisme appliqué aux mises à jour :
-1. Clipping L2 : delta_w_bar = delta_w · min(1, C / ||delta_w||₂). Cela borne la sensibilité à C.
-2. Bruit gaussien : on ajoute N(0, sigma² · C² · I) à l'agrégat des mises à jour clippées.
-Compromis : plus sigma est grand, plus epsilon est petit (meilleure confidentialité) mais plus l'entraînement est bruité. Un petit C écrête beaucoup l'information utile ; un grand C demande plus de bruit. Le suivi du budget cumulé d'epsilon sur les tours se fait par un comptable de confidentialité.
-Précision : le DP-SGD classique clippe les gradients par échantillon ; dans le cadre fédéré, on clippe souvent la mise à jour de chaque client (confidentialité au niveau du client), ce que le TP met en œuvre.
 
-C5 : Robustesse aux attaques et Trimmed Mean (2 h)
-Objectifs : comprendre l'empoisonnement et mettre en place une agrégation robuste.
-Menaces : empoisonnement des données (par exemple inversion d'étiquettes) ou des mises à jour (envoi de vecteurs volontairement nuisibles). Une simple moyenne est très sensible : un seul client malveillant peut déplacer le résultat arbitrairement.
-Trimmed Mean coordonnée par coordonnée : pour chaque paramètre, on trie les K valeurs reçues, on retire les b plus petites et les b plus grandes, puis on moyenne les K − 2b restantes. Elle résiste si le nombre de clients malveillants est au plus b.
-Limites : en non-i.i.d., des clients honnêtes mais atypiques peuvent être retirés, ce qui ralentit la convergence ; le choix de b est un compromis entre robustesse et efficacité.
+for mu in (0.0, 1.0, 10.0):
+    print(mu, round(run(mu), 3))
+Résultats attendus (approximatifs, car la résolution locale n'est pas exacte) : environ 5 pour mu = 0, environ 1,5 pour mu = 1 et environ 1,0 pour mu = 10. L'optimum global est 0,909.
+Pour le TP. Remplacez la perte quadratique par une régression logistique sur des données simulées, ajoutez la partition de Dirichlet, puis le clipping, le bruit et la moyenne tronquée. Vérifiez chaque brique par un test numérique (par exemple, avec mu = 0 votre FedProx doit coïncider avec votre FedAvg).
 
-T1 à T5 : Travaux pratiques (20 h)
-TP | Consigne | Livrable et critères
-T1 (4 h) | Générer K clients avec un déséquilibre de classes réglable (par exemple partition de Dirichlet) en Python pur | Fonction de partition, histogramme des classes par client
-T2 (4 h) | Implémenter FedAvg : entraînement local (régression logistique), agrégation pondérée, boucle de tours | Courbe de perte globale et d'exactitude par tour
-T3 (4 h) | Ajouter le terme proximal et comparer FedAvg et FedProx pour plusieurs mu et niveaux d'hétérogénéité | Tableau comparatif et analyse de l'effet de mu
-T4 (4 h) | Ajouter clipping L2 et bruit gaussien aux mises à jour ; faire varier sigma et C | Courbe utilité en fonction du bruit ; discussion du compromis
-T5 (4 h) | Injecter des clients malveillants (inversion d'étiquettes ou mises à jour aberrantes) ; comparer moyenne simple et Trimmed Mean | Cluster fédéré final, rapport d'évaluation (note du module)
-Barème indicatif de l'évaluation du module (à valider) : exactitude du code et reproductibilité, qualité des expériences, analyse critique, clarté du rapport.
+9. Exercices
+1. FedAvg. Quatre clients ont n = 50, 150, 300, 500 exemples et renvoient 2, 4, 6, 8 pour un paramètre. Calculez le résultat de l'agrégation pondérée et celui de la moyenne simple.
+2. Terme proximal. Pour F_k(w) = (w − 4)² / 2 et w_t = 0, écrivez h_k(w ; w_t) et trouvez le minimiseur en fonction de mu. Que se passe-t-il quand mu tend vers 0 ? vers l'infini ?
+3. Clipping. Une mise à jour vaut (6 ; 8). Calculez sa version clippée avec C = 2. Quelle est sa norme ?
+4. Bruit. Avec sigma = 2, C = 1 et K = 20 clients, quel est l'écart-type du bruit sur la moyenne, par coordonnée ?
+5. Trimmed Mean. Neuf clients envoient 3,0 ; 3,1 ; 2,9 ; 3,0 ; 3,2 ; 2,8 ; 3,0 ; −40 ; 90. Calculez la moyenne simple, puis la moyenne tronquée avec b = 2.
+6. Réflexion. Pourquoi une forte confidentialité différentielle et une forte robustesse (b grand) peuvent-elles toutes deux ralentir la convergence ? Proposez une expérience qui mesure ces effets.
 
-Module 2 : Meaning Graphs & GraphRAG
-C1 : Recherche dense et ses limites (2 h)
-Objectifs : comprendre le fonctionnement de la recherche vectorielle et là où elle échoue.
-Notions :
-• Plongements (embeddings) : un texte devient un vecteur ; la similarité (cosinus) mesure la proximité sémantique entre la requête q et un document d.
-• HNSW : index de voisinage approché en graphe hiérarchique ; très rapide, mais renvoie les passages les plus proches de la requête, pas les plus utiles pour raisonner.
-• Limites : perte de la structure (qui est lié à quoi), mauvaise gestion des questions multi-sauts, faible traçabilité de la réponse, difficulté sur les termes rares ou les identifiants exacts.
-À retenir : la recherche dense capte le sens mais pas les relations explicites ni les correspondances lexicales exactes.
+Corrigés courts
+1. Poids : 0,05 ; 0,15 ; 0,30 ; 0,50. Agrégation : 0,1 + 0,6 + 1,8 + 4,0 = 6,5. Moyenne simple : 5.
+2. h_k = (w − 4)² / 2 + (mu / 2) · w². Le gradient (w − 4) + mu · w s'annule en w = 4 / (1 + mu). Quand mu tend vers 0, w tend vers 4 (optimum local) ; quand mu tend vers l'infini, w tend vers 0 (on reste en w_t).
+3. Norme 10 ; facteur min(1 ; 2/10) = 0,2 ; mise à jour clippée (1,2 ; 1,6), de norme 2.
+4. Bruit sur la somme : sigma · C = 2 ; sur la moyenne : 2 / 20 = 0,1.
+5. Somme : 3,0 + 3,1 + 2,9 + 3,0 + 3,2 + 2,8 + 3,0 − 40 + 90 = 70,0 ; moyenne simple 70 / 9 ≈ 7,78. Triées : −40 ; 2,8 ; 2,9 ; 3,0 ; 3,0 ; 3,0 ; 3,1 ; 3,2 ; 90. On retire les deux plus petites (−40 ; 2,8) et les deux plus grandes (3,2 ; 90) ; il reste 2,9 ; 3,0 ; 3,0 ; 3,0 ; 3,1 de somme 15,0, soit une moyenne tronquée de 3,0.
+6. Le bruit et le clipping dégradent le signal de chaque mise à jour ; la troncature jette des informations de clients honnêtes. Expérience : faire varier sigma et b séparément puis ensemble, et tracer la précision en fonction du nombre de tours, sur plusieurs graines aléatoires.
 
-C2 : Triplets RDF et graphes de connaissances (2 h)
-Objectifs : représenter la connaissance sous forme de triplets et construire un graphe.
-Notions :
-• Triplet RDF : (Sujet, Prédicat, Objet), par exemple (Metformine, traite, Diabète de type 2).
-• Graphe de connaissances : les entités sont les nœuds, les prédicats sont les arêtes orientées. Le chemin entre deux nœuds exprime un raisonnement multi-sauts.
-• Ontologie : vocabulaire contrôlé de classes et de relations. Elle garantit la cohérence et permet l'inférence.
-• Extraction : par règles, par modèle de langage avec sortie structurée, ou par import de sources existantes. Il faut résoudre les synonymes (normalisation des entités) et valider la qualité.
+10. Résumé et références
+À retenir
+• Le fédéré garde les données sur place mais ne garantit pas la confidentialité à lui seul.
+• Avec des données non-i.i.d., la moyenne de modèles locaux dérive (Client Drift).
+• FedProx ajoute (mu / 2) · ‖w − w_t‖² pour borner cette dérive ; mu = 0 redonne FedAvg.
+• DP-SGD = clipping L2 + bruit gaussien ; le budget epsilon se consomme à chaque tour.
+• La moyenne tronquée résiste à b clients malveillants mais coûte de l'efficacité en non-i.i.d.
 
-C3 : BM25 et centralité de graphe (2 h)
-Objectifs : maîtriser les deux autres signaux de la formule hybride.
-BM25 : score lexical qui combine la fréquence du terme dans le document (saturée), la rareté du terme dans le corpus (IDF) et une normalisation par la longueur du document. Il excelle sur les termes exacts (noms de molécules, codes).
-Centralité : mesure de l'importance d'un nœud dans le graphe. Exemples : centralité de degré, PageRank (importance propagée par les liens), centralité d'intermédiarité (nœuds sur les chemins les plus courts). Un document rattaché à des entités centrales pour la requête est favorisé.
-Point d'attention : les trois scores n'ont pas la même échelle ; il faut les normaliser (par exemple min-max sur la liste candidate) avant de les combiner.
+Glossaire
+• Client Drift : éloignement des modèles locaux dû à l'hétérogénéité des données.
+• Cross-silo / cross-device : peu de clients fiables contre beaucoup d'appareils intermittents.
+• Sensibilité : variation maximale de la sortie quand un individu est ajouté ou retiré.
+• Trimmed Mean : moyenne après retrait des valeurs extrêmes, coordonnée par coordonnée.
 
-C4 : Hybridation tri-partite et évaluation (2 h)
-Objectifs : combiner les signaux, régler les poids, mesurer la qualité.
-Formule : Score(doc) = alpha · Sim_Dense(q, d) + beta · BM25(q, d) + gamma · Centrality_Graph(d), avec des scores normalisés et, en général, alpha + beta + gamma = 1.
-Réglage : recherche sur grille ou optimisation sur un jeu de requêtes annotées.
-Métriques : recall@k, MRR, précision@k. Toujours comparer à des lignes de base : dense seul, BM25 seul.
-Pipeline GraphRAG : requête, détection des entités, récupération hybride, expansion par voisins dans le graphe, assemblage du contexte avec ses sources, génération de la réponse avec citation des triplets utilisés.
+Références
+• McMahan et al., 2017 : Communication-Efficient Learning of Deep Networks from Decentralized Data (FedAvg).
+• Li et al., 2020 : Federated Optimization in Heterogeneous Networks (FedProx).
+• Abadi et al., 2016 : Deep Learning with Differential Privacy (DP-SGD).
+• Yin et al., 2018 : Byzantine-Robust Distributed Learning: Towards Optimal Statistical Rates (moyenne tronquée).
+Références citées de mémoire : à vérifier avant diffusion aux étudiants.
 
-T1 à T4 : Travaux pratiques (17 h)
-TP | Consigne | Livrable et critères
-T1 (4 h) | Extraire des triplets d'un corpus médical simulé, normaliser les entités | Fichier de triplets, taux de précision sur un échantillon annoté
-T2 (4 h) | Construire un index dense (vecteurs et similarité cosinus) et un index BM25 | Comparaison des résultats sur 10 requêtes
-T3 (4 h) | Construire le graphe, calculer degré et PageRank, afficher le sous-graphe d'une requête | Graphe et table de centralités
-T4 (5 h) | Assembler le pipeline GraphRAG, régler alpha, beta, gamma, évaluer en recall@k et MRR face aux lignes de base | Pipeline fonctionnel et rapport d'évaluation (note du module)
+Feuille de route Recherche & Développement
+Objectif : faire de l'Académie un lieu où le cursus se nourrit de la recherche, et où les travaux des étudiants alimentent en retour les cours. Cette feuille de route s'appuie sur une veille de la littérature 2026 ; les références citées sont à vérifier par l'équipe avant publication dans le syllabus.
 
-Module 3 : Enterprise AI Architecture
-C1 : Router-Dispatcher (2 h)
-Objectifs : concevoir un aiguillage entre petits et grands modèles.
-Principe : un routeur analyse la requête (longueur, complexité, domaine, sensibilité) et la dirige vers un SLM (rapide, peu coûteux) ou un LLM (plus capable, plus lent et coûteux).
-Stratégies de routage : règles explicites ; classifieur léger entraîné sur des requêtes étiquetées ; cascade (essayer le SLM, escalader vers le LLM si la confiance est faible).
-Critères d'évaluation : coût moyen par requête, latence, qualité de réponse, taux d'escalade. Le piège classique est de sous-estimer le coût d'un mauvais routage.
+Principes
+• Boucle recherche vers cours : chaque semestre, les résultats de veille ou d'expériences menées en labo sont intégrés comme TP, étude de cas ou question ouverte.
+• Reproductibilité d'abord : dépôt de code partagé, graines aléatoires fixées, jeux de données simulés documentés, résultats chiffrés accompagnés de leurs conditions.
+• Honnêteté expérimentale : comparer toujours à des lignes de base simples ; publier aussi les résultats négatifs.
+• Données simulées uniquement pour la santé, tant qu'aucun cadre de conformité avec un partenaire n'est signé.
 
-C2 : Cache sémantique (2 h)
-Objectifs : réduire la latence et le coût en réutilisant des réponses.
-Principe : au lieu d'une clé exacte, on compare le plongement de la requête à ceux des requêtes déjà traitées. Si la similarité dépasse un seuil, on renvoie la réponse stockée sans appeler le modèle, ce qui réduit fortement le TTFT.
-Points clés : seuil de similarité ; invalidation (durée de vie, versionnage des données sources) ; sécurité (ne jamais mettre en cache des réponses contenant des données personnelles, cloisonner le cache par utilisateur ou par droit d'accès).
+Axe 1 : Apprentissage fédéré, LoRA et confidentialité
+État de la veille : la littérature récente montre que LoRA appliqué tel quel en apprentissage fédéré confidentialisé dégrade les performances. Un article de février 2026 (LA-LoRA, arXiv 2602.19926) identifie le couplage des gradients entre les deux matrices, l'amplification du bruit sous confidentialité différentielle et la netteté du modèle agrégé, et propose une optimisation alternée locale. RoLoRA (alternance d'optimisation de A et B) est une autre référence de robustesse. Côté communication, FedSRD (parcimonie structurée) et GMFL (masquage global, ACL 2026) cherchent à réduire encore le volume échangé.
+Questions de recherche pour l'Académie :
+• L'agrégation séparée de A et B (module 4, C3) dégrade-t-elle la précision, et de combien, selon le niveau de bruit sigma ?
+• Une optimisation alternée reproduit-elle sur nos données simulées les gains rapportés ?
+• Quel rang r minimise le coût de communication pour une perte d'utilité fixée ?
+Projets étudiants possibles : reproduction d'un article (FedAvg-LoRA contre alternance), étude d'ablation sur r, sigma et mu, mesure de la fuite d'information par attaque d'inférence d'appartenance.
+Impact sur le cursus : ajouter au module 4 un TP optionnel de reproduction (3 h) et une séance de lecture d'article.
 
-C3 : Agents ReAct (2 h)
-Objectifs : comprendre la boucle d'un agent qui raisonne et agit.
-Boucle : Pensée (que faut-il faire ?), Action (appel d'un outil), Observation (résultat de l'outil), puis nouvelle pensée, jusqu'à une réponse finale.
-Bonnes pratiques : liste d'outils restreinte et typée, nombre maximal d'itérations, journalisation de chaque étape, validation des paramètres d'outils. Risques : boucles infinies, appels d'outils coûteux, injection de prompt via les observations.
+Axe 2 : GraphRAG, quand et pourquoi
+État de la veille : plusieurs travaux de 2025-2026 nuancent l'enthousiasme initial. Le benchmark GraphRAG-Bench (ICLR 2026) rapporte que GraphRAG sous-performe fréquemment un RAG classique sur de nombreuses tâches réelles et que le RAG simple est comparable, voire meilleur, sur la recherche de faits simples ; l'avantage du graphe apparaît surtout sur le raisonnement multi-sauts, avec un surcoût de latence. Une évaluation systématique (RAG contre GraphRAG, mars 2026) souligne en outre que des graphes construits automatiquement couvrent mal les réponses : environ 65,8 % des entités-réponses de HotpotQA seulement y figuraient, ce qui plafonne la récupération.
+Questions de recherche pour l'Académie :
+• Sur notre corpus médical simulé, dans quels types de questions le terme gamma (centralité) améliore-t-il le score ?
+• Peut-on régler alpha, beta, gamma dynamiquement selon le type de requête (fait simple contre multi-sauts) ?
+• Quelle est la couverture réelle du graphe, et comment la mesurer et l'améliorer ?
+Projets étudiants possibles : routeur de requêtes entre RAG simple et GraphRAG (réutilise le pattern du module 3), mesure de couverture et de latence, évaluation sur un sous-ensemble de GraphRAG-Bench.
+Impact sur le cursus : dans le module 2 (T4), exiger une comparaison explicite avec la ligne de base RAG simple, y compris le coût de latence ; c'est une évolution à faible coût et forte valeur pédagogique.
 
-C4 : Circuit Breakers et résilience (2 h)
-Objectifs : empêcher qu'une panne locale ne devienne une panne générale.
-Circuit Breaker : trois états. Fermé : les appels passent. Ouvert : après un seuil d'échecs ou de lenteurs, les appels sont refusés immédiatement. Semi-ouvert : après un délai, quelques appels de test ; s'ils réussissent, retour à fermé.
-Patterns associés : timeouts, reprises avec attente exponentielle et gigue, limitation de débit, bulkheads, dégradation gracieuse.
+Axe 3 : Sécurité des agents et guardrails
+Questions de recherche : robustesse des guardrails face à des attaques adaptatives, injection indirecte via le Meaning Graph ou le cache sémantique, compromis faux positifs et faux négatifs, fuite de PII par les journaux et le cache.
+Projets étudiants possibles : constitution d'un jeu de tests adverses réutilisable d'une promotion à l'autre, red teaming croisé entre équipes du projet fil rouge, évaluation de l'effet des guardrails sur la latence.
+Impact sur le cursus : transformer l'évaluation du module 5 (T4) en défi inter-équipes, avec un jeu d'attaques enrichi chaque année.
 
-C5 : Concevoir une passerelle d'inférence (2 h)
-Objectifs : assembler les patterns dans une architecture de production.
-Composants : authentification, limitation de débit, guardrails d'entrée, cache sémantique, routeur, appel de modèle protégé par Circuit Breaker, guardrails de sortie, journalisation.
-Observabilité : latence (p50, p95, p99), TTFT, taux d'erreur, taux d'accès au cache, coût par requête, taux d'escalade. Passage à l'échelle : instances sans état, cache partagé, files d'attente.
+Axe 4 : Edge ML et efficacité
+Questions de recherche : quantification des poids gelés, adaptation par sous-ensemble de couches, participation de clients à ressources hétérogènes, mesure d'énergie et de mémoire sur appareil réel.
+Projets étudiants possibles : banc de mesure sur mobile ou carte embarquée, comparaison de plusieurs rangs et précisions, profil mémoire de bout en bout.
 
-T1 à T4 : Travaux pratiques (15 h)
-TP | Consigne | Livrable et critères
-T1 (4 h) | Implémenter un routeur à règles puis une cascade avec seuil de confiance (modèles simulés) | Mesure du coût et de la qualité par stratégie
-T2 (4 h) | Implémenter le cache sémantique avec seuil réglable et expiration | Taux d'accès au cache, courbe erreurs en fonction du seuil
-T3 (4 h) | Écrire une boucle ReAct avec deux outils, plafond d'itérations et Circuit Breaker | Journal d'exécution, test avec un outil en panne
-T4 (3 h) | Assembler la passerelle et la soumettre à un test de charge | Rapport de latence et de résilience (note du module)
+Axe 5 : Évaluation, gouvernance et conformité
+Questions de recherche : grilles d'audit d'un système d'IA de santé, traçabilité des décisions, documentation des modèles et des données, lien avec le RGPD et le cadre réglementaire européen sur l'IA.
+Livrables : modèle de dossier d'audit fourni avec le projet fil rouge, évalué à la soutenance.
 
-Module 4 : LoRA & Edge ML
-C1 : Décomposition à bas rang (2 h)
-Objectifs : comprendre pourquoi et comment LoRA adapte un modèle avec très peu de paramètres.
-Idée : lors du fine-tuning, la mise à jour des poids d'une matrice W₀ (de dimensions d × k) a souvent un rang effectif faible. On la paramètre donc par deux petites matrices : delta_W = (alpha / r) · B · A, avec B de dimensions d × r et A de dimensions r × k, où r est le rang (très inférieur à d et k).
-Passe avant : h = W₀ · x + (alpha / r) · B · A · x
-Initialisation et entraînement : W₀ est gelée ; A est initialisée aléatoirement (gaussienne) et B à zéro, de sorte que le modèle adapté démarre exactement comme le modèle de base. Seuls A et B sont entraînées. Le facteur alpha / r règle l'amplitude de l'adaptation.
-Gain en paramètres : on passe de d · k paramètres entraînables à r · (d + k). Pour d = k = 4096 et r = 8, cela fait 65 536 au lieu de 16 777 216, soit environ 0,4 %.
+Organisation du laboratoire
+Élément | Description
+Séminaire de veille | Une séance mensuelle : un article présenté par un étudiant ou un enseignant, discussion et décision d'intégration au cursus
+Dépôt de reproductibilité | Code, données simulées, configurations et résultats de référence par expérience
+Parcours recherche | Option pour les meilleurs étudiants : remplacer une partie du projet fil rouge par une reproduction ou une extension d'article, encadrée
+Publication | Rapports techniques internes, puis soumission à un atelier ou une conférence pour les travaux les plus solides
+Partenariats | Hôpitaux, laboratoires et entreprises pour des cas d'usage réels, uniquement avec cadre de conformité signé
 
-C2 : Mémoire GPU et contraintes Edge (2 h)
-Objectifs : estimer et réduire l'empreinte mémoire d'un entraînement.
-Postes de mémoire : poids du modèle, gradients, états de l'optimiseur, activations. Avec LoRA, les gradients et états d'optimiseur ne concernent que A et B. Leviers complémentaires : précision réduite, accumulation de gradients, recalcul des activations, choix des couches adaptées.
-Contraintes IoT / mobile : mémoire limitée, énergie, connectivité intermittente, chauffe. Le cours amène à raisonner en budget : combien de mégaoctets, combien de secondes par tour local.
+Calendrier sur 12 mois
+Trimestre | Actions | Résultat attendu
+T1 | Mise en place du dépôt, du séminaire de veille et des jeux de données simulés de référence ; ajout de la comparaison RAG contre GraphRAG au module 2 | Socle reproductible et premier TP enrichi
+T2 | Reproduction d'un article de LoRA fédéré (axe 1) ; premier défi inter-équipes de guardrails (axe 3) | Rapport de reproduction, jeu de tests adverses v1
+T3 | Banc de mesure Edge (axe 4) ; routeur RAG ou GraphRAG (axe 2) ; modèle de dossier d'audit (axe 5) | Prototype et dossier d'audit type
+T4 | Bilan, mise à jour du syllabus, rédaction d'un rapport technique, sélection des travaux à soumettre | Syllabus 2027 et premier rapport technique
 
-C3 : LoRA et apprentissage fédéré (2 h)
-Objectifs : réduire le coût de communication d'un système fédéré.
-Principe : au lieu d'échanger toutes les matrices à chaque tour, les clients n'envoient que les matrices A et B. Le volume de communication par tour est divisé d'un facteur proche du gain en paramètres de C1.
-Point d'attention : l'agrégation. Moyenner A et B séparément n'équivaut pas à moyenner les produits B · A ; l'agrégation introduit une erreur. Pistes : agréger les produits reconstruits (puis re-factoriser), ou utiliser des variantes conçues pour ce problème. Le TP mesure l'écart.
-Compatibilité : LoRA se combine avec le terme proximal de FedProx (appliqué aux paramètres A et B) et avec le clipping et le bruit de DP-SGD.
+Indicateurs de suivi
+• Nombre d'expériences reproduites avec écart documenté.
+• Part des séances de cours mises à jour chaque année grâce à la veille.
+• Nombre de rapports techniques et de soumissions.
+• Résultats du jeu de tests adverses d'une promotion à l'autre.
+• Satisfaction et progression des étudiants du parcours recherche.
 
-T1 à T4 : Travaux pratiques (14 h)
-TP | Consigne | Livrable et critères
-T1 (4 h) | Implémenter une couche linéaire LoRA from scratch (passe avant, gradients de A et B, initialisation), vérifier que la sortie initiale égale celle de W₀ | Code testé, test numérique de gradient
-T2 (4 h) | Mesurer paramètres entraînables et mémoire estimée pour r = 1, 2, 4, 8, 16, 32 | Tableau et courbe du ratio de compression
-T3 (3 h) | Intégrer LoRA dans un client fédéré du module 1 et agréger A et B | Cluster fédéré en mode LoRA
-T4 (3 h) | Comparer précision finale et volume de communication entre fédéré complet et fédéré LoRA | Rapport d'évaluation (note du module)
+Évolutions de cursus proposées
+1. Module 2, T4 : ligne de base RAG simple obligatoire, avec mesure de latence et de couverture du graphe.
+2. Module 4 : séance de lecture d'article et TP optionnel de reproduction sur la combinaison LoRA, bruit et agrégation.
+3. Module 5, T4 : défi de red teaming entre équipes.
+4. Option « Parcours recherche » en S2 à la place d'une partie du projet fil rouge.
+5. Nouveau module optionnel de 10 à 15 h : méthodologie de la recherche et reproductibilité (lecture critique, protocoles d'expérience, statistiques de base, rédaction).
+Ces évolutions modifieraient les volumes du programme ; elles sont à arbitrer par l'équipe pédagogique avant intégration.
 
-Module 5 : Gouvernance, sécurité & LLM Guardrails
-C1 : Données personnelles et conformité (2 h)
-Objectifs : identifier les données à protéger et les obligations associées.
-Notions :
-• PII : identifiants directs (nom, e-mail, téléphone, numéro de sécurité sociale) et indirects (combinaison de date de naissance, code postal, sexe). Les données de santé sont une catégorie particulièrement sensible.
-• RGPD : principes de minimisation, limitation des finalités, durée de conservation, droits des personnes. Anonymisation (irréversible, hors champ du RGPD) contre pseudonymisation (réversible avec une clé, encore couverte par le RGPD).
-• Où appliquer le contrôle : avant l'ingestion dans le graphe, avant l'envoi à un modèle, avant l'écriture dans les journaux et dans le cache.
+Cours avancés du Master (modules d'approfondissement)
+Ces cours prolongent chacun des cinq modules du tronc commun et alimentent les axes de recherche. Ils sont proposés comme électifs de 20 h (6 h de cours, 14 h de TP), à choisir en S2 ou en S3 selon l'organisation du master. Le choix de deux électifs ajoute 40 h au cursus : cet arbitrage revient à l'équipe pédagogique.
 
-C2 : Injection de prompt (2 h)
-Objectifs : comprendre les attaques et les défenses en couches.
-Injection directe : l'utilisateur écrit des instructions qui tentent de contourner les consignes du système.
-Injection indirecte : les instructions malveillantes se cachent dans un contenu récupéré (page web, document, résultat d'outil, entrée du graphe) que le modèle traite comme fiable.
-Défenses, aucune n'étant suffisante seule :
-• séparer clairement instructions et données non fiables dans le prompt ;
-• détecter les motifs d'attaque connus et classer les entrées suspectes ;
-• principe du moindre privilège pour les outils ;
-• valider et filtrer les sorties avant toute action ou affichage ;
-• tests adverses réguliers (red teaming).
+Vue d'ensemble
+Code | Cours avancé | Prolonge | Axe R&D | Volume
+A1 | Apprentissage fédéré avancé et vie privée | Module 1 | Axe 1 | 20 h
+A2 | Graphes de connaissances et raisonnement | Module 2 | Axe 2 | 20 h
+A3 | Systèmes d'IA agentiques et inférence à grande échelle | Module 3 | Axes 2 et 3 | 20 h
+A4 | Compression, PEFT avancé et déploiement Edge | Module 4 | Axe 4 | 20 h
+A5 | IA de confiance : attaques, audit et conformité | Module 5 | Axes 3 et 5 | 20 h
+A6 | IA et données de santé | Projet fil rouge | Axes 1, 2 et 5 | 20 h
+A7 | Méthodologie de recherche et reproductibilité | Tous | Tous | 15 h
 
-C3 : Architecture de guardrails (2 h)
-Objectifs : placer les contrôles au bon endroit du flux.
-Flux : entrée utilisateur, guardrail d'entrée (masquage PII, détection d'injection, refus des sujets hors périmètre), traitement (récupération, modèle, outils), guardrail de sortie (détection de fuite de PII, cohérence avec les sources, format attendu), réponse.
-Compromis : faux positifs contre faux négatifs ; latence ajoutée ; journalisation des décisions pour audit, sans y stocker de données personnelles.
+A1 : Apprentissage fédéré avancé et vie privée (6 h cours, 14 h TP)
+Prérequis : modules 1 et 4. Objectif : maîtriser la personnalisation, l'agrégation sécurisée et la mesure rigoureuse de la confidentialité.
+Contenu du cours :
+• Cross-silo (hôpitaux) contre cross-device (mobiles) : hypothèses, participation, fiabilité.
+• Personnalisation face à l'hétérogénéité : modèles par client, couches personnalisées, apprentissage fédéré par groupes de clients similaires.
+• Agrégation sécurisée : le serveur ne voit que la somme des mises à jour ; coût de communication et gestion des abandons.
+• Comptabilité de la confidentialité : composition du budget (epsilon, delta) sur les tours, comptable des moments, confidentialité de Rényi.
+• Attaques : inférence d'appartenance, reconstruction à partir des gradients, attaques de porte dérobée ; défenses associées.
+• LoRA et confidentialité : alternance d'optimisation, effet du bruit sur A et B (lien avec l'axe 1).
+TP : implémenter une agrégation sécurisée simplifiée par masquage, mesurer l'effet d'une attaque d'inférence d'appartenance avant et après DP-SGD, comparer FedProx et un modèle personnalisé sur données non-i.i.d.
+Évaluation : rapport d'expériences reproductible, avec courbe confidentialité-utilité.
 
-T1 à T4 : Travaux pratiques (14 h)
-TP | Consigne | Livrable et critères
-T1 (4 h) | Détecter e-mails, téléphones et numéros de sécurité sociale par expressions régulières ; mesurer précision et rappel sur un jeu annoté | Détecteur et métriques
-T2 (4 h) | Masquer ou pseudonymiser les PII détectées, de façon réversible ou non selon l'usage | Module de masquage et tests
-T3 (3 h) | Écrire un détecteur d'injection directe et indirecte (motifs et règles de structure) | Détecteur et jeu d'attaques
-T4 (3 h) | Assembler le pipeline d'entrée et de sortie et l'évaluer sur un jeu de tests adverses | Rapport de faux positifs et faux négatifs (note du module)
+A2 : Graphes de connaissances et raisonnement (6 h cours, 14 h TP)
+Prérequis : module 2. Objectif : construire, interroger et faire évoluer des graphes de qualité, et décider quand le graphe apporte vraiment quelque chose.
+Contenu du cours :
+• Langages et standards : RDF, OWL, SPARQL, validation de schéma (SHACL).
+• Plongements de graphes et complétion de relations manquantes.
+• Réseaux de neurones sur graphes appliqués à la récupération.
+• Construction automatique par modèle de langage : qualité, couverture, résolution d'entités, mise à jour incrémentale.
+• Évaluation de GraphRAG : lignes de base, tâches simples contre multi-sauts, latence, couverture du graphe (lien avec l'axe 2).
+• Pondération adaptative de alpha, beta, gamma selon le type de requête.
+TP : requêtes SPARQL sur l'ontologie médicale simulée, mesure de la couverture du graphe construit, routeur entre RAG simple et GraphRAG, comparaison chiffrée.
+Évaluation : étude comparative RAG contre GraphRAG sur le corpus du projet.
 
-Projet fil rouge : cahier des charges détaillé
-Contexte : trois établissements hospitaliers simulés veulent entraîner ensemble un modèle d'aide au diagnostic et interroger une base de connaissances médicale, sans partager les dossiers patients.
-Livrables techniques :
-1. Cluster fédéré FedProx avec DP-SGD sur des données non-i.i.d. simulées.
-2. Meaning Graph médical (maladies, symptômes, traitements, contre-indications) et recherche GraphRAG hybride.
-3. Passerelle d'inférence avec routeur, cache sémantique et Circuit Breakers.
-4. Mode LoRA pour un établissement à ressources limitées.
-5. Guardrails d'entrée et de sortie : masquage PII et défense contre l'injection de prompt.
-6. Rapport d'architecture et démonstration.
-Contraintes : données entièrement simulées (aucune donnée réelle), code Python reproductible avec graine aléatoire fixée, journal de décisions techniques, travail en équipe avec répartition des rôles documentée.
+A3 : Systèmes d'IA agentiques et inférence à grande échelle (6 h cours, 14 h TP)
+Prérequis : module 3. Objectif : passer de la passerelle du module 3 à un système de production performant et sûr.
+Contenu du cours :
+• Serving de modèles : batching continu, cache clé-valeur de l'attention, décodage spéculatif, gestion de la mémoire.
+• Orchestration multi-agents : décomposition de tâches, mémoire, coordination, arrêt et reprise.
+• Outils et protocoles d'intégration, principe du moindre privilège, validation des appels.
+• Observabilité : traces, évaluation continue, détection de dérive de qualité.
+• Coût et latence : budgets, files d'attente, routage dynamique entre modèles.
+• Sécurité des agents : injection indirecte via les outils et la mémoire (lien avec A5).
+TP : ajouter traçage et métriques à la passerelle, mettre en place une évaluation automatique de régression, simuler une montée en charge.
+Évaluation : rapport de performance (p50, p95, p99, coût par requête) et revue d'architecture.
 
-Grille de soutenance sur 20 points (proposition à valider par l'équipe pédagogique) :
-Critère | Points
-Cluster fédéré et confidentialité (FedProx, DP-SGD, robustesse) | 5
-Meaning Graph et GraphRAG (qualité du graphe, évaluation) | 4
-Passerelle d'inférence et résilience | 3
-LoRA et réduction de communication | 2
-Guardrails (PII, injection) | 3
-Qualité de la présentation et de la documentation | 3
-Total | 20
+A4 : Compression, PEFT avancé et déploiement Edge (6 h cours, 14 h TP)
+Prérequis : module 4. Objectif : déployer des modèles adaptés sur des appareils contraints, en maîtrisant le compromis précision, mémoire et énergie.
+Contenu du cours :
+• Quantification des poids et des activations, quantification combinée à LoRA.
+• Élagage et distillation de connaissances.
+• Variantes de LoRA : choix du rang par couche, adaptation d'un sous-ensemble de modules, parcimonie des adaptateurs.
+• Formats et moteurs d'exécution embarqués ; profilage mémoire, latence et énergie.
+• Fédéré sur appareils hétérogènes : clients à capacités différentes, stratégies de participation (lien avec l'axe 4).
+TP : quantifier un petit modèle et mesurer la perte de précision, comparer plusieurs rangs et précisions, produire un profil mémoire de bout en bout.
+Évaluation : tableau de compromis et recommandation de configuration pour un appareil cible donné.
+
+A5 : IA de confiance : attaques, audit et conformité (6 h cours, 14 h TP)
+Prérequis : module 5. Objectif : évaluer et documenter la sécurité et la conformité d'un système d'IA.
+Contenu du cours :
+• Menaces sur les modèles : exemples adverses, empoisonnement, extraction de modèle, inférence d'appartenance, fuite de données d'entraînement.
+• Red teaming : méthodologie, jeux d'attaques, mesure du taux de réussite, attaques adaptatives contre les guardrails.
+• Évaluation de sécurité et de robustesse : métriques, intervalles de confiance, reproductibilité.
+• Gouvernance : documentation des modèles et des données, traçabilité, journalisation sans données personnelles.
+• Cadre réglementaire : RGPD et cadre européen sur l'IA, classification par niveau de risque, obligations pour les systèmes de santé.
+TP : conduire un red teaming sur le pipeline du module 5, rédiger un dossier d'audit complet (modèle fourni avec le projet fil rouge).
+Évaluation : dossier d'audit et défi inter-équipes.
+
+A6 : IA et données de santé (6 h cours, 14 h TP)
+Prérequis : modules 1 et 2 ; recommandé : A1 ou A2. Objectif : comprendre les spécificités du domaine médical pour concevoir un système réaliste.
+Contenu du cours :
+• Standards d'interopérabilité (FHIR, HL7) et terminologies cliniques (SNOMED CT, CIM-10).
+• Qualité et biais des données médicales : déséquilibres, mesures manquantes, différences entre établissements.
+• Évaluation clinique des modèles : sensibilité, spécificité, calibration, équité entre sous-populations.
+• Contraintes éthiques et juridiques : secret médical, consentement, hébergement des données de santé.
+• Explicabilité et traçabilité des réponses : citer les triplets et sources utilisés (lien avec GraphRAG).
+TP : transformer des dossiers simulés au format FHIR, aligner le graphe du projet sur une terminologie, mesurer l'équité d'un modèle fédéré entre trois établissements simulés.
+Évaluation : note technique sur la validité clinique et les risques du système du projet fil rouge.
+
+A7 : Méthodologie de recherche et reproductibilité (5 h cours, 10 h TP)
+Objectif : donner les outils pour mener et publier une expérience fiable.
+Contenu : lecture critique d'un article, formulation d'une question de recherche, conception de protocole et d'ablations, statistiques de base (variance entre graines, intervalles de confiance, tests de comparaison), gestion de code et de données, rédaction scientifique.
+TP : reproduire un résultat publié, documenter l'écart, rédiger un rapport technique de quatre pages.
+Évaluation : rapport de reproduction.
+
+Parcours conseillés
+Parcours | Électifs recommandés | Profil visé
+Vie privée et systèmes distribués | A1 + A5 | Ingénieur confidentialité, sécurité des données
+Connaissances et recherche d'information | A2 + A3 | Ingénieur RAG, architecte de systèmes de connaissances
+Edge et efficacité | A4 + A3 | Ingénieur IA embarquée, MLOps
+IA de santé | A6 + A1 ou A2 | Ingénieur IA pour la santé numérique
+Recherche | A7 + un électif au choix | Poursuite en doctorat ou en laboratoire
+
+Liens avec le tronc commun et le projet
+• Chaque électif réutilise le code produit dans le module qu'il prolonge, ce qui évite de repartir de zéro.
+• Le projet fil rouge propose une variante par parcours : l'équipe approfondit un axe (par exemple agrégation sécurisée pour A1, couverture et latence du graphe pour A2) en plus du socle commun.
+• Les travaux d'électifs les plus solides alimentent le dépôt de reproductibilité et le séminaire de veille de la feuille de route R&D.
+
+Impact horaire et à valider
+• Volume ajouté : 40 h pour deux électifs de 20 h ; A7 compte 15 h.
+• Les prérequis, durées et contenus sont des propositions : à ajuster selon le calendrier du master, les enseignants disponibles et le matériel (appareils pour A4).
+• Les standards et terminologies cités (FHIR, HL7, SNOMED CT, CIM-10, OWL, SPARQL, SHACL) sont réels mais leur usage en TP dépend des licences et jeux de données accessibles.
 
 © 2026 Pixel Software Design. Tous droits réservés."""
 
