@@ -2756,6 +2756,16 @@ def academy_espace(request):
     week_minutes = sum(AcademyStudyTime.objects.filter(user=request.user).values_list('minutes', flat=True))
     exercises = AcademyExerciseAnswer.objects.filter(user=request.user)[:10]
     activities = AcademyActivity.objects.filter(user=request.user)[:10]
+    # Leaderboard: top 5 students by total points
+    from django.contrib.auth.models import User as _U
+    from django.db.models import Sum
+    lb = []
+    for u in _U.objects.filter(is_staff=False):
+        pts = sum(p.score for p in AcademyProgress.objects.filter(user=u)) + sum(a.points for a in AcademyActivity.objects.filter(user=u))
+        if pts > 0:
+            lb.append({'username': u.username, 'points': pts})
+    lb.sort(key=lambda x: -x['points'])
+    lb = lb[:5]
     return render(request, 'studio/academy_espace.html', {
         'academy_user': request.user,
         'progress': progress,
@@ -2766,6 +2776,7 @@ def academy_espace(request):
         'week_minutes': week_minutes,
         'exercises': exercises,
         'activities': activities,
+        'leaderboard': lb,
     })
 
 @login_required

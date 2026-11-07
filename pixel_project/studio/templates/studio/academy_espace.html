@@ -155,6 +155,19 @@
       <button onclick="addTask()" class="px-4 py-2 rounded-lg bg-pixel-cyan text-slate-900 font-mono font-bold text-xs">Ajouter</button>
     </div>
   </div>
+  {% if leaderboard %}
+  <div class="bg-pixel-panel border border-pixel-border rounded-2xl p-5">
+    <h2 class="text-sm font-bold text-white mb-3 font-mono">Classement (top 5)</h2>
+    <div class="space-y-2">
+      {% for l in leaderboard %}
+      <div class="flex items-center justify-between bg-pixel-bg border border-pixel-border rounded-lg px-3 py-2 text-xs font-mono">
+        <span class="text-slate-300">#{{ forloop.counter }} {{ l.username }}{% if l.username == academy_user.username %} <span class="text-pixel-cyan">(vous)</span>{% endif %}</span>
+        <span class="text-pixel-amber font-bold">{{ l.points }} pts</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
   <div class="text-center text-slate-500 text-xs font-mono">© 2026 Pixel Software Design — Tous droits réservés.</div>
 </main>
 <script>
