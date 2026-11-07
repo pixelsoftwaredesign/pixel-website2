@@ -70,6 +70,16 @@
             font-family: 'JetBrains Mono', monospace;
             tab-size: 4;
         }
+        @keyframes fadeInUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes pulseGlow { 0%,100% { box-shadow:0 0 0 0 rgba(56,189,248,0.4); } 50% { box-shadow:0 0 18px 2px rgba(56,189,248,0.25); } }
+        @keyframes floatY { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-6px); } }
+        .fade-in-up { animation: fadeInUp 0.6s ease-out both; }
+        .pulse-glow { animation: pulseGlow 2.4s ease-in-out infinite; }
+        .float-y { animation: floatY 3s ease-in-out infinite; }
+        .card-hover { transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease; }
+        .card-hover:hover { transform: translateY(-4px); box-shadow: 0 12px 32px -8px rgba(56,189,248,0.25); }
+        .explain-panel { max-height:0; overflow:hidden; transition: max-height 0.4s ease, opacity 0.3s ease; opacity:0; }
+        .explain-panel.open { max-height:600px; opacity:1; }
     </style>
 </head>
 <body class="text-slate-200 font-sans min-h-screen flex flex-col antialiased selection:bg-pixel-cyan selection:text-slate-900">
@@ -157,7 +167,7 @@
             <!-- Curricula Cards Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <!-- Module 0 -->
-                <div class="bg-pixel-panel border border-pixel-border hover:border-pixel-cyan/50 rounded-2xl p-6 transition flex flex-col justify-between group">
+                <div class="bg-pixel-panel border border-pixel-border hover:border-pixel-cyan/50 rounded-2xl p-6 transition flex flex-col justify-between group card-hover fade-in-up">
                     <div class="space-y-4">
                         <div class="flex items-center justify-between">
                             <div class="w-12 h-12 rounded-xl bg-pixel-input border border-pixel-border flex items-center justify-center text-pixel-cyan text-xl">
@@ -178,7 +188,7 @@
                     </div>
                 </div>
                 <!-- Module 01 -->
-                <div class="bg-pixel-panel border border-pixel-border hover:border-pixel-purple/50 rounded-2xl p-6 transition flex flex-col justify-between group">
+                <div class="bg-pixel-panel border border-pixel-border hover:border-pixel-purple/50 rounded-2xl p-6 transition flex flex-col justify-between group card-hover fade-in-up">
                     <div class="space-y-4">
                         <div class="flex items-center justify-between">
                             <div class="w-12 h-12 rounded-xl bg-pixel-input border border-pixel-border flex items-center justify-center text-pixel-purple text-xl">
@@ -199,7 +209,7 @@
                     </div>
                 </div>
                 <!-- Module 1 -->
-                <div class="bg-pixel-panel border border-pixel-border hover:border-pixel-cyan/50 rounded-2xl p-6 transition flex flex-col justify-between group">
+                <div class="bg-pixel-panel border border-pixel-border hover:border-pixel-cyan/50 rounded-2xl p-6 transition flex flex-col justify-between group card-hover fade-in-up">
                     <div class="space-y-4">
                         <div class="flex items-center justify-between">
                             <div class="w-12 h-12 rounded-xl bg-pixel-input border border-pixel-border flex items-center justify-center text-pixel-cyan text-xl">
@@ -222,7 +232,7 @@
                 </div>
 
                 <!-- Module 2 -->
-                <div class="bg-pixel-panel border border-pixel-border hover:border-pixel-purple/50 rounded-2xl p-6 transition flex flex-col justify-between group">
+                <div class="bg-pixel-panel border border-pixel-border hover:border-pixel-purple/50 rounded-2xl p-6 transition flex flex-col justify-between group card-hover fade-in-up">
                     <div class="space-y-4">
                         <div class="flex items-center justify-between">
                             <div class="w-12 h-12 rounded-xl bg-pixel-input border border-pixel-border flex items-center justify-center text-pixel-purple text-xl">
@@ -245,7 +255,7 @@
                 </div>
 
                 <!-- Module 3 -->
-                <div class="bg-pixel-panel border border-pixel-border hover:border-pixel-indigo/50 rounded-2xl p-6 transition flex flex-col justify-between group">
+                <div class="bg-pixel-panel border border-pixel-border hover:border-pixel-indigo/50 rounded-2xl p-6 transition flex flex-col justify-between group card-hover fade-in-up">
                     <div class="space-y-4">
                         <div class="flex items-center justify-between">
                             <div class="w-12 h-12 rounded-xl bg-pixel-input border border-pixel-border flex items-center justify-center text-pixel-indigo text-xl">
@@ -268,7 +278,7 @@
                 </div>
 
                 <!-- Module 4 -->
-                <div class="bg-pixel-panel border border-pixel-border hover:border-pixel-emerald/50 rounded-2xl p-6 transition flex flex-col justify-between group">
+                <div class="bg-pixel-panel border border-pixel-border hover:border-pixel-emerald/50 rounded-2xl p-6 transition flex flex-col justify-between group card-hover fade-in-up">
                     <div class="space-y-4">
                         <div class="flex items-center justify-between">
                             <div class="w-12 h-12 rounded-xl bg-pixel-input border border-pixel-border flex items-center justify-center text-pixel-emerald text-xl">
@@ -291,7 +301,7 @@
                 </div>
 
                 <!-- Module 5 -->
-                <div class="bg-pixel-panel border border-pixel-border hover:border-pixel-rose/50 rounded-2xl p-6 transition flex flex-col justify-between group">
+                <div class="bg-pixel-panel border border-pixel-border hover:border-pixel-rose/50 rounded-2xl p-6 transition flex flex-col justify-between group card-hover fade-in-up">
                     <div class="space-y-4">
                         <div class="flex items-center justify-between">
                             <div class="w-12 h-12 rounded-xl bg-pixel-input border border-pixel-border flex items-center justify-center text-pixel-rose text-xl">
