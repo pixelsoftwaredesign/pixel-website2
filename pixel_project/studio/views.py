@@ -2671,6 +2671,26 @@ def academy_ia_donnees_systemes(request):
     })
 
 @login_required
+def academy_architectures_ia(request):
+    from .academy_content import ARCHITECTURES_IA_TEXT
+    return render(request, 'studio/academy_architectures_ia.html', {'text': ARCHITECTURES_IA_TEXT, 'academy_user': request.user})
+
+@login_required
+def academy_introduction_ia(request):
+    from .academy_content import INTRODUCTION_IA_TEXT
+    return render(request, 'studio/academy_introduction_ia.html', {'text': INTRODUCTION_IA_TEXT, 'academy_user': request.user})
+
+@login_required
+def academy_fondements_ia2(request):
+    from .academy_content import FONDEMENTS_IA2_TEXT
+    return render(request, 'studio/academy_fondements_ia2.html', {'text': FONDEMENTS_IA2_TEXT, 'academy_user': request.user})
+
+@login_required
+def academy_ia_donnees_bigdata(request):
+    from .academy_content import IA_DONNEES_BIGDATA_TEXT
+    return render(request, 'studio/academy_ia_donnees_bigdata.html', {'text': IA_DONNEES_BIGDATA_TEXT, 'academy_user': request.user})
+
+@login_required
 def academy_programme(request):
     from .academy_content import PROGRAMME_OFFICIEL_TEXT
     return render(request, 'studio/academy_programme.html', {
