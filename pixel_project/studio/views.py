@@ -2663,6 +2663,14 @@ def academy_fondements(request):
     })
 
 @login_required
+def academy_ia_donnees_systemes(request):
+    from .academy_content import IA_DONNEES_SYSTEMES_TEXT
+    return render(request, 'studio/academy_ia_donnees_systemes.html', {
+        'text': IA_DONNEES_SYSTEMES_TEXT,
+        'academy_user': request.user,
+    })
+
+@login_required
 def api_academy_progress(request):
     from .models import AcademyProgress
     if request.method == 'POST':

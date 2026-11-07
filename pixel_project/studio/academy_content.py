@@ -218,3 +218,262 @@ Tableaux : hiérarchie de Chomsky ; programmation logique ; ce que l'impossibili
 Ce document est la propriété exclusive de Pixel Software Design. Toute reproduction, représentation, adaptation ou diffusion, totale ou partielle, par quelque procédé que ce soit et sur quelque support que ce soit, est interdite sans autorisation écrite préalable de l'auteur.
 Document généré automatiquement le 29/09/2026 — mise en page Pixel Software Design.
 """
+
+IA_DONNEES_SYSTEMES_TEXT = r"""Pixel Software Design — Département de Recherche & Développement
+PIXEL SOFTWARE DESIGN
+Département de Recherche & Développement
+Intelligence Artificielle Avancée & Federated Learning
+
+• Fondations de l'intelligence artificielle
+• Algorithmes d'apprentissage fédéré
+• Confidentialité, attaques et défenses
+• Applications et grands modèles fédérés
+• Framework FedX de référence
+• Nouveaux fronts de recherche
+• Travaux pratiques, projets et évaluation
+
+Auteur Ghiloufi Jamel
+Fonction Architecte Logiciel Principal
+Direction Département de Recherche & Développement
+Service R&D - Intelligence Artificielle Avancée & Apprentissage Fédéré
+Niveau Recherche
+Édition Édition 2026 — 1.0
+Copyright © Pixel Software Design
+
+Sommaire
+Partie 1 — IA, Données et Systèmes Distribués
+1.1 Apprentissage automatique : typologie et chaîne de production
+1.2 Observabilité et supervision des systèmes
+1.3 Calcul et analyse de graphes
+1.4 Fouille de données
+1.5 Systèmes Big Data et architectures distribuées
+
+Partie Thème Contenu Compétence visée Durée
+Partie 1 Fondations Statistique, optimisation, courbes d'apprentissage Comprendre et formaliser 2-3 semaines
+Partie 2 Algorithmes FL FedAvg, convergence, hétérogénéité, système Implémenter et régler 3-4 semaines
+Partie 3 Confidentialité DP, attaques, défenses, agrégation sécurisée Auditer et sécuriser 2-3 semaines
+Partie 4 Applications FedLLM, santé, V2X, FedRL, TinyML, graphes Transposer à un domaine 3-4 semaines
+Partie 5 Framework FedX Architecture, API, benchmarks, exploitation Industrialiser 2 semaines
+Partie 6 Nouveaux fronts FedCL, FedCI, SNN, FedGL, feuille de route Ouvrir la recherche 2 semaines
+Partie 7 TP et projets 9 labs, 5 projets, corrigés, évaluation Faire et rendre 4-6 semaines
+
+Préface — Comment utiliser ce cours
+Ce support est conçu pour un parcours de formation et de recherche couvrant l'ensemble de la chaîne de valeur de l'intelligence artificielle distribuée. Ce n'est pas un manuel de référence à lire d'un trait : c'est un manuel opératoire. Chaque chapitre alterne exposition, formalisation, mise en œuvre numérique et évaluation. Les listings sont complets et exécutables ; les tableaux comparatifs servent de grille de décision.
+
+Public et prérequis : étudiants de master et de doctorat, ingénieurs IA, praticiens de la recherche appliquée. Prérequis : apprentissage automatique classique, algorithmique numérique, bases de probabilités.
+
+Partie 1 — IA, Données et Systèmes Distribués
+Les cinq piliers de la chaîne de valeur numérique. On part du modèle qui apprend, on passe à la mesure du système qui le sert, puis aux structures qui relient les entités, aux méthodes qui extraient des connaissances, et enfin aux architectures qui rendent l'ensemble possible à l'échelle.
+
+Objectifs de la partie
+• Distinguer une tâche d'apprentissage d'un outil, et choisir l'un avant l'autre.
+• Concevoir une chaîne d'observabilité en tenant compte du volume, de la rétention et du coût.
+• Implémenter et comparer un plus court chemin, une centralité et une détection de communauté.
+• Extraire des règles d'association et juger leur intérêt par le support et la confiance.
+• Concevoir un traitement par lots ou en flux, et justifier ce choix en latence et en exactitude.
+
+Plan de la partie
+1. Apprentissage automatique : typologie et chaîne de production
+2. Observabilité et supervision des systèmes
+3. Calcul et analyse de graphes
+4. Fouille de données
+5. Systèmes Big Data et architectures distribuées
+
+Chapitre 1.1 — Apprentissage automatique : typologie et chaîne de production
+Le choix de l'algorithme vient après le choix de la question. L'inverse est l'erreur la plus répandue.
+
+La typologie : quatre questions, pas une liste d'outils. L'apprentissage automatique se classe selon la disponibilité des étiquettes, la nature de la sortie, et le moment où l'erreur est révélée.
+
+Situations d'apprentissage :
+• Supervisé, sortie continue (un nombre) — régression linéaire, forêt, réseau — question : quelle erreur coûte le plus cher ?
+• Supervisé, sortie discrète (une classe) — régression logistique, SVM, arbre — question : quel est le coût d'un faux positif, d'un faux négatif ?
+• Non supervisé, structure (des groupes) — k-moyens, densité, hiérarchique — question : le découpage obtenu est-il interprétable ?
+• Non supervisé, compression (moins de dimensions) — ACP, voisinage — question : quelle variance faut-il vraiment garder ?
+• Renforcement (une politique d'actions) — gradient de politique, recherche de politique — question : quelle récompense mesure-t-on réellement ?
+
+Formules :
+y = w^T x + b,  ŷ - y ⇒ w ← w - η (w^T x - y) x
+p(y = 1 | x) = σ(w^T x + b),  σ(z) = 1/(1 + e^{-z})
+
+La régression linéaire ajuste une droite. La régression logistique ajuste une probabilité : la sigmoïde borne la sortie entre zéro et un.
+
+La réduction de dimension et la segmentation partagent la même question : que perdre en échange de ce qu'on gagne ? L'ACP maximise la variance conservée (linéaire, lisible) ; les méthodes de voisinage sont plus expressives et moins interprétables.
+
+La chaîne de production d'un modèle (Algorithme 1) :
+01 Recueillir, identifier la source, horodater chaque enregistrement. Contrôler la qualité : valeurs manquantes, doublons, valeurs aberrantes.
+02 Corriger les erreurs de mesure connues par le métier.
+03 Séparer en trois jeux disjoints, avant toute transformation.
+04 Transformer : normalisation, encodage des catégories, réduction de dimension.
+05 Entraîner sur le jeu d'entraînement, ajuster sur le jeu de validation.
+06 Évaluer une seule fois sur le jeu de test, jamais avant.
+07 Rendre reproductible : version des données, du code, de la configuration.
+08 Déployer sous conteneur, surveiller, et prévoir le retour arrière.
+Effort dominant : la préparation, pas l'entraînement. La ligne 4 est irremplaçable et presque toujours faite trop tard.
+
+Gouvernance d'un modèle (Listing 1) : une version n'est acceptée que si elle améliore au moins une métrique globale, si aucune métrique de sous-groupe ne se dégrade au-delà du seuil, et si elle respecte les contraintes de coût et de latence. Le critère sur les sous-groupes est celui qu'on oublie le plus souvent. Un modèle peut gagner deux points de précision globale en dégradant sévèrement un groupe de dix pour cent de la population : la moyenne masque exactement ce qui doit être surveillé.
+
+Le seuil de 0,5 n'a aucune signification en soi : il doit être choisi sur le jeu de validation, en fonction du coût relatif d'un faux positif et d'un faux négatif. C'est la seule décision qui demande un arbitrage métier, pas une mesure technique.
+
+Exercice 1.1.1 : un modèle de crédit atteint 92 % de justesse sur l'ensemble de test, mais 71 % sur le plus petit groupe de population. L'exactitude globale est une moyenne pondérée par la taille de chaque groupe. Si le groupe minoritaire pèse dix pour cent de la population, la contribution de ses vingt et un points d'écart au score global est deux points. Il faut demander la décomposition complète par groupe et la taille de chaque groupe.
+
+A retenir (1.1)
+• La question précède l'algorithme, et le coût de l'erreur décide de la métrique.
+• La séparation des jeux de données précède toute transformation, sinon l'estimation est optimiste.
+• Une métrique globale masque les sous-groupes : la décomposition fait partie de la mesure.
+• Le seuil de décision est un arbitrage métier, pas un paramètre technique.
+
+Chapitre 1.2 — Observabilité et supervision des systèmes
+Savoir si un système fonctionne est la moitié du travail. Savoir pourquoi il ne fonctionne pas est l'autre moitié.
+
+La supervision historique consistait à interroger périodiquement un état. L'observabilité moderne répond à une question plus difficile : dans un système distribué, quelle est la cause de ce comportement observable ? Elle se construit sur trois signaux de nature et de coût très différents.
+
+Signaux :
+• Métrique : quel est le niveau et sa tendance ? Une valeur par fenêtre de temps — coût faible, on garde tout.
+• Journal : que s'est-il passé à cet instant ? Un événement par ligne — coût élevé, on archive.
+• Tracé : où le temps est-il passé ? Une portion par étape d'un parcours — coût très élevé, on échantillonne.
+• Événement métier : l'activité a-t-elle un sens ? Un changement d'état métier — coût faible, très haute valeur.
+• Profil de charge : où va la charge, et pour qui ? Une requête analysée — coût moyen, protection des données.
+
+Tirage ou poussée : une décision structurante. Tirage : le collecteur interroge les cibles à intervalle fixe (mode par défaut). Poussée : l'agent envoie ses valeurs (indispensable derrière un pare-feu ou pour les systèmes à très forte dispersion). Trente secondes est un compromis usuel pour le délai de scrape. La rétention doit être dégressive.
+
+Concevoir une règle d'alerte qui ne fatigue pas l'équipe : condition de durée (l'anomalie doit persister plus longtemps qu'un pic normal, par exemple deux minutes), fenêtre de calcul (taux d'erreur sur cinq minutes, et non sur la dernière requête), action liée à la gravité (avertissement pour surveillance, escalade vers un humain uniquement si la durée franchit un seuil). La meilleure mesure de la qualité d'un système d'alerte est le nombre d'alertes ignorées par semaine.
+
+taux_erreur = (N_échec(Δ) / N_0(Δ)) ≥ s ∧ durée ≥ τ. Les deux conditions sont indissociables.
+
+Du symptôme à la cause : la méthode des quatre questions :
+• Symptôme : qu'est-ce qui est faux, vu de l'extérieur ?
+• Changement : qu'est-ce qui a changé récemment ? (version, configuration, volume, dépendance)
+• Périmètre : qui est affecté, et par quoi cela se distingue-t-il ?
+• Cause : qu'est-ce qui explique simultanément le symptôme, le changement et le périmètre ?
+Un identifiant de corrélation propagé dans toutes les couches vaut souvent davantage que n'importe quel tableau de bord supplémentaire.
+
+Surveillance d'un modèle et surveillance d'un service : un service peut être parfaitement sain (latence normale, aucune erreur) et le modèle dégradé (réponses plus courtes, plus vagues, silencieusement biaisées). La supervision technique ne voit rien. Il faut surveiller la qualité séparément : distribution des entrées, taux de refus, longueur des réponses, et décomposition des métriques par groupe.
+
+Travaux pratiques 1.1 — Superviser un service distribué de bout en bout (3 h, niveau intermédiaire) : exposer une métrique de latence par percentile et un compteur d'erreurs ; configurer la collecte en mode tirage ; écrire une règle d'alerte sur le taux d'erreur avec condition de durée ; construire un tableau de bord en trois volets (santé technique, santé de la qualité, répartition de la charge) ; éteindre un composant pendant deux minutes et consigner les délais ; rédiger la règle d'escalade.
+
+Barème : l'alerte se déclenche exactement une fois sur la panne simulée (5 pts), le tableau de bord nomme le composant responsable en moins de deux minutes (3 pts), la procédure d'escalade nomme un responsable et un délai (2 pts).
+
+A retenir (1.2)
+• Métriques, journaux et tracés ont des coûts et des durées de conservation différents.
+• Une alerte utile est une conjonction de seuil et de durée, jamais un dépassement instantané.
+• Le nombre d'alertes ignorées par semaine mesure la qualité du système d'alerte.
+• La qualité d'un modèle se surveille séparément de la santé technique du service.
+
+Chapitre 1.3 — Calcul et analyse de graphes
+Dès qu'une question porte sur des relations, la structure naturelle n'est pas la table mais le graphe.
+
+G = (V, E), E ⊆ V × V, deg⁺(v) = |{(v,u) ∈ E}|
+PR(v) = (1-α)/N + α Σ_{u→v} PR(u)/deg⁺(u)
+
+Le plus court chemin : Dijkstra (on explore par coût croissant du chemin) et A* (on explore par coût estimé du chemin complet). A* est optimal si et seulement si son estimation du coût restant est admissible (jamais supérieure au coût réel). Une estimation qui surestime transforme A* en recherche gloutonne.
+
+Mesures de centralité :
+• Degré : combien de relations directes ? popularité brute, facilement trompeuse.
+• PageRank : combien de voisins réputés ? influence propagée par le graphe orienté.
+• Médiation : sur quels chemins ce sommet est-il indispensable ? goulot d'étranglement, pont entre communautés.
+• Proximité : combien de chemins courts vers tous les autres ? position périphérique ou centrale.
+• Communauté : quels sommets se ressemblent structurellement ? groupes denses à l'intérieur, clairs entre eux.
+
+Le degré n'est presque jamais la bonne mesure. Un sommet très connecté peut n'être connu que d'un seul groupe. Ce qui compte, c'est la qualité des voisins, pas leur nombre. Pour la détection de fraude en transactions, la mesure utile est presque toujours la médiation : un compte intermédiaire qui apparaît sur les plus courts chemins entre plusieurs comptes est bien plus suspect qu'un compte très actif.
+
+A retenir (1.3)
+• Les questions de parcours et de relations exigent une structure de graphe, pas des jointures récursives.
+• A* est optimal si et seulement si son estimation du coût restant est admissible.
+• Le PageRank mesure une influence propagée, pas un nombre de relations.
+• La médiation signale les sommets indispensables aux parcours, donc les goulots d'étranglement.
+
+Chapitre 1.4 — Fouille de données
+Extraire des connaissances ne signifie pas trouver des corrélations : cela signifie en trouver qui résistent à une vérification.
+
+Classification : l'arbre comme langage de décision. Un arbre de décision est une suite de questions binaires. Le critère de choix de la question de premier rang est la réduction d'incertitude qu'elle procure.
+Entropie(S) = -Σ_c (|S_c|/|S|) log2(|S_c|/|S|)
+Gain(S, A) = Entropie(S) - Σ_v (|S_v|/|S|) Entropie(S_v)
+
+Surapprentissage : un arbre sans contrainte mémorise chaque feuille d'entraînement. Les trois coupes principales : limiter la profondeur, imposer un nombre minimal d'exemples par feuille, élaguer les branches dont le gain est inférieur à un seuil. La forêt aléatoire construit des arbres sur des tirages aléatoires des variables et des exemples, puis moyenne leurs décisions. La dispersion d'un seul arbre devient une estimation de l'incertitude.
+
+Segmentation : deux philosophies.
+• K-moyens : minimise la dispersion autour de centroïdes ; groupes fixes à l'avance, forme sphérique, valeur d'initialisation critique. Impose une forme aux données.
+• Densité : regroupe les zones denses séparées par du vide ; nombre de groupes découvert, non paramétrique, forme arbitraire, peut identifier et exclure le bruit. Sensible aux échelles de densité.
+K-moyens suppose que les groupes sont compacts. Sur des données réelles en orbites concentriques, il échoue complètement.
+
+Règles d'association (Apriori) :
+support(A → B) = n(A ∪ B)/N
+confiance(A → B) = n(A ∪ B)/n(A)
+Le support mesure la fréquence de la co-occurrence, la confiance mesure la probabilité conditionnelle.
+
+Juger une règle d'association, dans l'ordre :
+1. Support : combien de transactions ? En dessous de la centaine, la règle n'a aucun usage statistique.
+2. Confiance : le conséquent est-il réellement tiré par l'antécédent, ou seulement par sa fréquence propre ?
+3. Levier : la confiance excède-t-elle nettement la fréquence du conséquent seul ? Seul test qui distingue une vraie règle d'un artefact de fréquence.
+4. Négativité : le nombre de règles est un tsunami ; il faut un critère de sélection final.
+5. Décision : une règle n'est un résultat que si elle déclenche une action mesurable et évaluable.
+
+Détection d'anomalies : deux approches.
+• Par densité (isolation des arbres) : mesure la rareté d'un point dans son voisinage ; simple, explicable, détecte l'inconnu ; sensible à l'échelle et à la densité.
+• Par reconstruction (auto-encodeur) : reconstruit l'entrée et mesure l'écart ; capte des anomalies de forme complexe ; une anomalie fréquente dans l'entraînement devient normale.
+Statistiquement, détecter une anomalie est aisé ; décider qu'elle doit déclencher une alerte relève du métier. Sans cette règle métier écrite, un système de détection produit un flux d'alertes que personne ne traite.
+
+Travaux pratiques 1.2 — Panier de marché et détection d'anomalies (4 h, niveau avancé) : écrire le générateur d'itemsets fréquents par largeur croissante ; mesurer support, confiance et levier ; afficher la courbe de nombre de règles en fonction du seuil de support ; construire un score d'anomalie fondé sur la rareté locale ; répondre par écrit parmi les anomalies lesquelles justifient une enquête et sur quel critère métier.
+
+Barème : la règle est justifiée par le levier (4 pts), le nombre de règles en fonction du seuil est expliqué (2 pts), l'analyse distingue ce qui est statistique et ce qui est décisionnel (4 pts).
+
+A retenir (1.4)
+• Un arbre se construit par gain maximal d'information et se contraint par élagage, profondeur minimale et taille de feuille.
+• La dispersion d'une forêt aléatoire fournit une estimation d'incertitude qu'un arbre seul ne donne pas.
+• K-moyens impose une forme aux groupes, la densité ne l'impose pas : le choix suit les données.
+• Une règle d'association n'est exploitable qu'après le test du levier et un critère de sélection explicite.
+
+Chapitre 1.5 — Systèmes Big Data et architectures distribuées
+Distribuer n'est pas une optimisation de performance : c'est la condition pour accepter l'échelle, avec le prix de la cohérence.
+
+Pourquoi distribuer, et à quel prix :
+• Capacité de stockage extensible — la donnée est découpée, l'accès doit connaître la découpe.
+• Débit d'écriture et de lecture — la charge doit être répartie sans déséquilibre.
+• Tolérance à la panne — il faut détecter et reconstruire.
+• Extensibilité linéaire — la coordination coûte, et son coût croît avec le nombre de machines.
+• Isolation des charges — le partage de ressources crée des interférences imprévisibles.
+
+Stockage : pourquoi la disposition en colonnes change tout.
+• Stockage par lignes : une ligne complète est l'unité lue. Bon pour les mises à jour ponctuelles, coûteux pour l'analyse.
+• Stockage par colonnes : seule la colonne demandée est lue, et les valeurs d'une même colonne se compressent très bien. C'est la disposition qui rend praticable l'analyse sur de grands volumes.
+• Indexation : l'index accélère la sélection mais ralentit l'écriture.
+• Partage : répartir par plage de clés met les écritures réparties, mais rend les parcours multi-clés plus coûteux.
+
+Traitement : deux philosophies.
+Critère Par lots En flux Choix pratique
+• Latence : minutes à heures / millisecondes — le flux si l'action doit suivre l'événement.
+• Exactitude : voit l'intégralité de la période / estimate, corrigée ensuite — le lot si le calcul doit être exact.
+• Reprise : relance complète / reprise au point de reprise — le flux, si l'état est externalisé.
+• Coût : bon pour de gros volumes / coût par unité plus élevé — lots pour l'historique, flux pour le direct.
+• Complexité : faible / gestion d'état, temps d'événement — commencer par lots.
+En pratique, les deux coexistent presque toujours : flux pour l'alerte immédiate, lots pour la consolidation exacte.
+
+Traiter un flux : trois notions à décider avant d'écrire la première ligne :
+• Fenêtre : par temps fixe (une minute) ou par nombre d'événements (les mille premiers) ?
+• Temps d'événement : l'horodatage du capteur (peut être en retard) ou l'horodatage de réception (toujours juste).
+• État : les traitements inhomogènes supposent de conserver un état au-delà d'un événement ; il doit être périodiquement sauvegardé.
+L'erreur la plus courante consiste à traiter un flux comme un lot : sans fenêtre, chaque événement est traité seul et aucun agrégat n'est possible.
+
+Cadre juridique de l'usage des données : finalité déterminée, base légale explicite, minimisation des données collectées, information des personnes concernées, droit d'opposition et d'effacement. Un entrepôt distribué n'améliore ni n'aggrave la conformité, il rend simplement l'incapacité à répondre à une demande de suppression beaucoup plus coûteuse — parce qu'il faut retrouver toutes les copies. C'est le premier argument à opposer avant de distribuer une donnée.
+
+Projet — Concevoir une chaîne complète, de la source à la restitution (6 semaines, équipe de 3 à 5 étudiants) : une entreprise de logistique veut suivre ses véhicules, détecter les anomalies de conduite et produire un tableau de bord temps réel, tout en conservant un historique exact pour la facturation. Volume annuel de l'ordre de deux milliards d'enregistrements.
+Missions : spécifier le schéma des événements ; choisir le découpage du stockage ; définir la fenêtre de temps et le temps d'événement du traitement de flux ; concevoir la consolidation exacte par lots ; écrire le plan de reprise après panne ; établir ce qu'il faut pour répondre à une demande d'effacement d'un conducteur.
+Livrables : document d'architecture en cinq étages, schéma de découpage, plan de reprise après panne, note sur la conformité aux demandes d'effacement.
+Évaluation : le jury vérifie trois points — le critère de découpage est justifié par le type de requête, la réconciliation entre flux et lots est explicite, et l'effacement est traité comme une contrainte de conception et non comme un verrou.
+
+A retenir (1.5)
+• La distribution achète de l'échelle et introduit de la coordination : le prix est à chiffrer avant.
+• La disposition en colonnes rend praticable l'analyse, mais coûte à l'écriture.
+• Par lots et en flux coexistent : flux pour l'alerte, lots pour la consolidation exacte.
+• Une fenêtre, un temps d'événement et un état : trois décisions précèdent toute ligne de traitement de flux.
+• L'effacement d'une donnée se paie en conception, pas en procédure d'urgence.
+
+Index des figures et des tableaux
+Figures : les trois signaux de l'observabilité et leur échelle ; architecture de supervision ; un graphe, ses trois lectures ; PageRank ; les quatre tâches de la fouille de données ; Apriori ; les cinq dimensions du Big Data ; architecture de référence en cinq étages ; traitement par lots contre traitement en flux.
+Tableaux : situations d'apprentissage et algorithme ; métriques, journaux, tracés ; Dijkstra et A* ; quatre mesures, quatre questions ; K-moyens et densité ; anomalies par densité et par reconstruction ; ce que la distribution achète et ce qu'elle coûte ; par lots, en flux, ou les deux.
+
+© 2026 Pixel Software Design. Tous droits réservés.
+Ce document est la propriété exclusive de Pixel Software Design. Toute reproduction, représentation, adaptation ou diffusion, totale ou partielle, par quelque procédé que ce soit et sur quelque support que ce soit, est interdite sans autorisation écrite préalable de l'auteur.
+Document généré automatiquement le 29/09/2026 — mise en page Pixel Software Design.
+"""
+
