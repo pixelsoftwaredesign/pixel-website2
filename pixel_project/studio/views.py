@@ -2691,6 +2691,51 @@ def academy_ia_donnees_bigdata(request):
     return render(request, 'studio/academy_ia_donnees_bigdata.html', {'text': IA_DONNEES_BIGDATA_TEXT, 'academy_user': request.user})
 
 @login_required
+def academy_histoire_ia(request):
+    from .academy_content import HISTOIRE_IA_TEXT
+    return render(request, 'studio/academy_histoire_ia.html', {'text': HISTOIRE_IA_TEXT, 'academy_user': request.user})
+
+@login_required
+def academy_innovation_ia(request):
+    from .academy_content import INNOVATION_IA_TEXT
+    return render(request, 'studio/academy_innovation_ia.html', {'text': INNOVATION_IA_TEXT, 'academy_user': request.user})
+
+@login_required
+def academy_ia_appliquee_terrain(request):
+    from .academy_content import IA_APPLIQUEE_TERRAIN_TEXT
+    return render(request, 'studio/academy_ia_appliquee_terrain.html', {'text': IA_APPLIQUEE_TERRAIN_TEXT, 'academy_user': request.user})
+
+@login_required
+def academy_ia_audio(request):
+    from .academy_content import IA_AUDIO_TEXT
+    return render(request, 'studio/academy_ia_audio.html', {'text': IA_AUDIO_TEXT, 'academy_user': request.user})
+
+@login_required
+def academy_ia_3d(request):
+    from .academy_content import IA_3D_TEXT
+    return render(request, 'studio/academy_ia_3d.html', {'text': IA_3D_TEXT, 'academy_user': request.user})
+
+@login_required
+def academy_ia_a_z(request):
+    from .academy_content import IA_A_Z_TEXT
+    return render(request, 'studio/academy_ia_a_z.html', {'text': IA_A_Z_TEXT, 'academy_user': request.user})
+
+@login_required
+def academy_ia_recherche_operationnelle(request):
+    from .academy_content import IA_RECHERCHE_OPERATIONNELLE_TEXT
+    return render(request, 'studio/academy_ia_recherche_operationnelle.html', {'text': IA_RECHERCHE_OPERATIONNELLE_TEXT, 'academy_user': request.user})
+
+@login_required
+def academy_ingenierie_ia(request):
+    from .academy_content import INGENIERIE_IA_TEXT
+    return render(request, 'studio/academy_ingenierie_ia.html', {'text': INGENIERIE_IA_TEXT, 'academy_user': request.user})
+
+@login_required
+def academy_architecture_numerique_trois_niveaux(request):
+    from .academy_content import ARCHITECTURE_NUMERIQUE_TROIS_NIVEAUX_TEXT
+    return render(request, 'studio/academy_architecture_numerique_trois_niveaux.html', {'text': ARCHITECTURE_NUMERIQUE_TROIS_NIVEAUX_TEXT, 'academy_user': request.user})
+
+@login_required
 def academy_programme(request):
     from .academy_content import PROGRAMME_OFFICIEL_TEXT
     return render(request, 'studio/academy_programme.html', {
