@@ -2780,6 +2780,10 @@ def academy_cours_interactif_ia_3d(request):
     return render(request, 'studio/cours_interactif_ia_3d.html', {'academy_user': request.user})
 
 @login_required
+def academy_cours_interactif_ia_a_z(request):
+    return render(request, 'studio/cours_interactif_ia_a_z.html', {'academy_user': request.user})
+
+@login_required
 def academy_cours_interactif_histoire_ia(request):
     return render(request, 'studio/cours_interactif_histoire_ia.html', {'academy_user': request.user})
 
