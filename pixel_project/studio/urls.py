@@ -126,6 +126,7 @@ urlpatterns = [
     path('academy/cours-interactif-ia-appliquee-terrain/', views.academy_cours_interactif_ia_appliquee_terrain, name='academy_cours_interactif_ia_appliquee_terrain'),
     path('academy/cours-interactif-innovation-ia/', views.academy_cours_interactif_innovation_ia, name='academy_cours_interactif_innovation_ia'),
     path('academy/cours-interactif-ia-audio/', views.academy_cours_interactif_ia_audio, name='academy_cours_interactif_ia_audio'),
+    path('academy/cours-interactif-ia-3d/', views.academy_cours_interactif_ia_3d, name='academy_cours_interactif_ia_3d'),
     path('academy/cours-interactif-histoire-ia/', views.academy_cours_interactif_histoire_ia, name='academy_cours_interactif_histoire_ia'),
     path('academy/cours-interactif-architectures-ia/', views.academy_cours_interactif_architectures_ia, name='academy_cours_interactif_architectures_ia'),
     path('academy/cours-ia-modules-2-5-motion/', views.academy_cours_ia_modules_2_5_motion, name='academy_cours_ia_modules_2_5_motion'),
