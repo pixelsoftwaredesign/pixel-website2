@@ -2768,6 +2768,10 @@ def academy_cours_interactif_ia_appliquee_terrain(request):
     return render(request, 'studio/cours_interactif_ia_appliquee_terrain.html', {'academy_user': request.user})
 
 @login_required
+def academy_cours_interactif_innovation_ia(request):
+    return render(request, 'studio/cours_interactif_innovation_ia.html', {'academy_user': request.user})
+
+@login_required
 def academy_cours_interactif_architectures_ia(request):
     return render(request, 'studio/cours_interactif_architectures_ia.html', {'academy_user': request.user})
 
