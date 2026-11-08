@@ -2896,6 +2896,7 @@ def academy_espace(request):
     week_minutes = sum(AcademyStudyTime.objects.filter(user=request.user).values_list('minutes', flat=True))
     exercises = AcademyExerciseAnswer.objects.filter(user=request.user)[:10]
     activities = AcademyActivity.objects.filter(user=request.user)[:10]
+    completed_courses = AcademyActivity.objects.filter(user=request.user, activity_type='course_completed')
     # Leaderboard: top 5 students by total points
     from django.contrib.auth.models import User as _U
     lb = []
@@ -2950,6 +2951,7 @@ def academy_espace(request):
         'week_minutes': week_minutes,
         'exercises': exercises,
         'activities': activities,
+        'completed_courses': completed_courses,
         'leaderboard': lb,
         'badges': badges,
     })
@@ -3014,6 +3016,15 @@ def api_academy_activity(request):
             detail=data.get('detail', ''),
             points=int(data.get('points', 0)),
         )
+        # Notification email lors d'un cours terminé
+        if obj.activity_type == 'course_completed' and request.user.email:
+            try:
+                from studio.emailing import envoyer_email
+                titre = 'Cours terminé : %s' % obj.title
+                html = '<p>Bonjour %s,</p><p>Vous avez terminé le cours « %s » (+%d points).</p><p>Continuez votre parcours sur l\'Academy.</p>' % (request.user.username, obj.title, obj.points)
+                envoyer_email(titre, html, html, [request.user.email])
+            except Exception:
+                pass
         return JsonResponse({'status': 'success', 'id': obj.id})
     return JsonResponse({'status': 'error'}, status=400)
 

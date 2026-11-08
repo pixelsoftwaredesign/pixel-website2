@@ -175,6 +175,19 @@
     <a href="/academy/certificat.pdf" class="inline-block px-4 py-2 rounded-lg bg-pixel-amber text-slate-900 font-mono font-bold text-xs">Télécharger mon certificat (PDF)</a>
   </div>
   {% endif %}
+  {% if completed_courses %}
+  <div class="bg-pixel-panel border border-pixel-border rounded-2xl p-5">
+    <h2 class="text-sm font-bold text-white mb-3 font-mono">Cours terminés ({{ completed_courses|length }})</h2>
+    <div class="space-y-2">
+      {% for c in completed_courses %}
+      <div class="flex items-center justify-between bg-pixel-bg border border-pixel-border rounded-lg px-3 py-2 text-xs font-mono">
+        <span class="text-slate-300 truncate">{{ c.title }}</span>
+        <span class="text-pixel-emerald">+{{ c.points }} pts</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
   {% if leaderboard %}
   <div class="bg-pixel-panel border border-pixel-border rounded-2xl p-5">
     <h2 class="text-sm font-bold text-white mb-3 font-mono">Classement (top 5)</h2>
