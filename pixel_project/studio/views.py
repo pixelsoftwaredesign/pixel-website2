@@ -2784,6 +2784,18 @@ def academy_cours_interactif_ia_a_z(request):
     return render(request, 'studio/cours_interactif_ia_a_z.html', {'academy_user': request.user})
 
 @login_required
+def academy_cours_interactif_architecture_numerique_trois_niveaux(request):
+    return render(request, 'studio/cours_interactif_architecture_numerique_trois_niveaux.html', {'academy_user': request.user})
+
+@login_required
+def academy_cours_interactif_fondements_ia2(request):
+    return render(request, 'studio/cours_interactif_fondements_ia2.html', {'academy_user': request.user})
+
+@login_required
+def academy_cours_interactif_ia_donnees_bigdata(request):
+    return render(request, 'studio/cours_interactif_ia_donnees_bigdata.html', {'academy_user': request.user})
+
+@login_required
 def academy_cours_interactif_ia_recherche_operationnelle(request):
     return render(request, 'studio/cours_interactif_ia_recherche_operationnelle.html', {'academy_user': request.user})
 
