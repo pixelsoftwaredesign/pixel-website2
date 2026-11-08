@@ -2911,6 +2911,16 @@ def academy_espace(request):
         badges.append({'name': '100 points', 'desc': 'Atteint 100 points', 'icon': 'fa-bolt', 'color': 'amber'})
     if today_minutes and today_minutes >= 30:
         badges.append({'name': 'Étudiant assidu', 'desc': '30 min d\'étude en un jour', 'icon': 'fa-clock', 'color': 'cyan'})
+    if week_minutes and week_minutes >= 60:
+        badges.append({'name': '1 heure d\'étude', 'desc': '60 min d\'étude cumulées', 'icon': 'fa-hourglass-half', 'color': 'purple'})
+    if total_points >= 50:
+        badges.append({'name': '50 points', 'desc': 'Atteint 50 points', 'icon': 'fa-star-half-stroke', 'color': 'amber'})
+    if len(progress) >= 3:
+        badges.append({'name': 'Explorateur', 'desc': '3 modules suivis', 'icon': 'fa-compass', 'color': 'emerald'})
+    if any(a.activity_type == 'code_report' for a in activities if hasattr(a, 'activity_type')):
+        badges.append({'name': 'Développeur', 'desc': 'Un rapport de code enregistré', 'icon': 'fa-code', 'color': 'cyan'})
+    if any(a.activity_type == 'r_and_d' for a in activities if hasattr(a, 'activity_type')):
+        badges.append({'name': 'Chercheur', 'desc': 'Une participation R&D enregistrée', 'icon': 'fa-flask', 'color': 'purple'})
     return render(request, 'studio/academy_espace.html', {
         'academy_user': request.user,
         'progress': progress,
