@@ -2764,6 +2764,10 @@ def academy_cours_interactif_federated_learning_avance(request):
     return render(request, 'studio/cours_interactif_federated_learning_avance.html', {'academy_user': request.user})
 
 @login_required
+def academy_cours_interactif_ia_appliquee_terrain(request):
+    return render(request, 'studio/cours_interactif_ia_appliquee_terrain.html', {'academy_user': request.user})
+
+@login_required
 def academy_cours_ia_modules_2_5_motion(request):
     return render(request, 'studio/cours_ia_modules_2_5_motion.html', {'academy_user': request.user})
 
