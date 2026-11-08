@@ -2866,6 +2866,16 @@ def academy_certificat(request):
     c.drawCentredString(w/2, h-11*cm, 'Score : %d points  -  %d modules completes  -  %d points totaux' % (cert.score, completed, total_points))
     c.drawCentredString(w/2, h-12.5*cm, 'du programme PixelSoftware Academy (Edition 2026)')
     c.setFont('Helvetica', 10)
+    c.setFillColor(colors.HexColor('#9fb0c3'))
+    mods = [str(p.module) for p in progress if p.completed and p.module != 0]
+    if mods:
+        c.drawCentredString(w/2, h-14*cm, 'Modules valides : ' + ', '.join(mods))
+    c.setStrokeColor(colors.HexColor('#38bdf8'))
+    c.line(w/2-4*cm, 4*cm, w/2+4*cm, 4*cm)
+    c.setFillColor(colors.HexColor('#5b6b7f'))
+    c.setFont('Helvetica', 9)
+    c.drawCentredString(w/2, 3.3*cm, 'Signature du responsable pedagogique')
+    c.setFont('Helvetica', 10)
     c.setFillColor(colors.HexColor('#5b6b7f'))
     c.drawCentredString(w/2, 2.5*cm, 'Pixel Software Design - Tous droits reserves.')
     c.drawCentredString(w/2, 2*cm, 'PixelSoftware Academy - Edition 2026')
@@ -2921,6 +2931,15 @@ def academy_espace(request):
         badges.append({'name': 'Développeur', 'desc': 'Un rapport de code enregistré', 'icon': 'fa-code', 'color': 'cyan'})
     if any(a.activity_type == 'r_and_d' for a in activities if hasattr(a, 'activity_type')):
         badges.append({'name': 'Chercheur', 'desc': 'Une participation R&D enregistrée', 'icon': 'fa-flask', 'color': 'purple'})
+    course_completions = [a for a in activities if hasattr(a, 'activity_type') and a.activity_type == 'course_completed']
+    if len(course_completions) >= 1:
+        badges.append({'name': 'Premier cours', 'desc': 'Un cours terminé', 'icon': 'fa-book-open', 'color': 'cyan'})
+    if len(course_completions) >= 5:
+        badges.append({'name': '5 cours terminés', 'desc': '5 cours terminés', 'icon': 'fa-books', 'color': 'emerald'})
+    if week_minutes and week_minutes >= 600:
+        badges.append({'name': '10h d\'étude', 'desc': '600 min d\'étude cumulées', 'icon': 'fa-graduation-cap', 'color': 'amber'})
+    if lb and lb and lb[0].get('username') == request.user.username:
+        badges.append({'name': 'Top 1', 'desc': 'Premier du classement', 'icon': 'fa-crown', 'color': 'amber'})
     return render(request, 'studio/academy_espace.html', {
         'academy_user': request.user,
         'progress': progress,
