@@ -3077,10 +3077,26 @@ def api_academy_progress(request):
         completed = bool(data.get('completed', False))
         if module < 0 or module > 5:
             return JsonResponse({'status': 'error', 'message': 'module invalide'}, status=400)
-        obj, _ = AcademyProgress.objects.update_or_create(
+        existing = AcademyProgress.objects.filter(user=request.user, module=module).first()
+        previously_completed = existing.completed if existing else False
+        obj, created = AcademyProgress.objects.update_or_create(
             user=request.user, module=module,
             defaults={'score': score, 'completed': completed},
         )
+        # Notification email uniquement lors d'une nouvelle complétion
+        if completed and not previously_completed and request.user.email:
+            try:
+                from studio.emailing import envoyer_email
+                if module == 0:
+                    titre = 'Certification réussie !'
+                    msg = 'réussi l\'examen de certification'
+                else:
+                    titre = 'Module %d complété !' % module
+                    msg = 'complété le module %d' % module
+                html = '<p>Bonjour %s,</p><p>Vous avez %s avec un score de %d points.</p><p>Continuez votre parcours sur l\'Academy.</p>' % (request.user.username, msg, score)
+                envoyer_email(titre, html, html, [request.user.email])
+            except Exception:
+                pass
         return JsonResponse({'status': 'success', 'module': obj.module, 'score': obj.score, 'completed': obj.completed})
     progress = {p.module: {'score': p.score, 'completed': p.completed} for p in AcademyProgress.objects.filter(user=request.user)}
     return JsonResponse({'status': 'success', 'progress': progress})
