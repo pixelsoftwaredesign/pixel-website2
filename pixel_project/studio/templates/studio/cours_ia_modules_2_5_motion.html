@@ -2,6 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
+<meta name="csrf-token" content="{{ csrf_token }}">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Modules 2 à 5 en mouvement</title>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
@@ -72,5 +73,6 @@ const S5={name:'M5 · Guardrails',dur:10,html:()=>`<svg viewBox="0 0 600 300" ro
 const SC=[S2,S3,S4,S5];let cur=0,t0=performance.now(),paused=false,frozen=0;const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;function show(i){cur=i;const s=SC[i];$('stage').innerHTML=s.html();$('cap').innerHTML=s.cap;const c=$('ctlx');c.hidden=!s.ctl;c.innerHTML=s.ctl||'';if(s.init)s.init();[...$('tabs').children].forEach((b,j)=>b.setAttribute('aria-selected',j==i));t0=performance.now();frozen=reduce?.999:0;paused=reduce;$('pp').textContent=paused?'Lecture':'Pause';s.draw(reduce?.999:0);}SC.forEach((s,i)=>{const b=document.createElement('button');b.type='button';b.role='tab';b.textContent=s.name;b.onclick=()=>show(i);$('tabs').appendChild(b)});$('pp').onclick=()=>{if(paused){t0=performance.now()-frozen*SC[cur].dur*1000;paused=false;$('pp').textContent='Pause'}else{paused=true;$('pp').textContent='Lecture'}};$('rp').onclick=()=>{t0=performance.now();paused=false;$('pp').textContent='Pause'};function loop(now){if(!paused){const s=SC[cur],e=(now-t0)/1000;const T=s.dur+1.5;const u=(e%T)/s.dur;frozen=Math.min(1,u);s.draw(Math.min(.999,frozen));}else{SC[cur].draw(Math.min(.999,frozen))}requestAnimationFrame(loop);}show(0);requestAnimationFrame(loop);
 </script>
 <footer style="text-align:center;padding:1.5rem 1rem;font-size:.8rem;opacity:.7;font-family:system-ui,sans-serif;">© 2026 Pixel Software Design — Tous droits réservés.</footer>
+<script src="/static/studio/academy_tracker.js"></script>
 </body>
 </html>

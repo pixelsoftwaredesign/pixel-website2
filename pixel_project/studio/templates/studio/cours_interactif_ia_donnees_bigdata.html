@@ -2,6 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
+<meta name="csrf-token" content="{{ csrf_token }}">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Cours interactif - IA, Données & Big Data</title>
 <style>
@@ -62,9 +63,12 @@ const key='cours-ia-bd-progress-v1'; const state=JSON.parse(localStorage.getItem
 const save=()=>localStorage.setItem(key,JSON.stringify(state));
 function update(){const n=state.done.length;document.querySelector('#score').textContent=`${n} / 3`;document.querySelector('#status').textContent=n===3?'Parcours terminé - bravo !':`${n} exercice${n>1?'s':''} validé${n>1?'s':''}`;document.querySelector('#bar').style.width=`${n*33.33}%`;}
 document.querySelectorAll('[data-lesson]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-lesson],.lesson').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelector('#'+b.dataset.lesson).classList.add('active');}));
-document.querySelectorAll('.check').forEach(btn=>btn.addEventListener('click',()=>{const q=btn.dataset.q, selected=document.querySelector(`input[name="${q}"]:checked`), f=document.querySelector('#f'+q);if(!selected){f.className='feedback no';f.textContent='Choisissez une réponse avant de vérifier.';return}const ok=selected.value===btn.dataset.answer;f.className='feedback '+(ok?'ok':'no');f.textContent=ok?'Correct.':'Pas encore.';if(ok&&!state.done.includes(q)){state.done.push(q);save();update();}}));
+document.querySelectorAll('.check').forEach(btn=>btn.addEventListener('click',()=>{const q=btn.dataset.q, selected=document.querySelector(`input[name="${q}"]:checked`), f=document.querySelector('#f'+q);if(!selected){f.className='feedback no';f.textContent='Choisissez une réponse avant de vérifier.';return}const ok=selected.value===btn.dataset.answer;f.className='feedback '+(ok?'ok':'no');f.textContent=ok?'Correct.':'Pas encore.';if(ok&&!state.done.includes(q)){state.done.push(q);save();update();
+  var csrf=document.querySelector('meta[name="csrf-token"]')?.content||'';
+  fetch('/api/academy/progress/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':csrf},body:JSON.stringify({module:0,score:Math.round((state.done.length/4)*100),completed:state.done.length>=4})}).catch(()=>{});}}));
 document.querySelector('#design').addEventListener('click',()=>{const risk=document.querySelector('#risk').value.trim(),f=document.querySelector('#designFeedback');let msg=risk.length<12?' Ajoutez un risque concret.':' Risque identifié.';f.className='feedback ok result';f.textContent=msg;if(!state.done.includes('design')){state.done.push('design');save();update();}});
 document.querySelector('#reset').addEventListener('click',()=>{state.done=[];save();update();document.querySelectorAll('.feedback').forEach(x=>x.className='feedback');document.querySelectorAll('input').forEach(x=>x.checked=false);}); update();
 </script>
+<script src="/static/studio/academy_tracker.js"></script>
 </body>
 </html>

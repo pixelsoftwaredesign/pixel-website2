@@ -951,9 +951,15 @@
         }
 
         const PDFS = ["Cours_Architecture_Numerique_Trois_Niveaux.pdf","Cours_Architectures_IA.pdf","Cours_Fondements_IA.pdf","Cours_Histoire_IA.pdf","Cours_IA_3D.pdf","Cours_IA_A_Z.pdf","Cours_IA_Appliquee_Terrain.pdf","Cours_IA_Audio.pdf","Cours_IA_Avannee_Federated_Learning.pdf","Cours_IA_Donnees_BigData.pdf","Cours_IA_Recherche_Operationnelle.pdf","Cours_Ingenierie_IA.pdf","Cours_Innovation_IA.pdf","Cours_Introduction_IA.pdf"];
+        function trackPdfDownload(name){
+            const csrf=document.querySelector('meta[name="csrf-token"]')?.content||'';
+            // 75% du temps nécessaire (15 min) crédité pour un téléchargement de PDF
+            fetch('/api/academy/study-time/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':csrf},body:JSON.stringify({minutes:15})}).catch(()=>{});
+            fetch('/api/academy/activity/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':csrf},body:JSON.stringify({activity_type:'task',title:'Téléchargement PDF',detail:name,points:5})}).catch(()=>{});
+        }
         function renderBiblio(){
             const g=document.getElementById('biblio-grid'); if(!g) return;
-            g.innerHTML=PDFS.map(f=>`<a href="/static/studio/cours/${encodeURIComponent(f)}" target="_blank" class="bg-pixel-panel border border-pixel-border hover:border-pixel-cyan/50 rounded-xl p-4 flex items-center gap-3 transition group"><i class="fa-solid fa-file-pdf text-pixel-rose text-xl"></i><span class="text-xs font-mono text-slate-300 group-hover:text-pixel-cyan truncate">${f}</span></a>`).join('');
+            g.innerHTML=PDFS.map(f=>`<a href="/static/studio/cours/${encodeURIComponent(f)}" target="_blank" onclick="trackPdfDownload('${f}')" class="bg-pixel-panel border border-pixel-border hover:border-pixel-cyan/50 rounded-xl p-4 flex items-center gap-3 transition group"><i class="fa-solid fa-file-pdf text-pixel-rose text-xl"></i><span class="text-xs font-mono text-slate-300 group-hover:text-pixel-cyan truncate">${f}</span></a>`).join('');
         }
         window.onload = function() {
             loadSandboxPreset('fedprox');
