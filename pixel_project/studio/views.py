@@ -2744,6 +2744,18 @@ def academy_cours_ia_avances_interactif(request):
     return render(request, 'studio/cours_ia_avances_interactif.html', {'academy_user': request.user})
 
 @login_required
+def academy_federated_learning_avance(request):
+    import os
+    from django.conf import settings
+    path = os.path.join(settings.BASE_DIR, 'studio', 'static', 'studio', 'cours_text', 'federated_learning_avance.txt')
+    try:
+        with open(path, encoding='utf-8') as f:
+            text = f.read()
+    except FileNotFoundError:
+        text = "Contenu non disponible."
+    return render(request, 'studio/academy_federated_learning_avance.html', {'text': text, 'academy_user': request.user})
+
+@login_required
 def academy_cours_fondements_ia_motion(request):
     return render(request, 'studio/cours_fondements_ia_motion.html', {'academy_user': request.user})
 
