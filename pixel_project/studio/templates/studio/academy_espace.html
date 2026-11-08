@@ -155,6 +155,26 @@
       <button onclick="addTask()" class="px-4 py-2 rounded-lg bg-pixel-cyan text-slate-900 font-mono font-bold text-xs">Ajouter</button>
     </div>
   </div>
+  {% if badges %}
+  <div class="bg-pixel-panel border border-pixel-border rounded-2xl p-5">
+    <h2 class="text-sm font-bold text-white mb-3 font-mono">Badges obtenus ({{ badges|length }})</h2>
+    <div class="flex flex-wrap gap-2">
+      {% for b in badges %}
+      <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-pixel-bg border border-pixel-border text-xs font-mono">
+        <i class="fa-solid {{ b.icon }} text-pixel-{{ b.color }}"></i>
+        <span class="text-slate-300">{{ b.name }}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+  {% if cert and cert.completed %}
+  <div class="bg-pixel-panel border border-pixel-border rounded-2xl p-5 text-center">
+    <h2 class="text-sm font-bold text-white mb-3 font-mono">Certificat</h2>
+    <p class="text-slate-400 text-xs mb-3">Vous avez réussi l'examen de certification ({{ cert.score }} pts).</p>
+    <button onclick="window.print()" class="px-4 py-2 rounded-lg bg-pixel-amber text-slate-900 font-mono font-bold text-xs">Télécharger / Imprimer mon certificat</button>
+  </div>
+  {% endif %}
   {% if leaderboard %}
   <div class="bg-pixel-panel border border-pixel-border rounded-2xl p-5">
     <h2 class="text-sm font-bold text-white mb-3 font-mono">Classement (top 5)</h2>

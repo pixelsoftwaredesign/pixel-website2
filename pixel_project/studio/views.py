@@ -2838,7 +2838,6 @@ def academy_espace(request):
     activities = AcademyActivity.objects.filter(user=request.user)[:10]
     # Leaderboard: top 5 students by total points
     from django.contrib.auth.models import User as _U
-    from django.db.models import Sum
     lb = []
     for u in _U.objects.filter(is_staff=False):
         pts = sum(p.score for p in AcademyProgress.objects.filter(user=u)) + sum(a.points for a in AcademyActivity.objects.filter(user=u))
@@ -2846,6 +2845,22 @@ def academy_espace(request):
             lb.append({'username': u.username, 'points': pts})
     lb.sort(key=lambda x: -x['points'])
     lb = lb[:5]
+    # Badges
+    badges = []
+    if progress:
+        badges.append({'name': 'Premier pas', 'desc': 'Premier module commencé', 'icon': 'fa-seedling', 'color': 'emerald'})
+    if any(p.score > 0 for p in progress):
+        badges.append({'name': 'Quiz réussi', 'desc': 'Au moins un quiz validé', 'icon': 'fa-check-circle', 'color': 'cyan'})
+    if any(p.completed for p in progress):
+        badges.append({'name': 'Module complété', 'desc': 'Au moins un module terminé', 'icon': 'fa-trophy', 'color': 'amber'})
+    if completed >= 5:
+        badges.append({'name': 'Tous les modules', 'desc': 'Les 5 modules complétés', 'icon': 'fa-star', 'color': 'purple'})
+    if cert and cert.completed:
+        badges.append({'name': 'Certifié', 'desc': 'Examen de certification réussi', 'icon': 'fa-award', 'color': 'rose'})
+    if total_points >= 100:
+        badges.append({'name': '100 points', 'desc': 'Atteint 100 points', 'icon': 'fa-bolt', 'color': 'amber'})
+    if today_minutes and today_minutes >= 30:
+        badges.append({'name': 'Étudiant assidu', 'desc': '30 min d\'étude en un jour', 'icon': 'fa-clock', 'color': 'cyan'})
     return render(request, 'studio/academy_espace.html', {
         'academy_user': request.user,
         'progress': progress,
@@ -2857,6 +2872,7 @@ def academy_espace(request):
         'exercises': exercises,
         'activities': activities,
         'leaderboard': lb,
+        'badges': badges,
     })
 
 @login_required
