@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cours interactif - Histoire de l'IA</title>
+<style>
+:root{--ink:#18324b;--blue:#176e94;--teal:#159d8b;--mist:#eef7f7;--gold:#e7a52d;--red:#c94747;--paper:#fbfcfd}
+*{box-sizing:border-box} body{margin:0;background:var(--paper);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.55}
+header{background:linear-gradient(120deg,#12304a,#176e94);color:#fff;padding:3.3rem max(1.2rem,calc((100vw - 1050px)/2))}
+header p{max-width:680px;margin:.45rem 0 0;font-size:1.06rem;color:#dcecf2} h1{font-size:clamp(2rem,5vw,3.6rem);line-height:1.06;margin:0;letter-spacing:-.04em}
+main{max-width:1050px;margin:0 auto;padding:1.4rem 1.2rem 4rem}
+.progress{background:#fff;border:1px solid #d9e6ea;border-radius:14px;padding:1rem 1.1rem;margin:-1.55rem 0 2rem;box-shadow:0 7px 22px #12304a14;display:flex;gap:1rem;align-items:center;flex-wrap:wrap}
+.bar{height:10px;border-radius:99px;background:#dcebed;flex:1;min-width:170px;overflow:hidden} .bar span{display:block;height:100%;width:0;background:var(--teal);transition:width .35s}
+.count{font-weight:700;white-space:nowrap}
+.grid{display:grid;grid-template-columns:250px 1fr;gap:1.25rem}
+.nav{height:max-content;background:#fff;border:1px solid #d9e6ea;border-radius:14px;padding:.7rem;position:sticky;top:1rem}
+.nav button{border:0;background:transparent;width:100%;text-align:left;padding:.7rem .8rem;border-radius:8px;color:var(--ink);font:inherit;cursor:pointer}
+.nav button:hover,.nav button.active{background:var(--mist);color:var(--blue);font-weight:700}
+.lesson{display:none} .lesson.active{display:block;animation:fade .25s ease}
+@keyframes fade{from{opacity:.2;transform:translateY(6px)}to{opacity:1;transform:none}}
+h2{font-size:clamp(1.55rem,3vw,2.25rem);line-height:1.16;margin:.15rem 0 .75rem;letter-spacing:-.025em}
+h3{margin:1.55rem 0 .5rem;color:var(--blue)}
+.lead{font-size:1.12rem;color:#3c5568}
+.card{background:#fff;border:1px solid #d9e6ea;border-radius:14px;padding:1.25rem;margin:1.15rem 0}
+.key{border-left:5px solid var(--teal);background:var(--mist)}
+.pill{display:inline-block;border-radius:99px;background:#e9f3f8;color:var(--blue);font-size:.8rem;font-weight:700;padding:.18rem .55rem;margin-bottom:.55rem}
+.question{border:1px solid #cbdde3;border-radius:12px;padding:1.1rem;margin:1rem 0}
+.question legend{font-weight:750;padding:0 .3rem}
+.option{display:block;margin:.45rem 0;padding:.55rem .65rem;border-radius:8px;cursor:pointer}
+.option:hover{background:#f2f7f8} .option input{accent-color:var(--teal);margin-right:.45rem}
+.btn{border:0;border-radius:9px;background:var(--blue);color:white;font:inherit;font-weight:700;padding:.65rem .9rem;cursor:pointer}
+.btn:hover{filter:brightness(1.08)} .btn.alt{background:#e8f1f3;color:var(--ink)}
+.feedback{display:none;margin-top:.75rem;padding:.75rem;border-radius:8px;font-weight:600}
+.feedback.ok{display:block;background:#e6f6ef;color:#12634e} .feedback.no{display:block;background:#fdecec;color:#972f2f}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.nav{position:static;display:flex;overflow:auto}.nav button{white-space:nowrap}.nav{padding:.45rem}}
+</style>
+</head>
+<body>
+<header><h1>Histoire de l'IA</h1><p>Un cours interactif sur les pionniers, les ruptures et l'évolution de l'intelligence artificielle.</p></header>
+<main>
+<section class="progress" aria-label="Progression"><div><strong>Votre progression</strong><br><small id="status">0 exercice validé</small></div><div class="bar" aria-hidden="true"><span id="bar"></span></div><div class="count" id="score">0 / 3</div><button class="btn alt" id="reset">Réinitialiser</button></section>
+<div class="grid">
+<nav class="nav" aria-label="Leçons">
+<button class="active" data-lesson="l1">1. Pionniers</button>
+<button data-lesson="l2">2. Ruptures</button>
+<button data-lesson="l3">3. Évolution</button>
+</nav>
+<section>
+<article class="lesson active" id="l1"><span class="pill">LEÇON 1</span><h2>Les pionniers</h2><p class="lead">Alan Turing, Geoffrey Hinton, Yann LeCun, Yoshua Bengio — les figures qui ont façonné l'IA moderne.</p><h3>Les origines</h3><p>Le test de Turing (1950), le perceptron (1958), les réseaux de neurones profonds (2010s). L'IA a connu des hivers et des printemps. La disponibilité simultanée de GPU abordables et de données massives a déclenché la dernière rupture.</p><div class="card key"><strong>À retenir.</strong> L'IA est une histoire de cycles : enthousiasme, déception, puis nouvelle percée.</div>
+<fieldset class="question"><legend>Exercice 1 - Pionniers</legend><p>Qui est considéré comme le père fondateur de l'informatique théorique ?</p><label class="option"><input type="radio" name="q1" value="a"> Alan Turing</label><label class="option"><input type="radio" name="q1" value="b"> Geoffrey Hinton</label><label class="option"><input type="radio" name="q1" value="c"> Yann LeCun</label><button class="btn check" data-q="q1" data-answer="a">Vérifier</button><div class="feedback" id="fq1"></div></fieldset></article>
+<article class="lesson" id="l2"><span class="pill">LEÇON 2</span><h2>Les ruptures</h2><p class="lead">Deux ruptures majeures : le deep learning (2012) et les LLMs (2020s).</p><h3>Le deep learning</h3><p>ImageNet 2012 : AlexNet réduit l'erreur de moitié. L'IA devient pratique. Les transformers (2017) révolutionnent le NLP. GPT, BERT, puis les LLMs.</p><div class="card key"><strong>À retenir.</strong> Chaque rupture combine données + calcul + algorithme.</div>
+<fieldset class="question"><legend>Exercice 2 - Ruptures</legend><p>Quel événement a déclenché la dernière rupture de l'IA ?</p><label class="option"><input type="radio" name="q2" value="a"> GPU abordables + données massives</label><label class="option"><input type="radio" name="q2" value="b"> Un nouveau langage de programmation</label><label class="option"><input type="radio" name="q2" value="c"> La fin d'Internet</label><button class="btn check" data-q="q2" data-answer="a">Vérifier</button><div class="feedback" id="fq2"></div></fieldset></article>
+<article class="lesson" id="l3"><span class="pill">LEÇON 3</span><h2>L'évolution actuelle</h2><p class="lead">IA générative, agents, IA de confiance, IA embarquée.</p><h3>Tendances</h3><p>Génération de contenu (texte, image, son, code), agents autonomes, IA de confiance (sécurité, conformité), IA embarquée (Edge, IoT). L'IA devient un composant d'infrastructure.</p><div class="card key"><strong>À retenir.</strong> L'IA évolue de l'outil vers l'infrastructure.</div>
+<section class="card design"><span class="pill">EXERCICE FINAL</span><h3>Mini-cadrage</h3><p>Identifiez une tendance actuelle et son risque principal.</p><label for="risk">Risque</label><textarea id="risk" placeholder="Ex. hallucinations, biais, confidentialité..."></textarea><button class="btn" id="design">Analyser</button><div class="feedback result" id="designFeedback"></div></section></article>
+</section>
+</div>
+</main>
+<footer style="text-align:center;padding:1.5rem 1rem;font-size:.8rem;opacity:.7;font-family:system-ui,sans-serif;">© 2026 Pixel Software Design — Tous droits réservés. · <a href="/academy/" style="color:inherit;">Academy</a> · <a href="/" style="color:inherit;">Site</a></footer>
+<script>
+const key='cours-histoire-ia-progress-v1'; const state=JSON.parse(localStorage.getItem(key)||'{"done":[]}');
+const save=()=>localStorage.setItem(key,JSON.stringify(state));
+function update(){const n=state.done.length;document.querySelector('#score').textContent=`${n} / 3`;document.querySelector('#status').textContent=n===3?'Parcours terminé - bravo !':`${n} exercice${n>1?'s':''} validé${n>1?'s':''}`;document.querySelector('#bar').style.width=`${n*33.33}%`;}
+document.querySelectorAll('[data-lesson]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-lesson],.lesson').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelector('#'+b.dataset.lesson).classList.add('active');}));
+document.querySelectorAll('.check').forEach(btn=>btn.addEventListener('click',()=>{const q=btn.dataset.q, selected=document.querySelector(`input[name="${q}"]:checked`), f=document.querySelector('#f'+q);if(!selected){f.className='feedback no';f.textContent='Choisissez une réponse avant de vérifier.';return}const ok=selected.value===btn.dataset.answer;f.className='feedback '+(ok?'ok':'no');f.textContent=ok?'Correct.':'Pas encore.';if(ok&&!state.done.includes(q)){state.done.push(q);save();update();}}));
+document.querySelector('#design').addEventListener('click',()=>{const risk=document.querySelector('#risk').value.trim(),f=document.querySelector('#designFeedback');let msg=risk.length<12?' Ajoutez un risque concret.':' Risque identifié.';f.className='feedback ok result';f.textContent=msg;if(!state.done.includes('design')){state.done.push('design');save();update();}});
+document.querySelector('#reset').addEventListener('click',()=>{state.done=[];save();update();document.querySelectorAll('.feedback').forEach(x=>x.className='feedback');document.querySelectorAll('input').forEach(x=>x.checked=false);}); update();
+</script>
+</body>
+</html>
