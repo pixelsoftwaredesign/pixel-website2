@@ -3107,6 +3107,17 @@ def api_academy_progress(request):
                 envoyer_email(titre, html, html, [request.user.email])
             except Exception:
                 pass
+            # Notification au professeur affecté
+            try:
+                from .models import AcademyTeacherStudent
+                for a in AcademyTeacherStudent.objects.filter(student=request.user).select_related('teacher'):
+                    t = a.teacher
+                    if t.email:
+                        titre_p = 'Élève %s : %s' % (request.user.username, 'certification réussie' if module == 0 else 'module %d complété' % module)
+                        html_p = '<p>Bonjour %s,</p><p>Votre élève %s a %s (score : %d points).</p>' % (t.username, request.user.username, 'réussi la certification' if module == 0 else 'complété le module %d' % module, score)
+                        envoyer_email(titre_p, html_p, html_p, [t.email])
+            except Exception:
+                pass
         return JsonResponse({'status': 'success', 'module': obj.module, 'score': obj.score, 'completed': obj.completed})
     progress = {p.module: {'score': p.score, 'completed': p.completed} for p in AcademyProgress.objects.filter(user=request.user)}
     return JsonResponse({'status': 'success', 'progress': progress})
