@@ -172,7 +172,7 @@
   <div class="bg-pixel-panel border border-pixel-border rounded-2xl p-5 text-center">
     <h2 class="text-sm font-bold text-white mb-3 font-mono">Certificat</h2>
     <p class="text-slate-400 text-xs mb-3">Vous avez réussi l'examen de certification ({{ cert.score }} pts).</p>
-    <button onclick="window.print()" class="px-4 py-2 rounded-lg bg-pixel-amber text-slate-900 font-mono font-bold text-xs">Télécharger / Imprimer mon certificat</button>
+    <a href="/academy/certificat.pdf" class="inline-block px-4 py-2 rounded-lg bg-pixel-amber text-slate-900 font-mono font-bold text-xs">Télécharger mon certificat (PDF)</a>
   </div>
   {% endif %}
   {% if leaderboard %}

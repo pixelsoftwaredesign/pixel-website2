@@ -138,6 +138,7 @@ urlpatterns = [
     path('academy/cours-ia-modules-2-5-motion/', views.academy_cours_ia_modules_2_5_motion, name='academy_cours_ia_modules_2_5_motion'),
     path('academy/programme/', views.academy_programme, name='academy_programme'),
     path('academy/espace/', views.academy_espace, name='academy_espace'),
+    path('academy/certificat.pdf', views.academy_certificat, name='academy_certificat'),
     path('academy/professeur/', views.academy_professeur, name='academy_professeur'),
     path('academy/administration/', views.academy_administration, name='academy_administration'),
     path('api/academy/progress/', views.api_academy_progress, name='api_academy_progress'),

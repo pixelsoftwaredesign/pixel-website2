@@ -2824,8 +2824,58 @@ def academy_programme(request):
     })
 
 @login_required
+def academy_certificat(request):
+    from .models import AcademyProgress
+    from django.http import HttpResponse, HttpResponseForbidden
+    from reportlab.lib.pagesizes import A4, landscape
+    from reportlab.lib import colors
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.units import cm
+    progress = list(AcademyProgress.objects.filter(user=request.user).order_by('module'))
+    cert = next((p for p in progress if p.module == 0), None)
+    if not (cert and cert.completed):
+        return HttpResponseForbidden("Certificat non disponible : examen non reussi.")
+    total_points = sum(p.score for p in progress) + sum(a.points for a in __import__('studio.models', fromlist=['AcademyActivity']).AcademyActivity.objects.filter(user=request.user))
+    completed = sum(1 for p in progress if p.completed)
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="certificat_%s.pdf"' % request.user.username
+    c = canvas.Canvas(response, pagesize=landscape(A4))
+    w, h = landscape(A4)
+    c.setFillColor(colors.HexColor('#070a11'))
+    c.rect(0, 0, w, h, fill=1, stroke=0)
+    c.setStrokeColor(colors.HexColor('#38bdf8'))
+    c.setLineWidth(3)
+    c.rect(1.5*cm, 1.5*cm, w-3*cm, h-3*cm, fill=0, stroke=1)
+    c.setStrokeColor(colors.HexColor('#1b2438'))
+    c.setLineWidth(1)
+    c.rect(2*cm, 2*cm, w-4*cm, h-4*cm, fill=0, stroke=1)
+    c.setFillColor(colors.HexColor('#38bdf8'))
+    c.setFont('Helvetica-Bold', 32)
+    c.drawCentredString(w/2, h-4*cm, 'PixelSoftware Academy')
+    c.setFillColor(colors.HexColor('#e8f5f0'))
+    c.setFont('Helvetica', 14)
+    c.drawCentredString(w/2, h-5*cm, 'Certificat de reussite')
+    c.setFont('Helvetica', 12)
+    c.drawCentredString(w/2, h-7*cm, 'Ce certificat est decerne a')
+    c.setFillColor(colors.HexColor('#38bdf8'))
+    c.setFont('Helvetica-Bold', 24)
+    c.drawCentredString(w/2, h-8.5*cm, request.user.username)
+    c.setFillColor(colors.HexColor('#e8f5f0'))
+    c.setFont('Helvetica', 12)
+    c.drawCentredString(w/2, h-10*cm, "pour avoir reussi l'examen de certification")
+    c.drawCentredString(w/2, h-11*cm, 'Score : %d points  -  %d modules completes  -  %d points totaux' % (cert.score, completed, total_points))
+    c.drawCentredString(w/2, h-12.5*cm, 'du programme PixelSoftware Academy (Edition 2026)')
+    c.setFont('Helvetica', 10)
+    c.setFillColor(colors.HexColor('#5b6b7f'))
+    c.drawCentredString(w/2, 2.5*cm, 'Pixel Software Design - Tous droits reserves.')
+    c.drawCentredString(w/2, 2*cm, 'PixelSoftware Academy - Edition 2026')
+    c.save()
+    return response
+
+@login_required
 def academy_espace(request):
     from .models import AcademyProgress, AcademyStudyTime, AcademyExerciseAnswer, AcademyActivity
+    from django.utils import timezone
     from django.utils import timezone
     progress = list(AcademyProgress.objects.filter(user=request.user).order_by('module'))
     total_points = sum(p.score for p in progress) + sum(a.points for a in AcademyActivity.objects.filter(user=request.user))
