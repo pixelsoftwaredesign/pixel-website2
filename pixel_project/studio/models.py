@@ -1973,6 +1973,7 @@ class AcademyActivity(models.Model):
         ('code_report', 'Rapport de code'),
         ('r_and_d', 'Participation R&D'),
         ('task', 'Tâche'),
+        ('course_completed', 'Cours terminé'),
     ]
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='academy_activities')
     activity_type = models.CharField(max_length=20, choices=ACTIVITY_TYPES, verbose_name="Type")
